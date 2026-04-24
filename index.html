@@ -72,7 +72,8 @@
       const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
       let content;
-      if (page === 'home') content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+      if (window.location.search.includes('admin') || page === 'admin') content = <AdminYoung />;
+      else if (page === 'home') content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'shop' || page === 'new') content = <ShopYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'product' && currentProduct) content = <PDetailYoung lang={lang} product={currentProduct} onBack={() => goto('home')} onAddToCart={addToCart} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'cart') content = <CartYoung lang={lang} cart={cart} updateQty={(i, q) => setCart(c => c.map((it, idx) => idx === i ? { ...it, qty: q } : it))} removeItem={(i) => setCart(c => c.filter((_, idx) => idx !== i))} onCheckout={() => setPage('checkout')} onContinue={() => goto('shop')} />;
