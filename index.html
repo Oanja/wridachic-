@@ -16,6 +16,13 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    window._sb = supabase.createClient(
+      'https://guoapqclmskyoubyivuv.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b2FwcWNsbXNreW91YnlpdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNDQzODYsImV4cCI6MjA5MjYyMDM4Nn0.mW0T7r4eZfWULKvx9d-XloIQbaxo2LmnhdC9DuIIyis'
+    );
+  </script>
   <script src="data.js"></script>
   <script type="text/babel" src="components2.jsx"></script>
   <script type="text/babel" src="pages2young.jsx"></script>
@@ -73,6 +80,7 @@
       else if (page === 'prayer') content = <PrayerYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'about') content = <AboutYoung lang={lang} />;
       else if (page === 'lookbook') content = <LookbookYoung lang={lang} />;
+      else if (page === 'admin' || window.location.search.includes('admin')) content = <AdminYoung />;
       else content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
 
       return (

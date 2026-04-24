@@ -516,10 +516,35 @@ const CheckoutYoung = ({ lang, cart, onSuccess }) => {
   const t = WC_TR[lang];
   const [step, setStep] = u2S(1);
   const [payment, setPayment] = u2S('cod');
-  const [form, setForm] = u2S({ fullName: '', phone: '', address: '', city: 'Casablanca' });
+  const [form, setForm] = u2S({ fullName: '', phone: '', email: '', address: '', city: 'Casablanca' });
+  const [saving, setSaving] = u2S(false);
+  const [orderNum, setOrderNum] = u2S('');
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery  = subtotal > 500 ? 0 : 35;
   const total     = subtotal + delivery;
+
+  const placeOrder = async () => {
+    setSaving(true);
+    const num = 'WC-' + (Math.floor(Math.random() * 900000) + 100000);
+    setOrderNum(num);
+    const itemsData = cart.map(it => ({
+      name: lang === 'ar' ? (it.nameAr || it.name) : it.name,
+      qty: it.qty, size: it.size, color: it.color, price: it.price,
+    }));
+    try {
+      await window._sb.from('orders').insert({
+        order_number: num, status: 'nouveau',
+        full_name: form.fullName, phone: form.phone, email: form.email,
+        address: form.address, city: form.city, payment,
+        subtotal, delivery, total, items: itemsData, lang,
+      });
+    } catch(e) { console.error('Supabase:', e); }
+    const itemsText = itemsData.map(it => `• ${it.name} × ${it.qty} — ${it.size} — ${it.color}`).join('\n');
+    const msg = `🛍️ *طلب جديد — wridachic*\n━━━━━━━━━━━━━━━━━━━━\n👤 *الاسم:* ${form.fullName}\n📱 *الهاتف:* ${form.phone}\n📧 *الإيميل:* ${form.email}\n📍 *العنوان:* ${form.address}، ${form.city}\n\n🛒 *المنتجات:*\n${itemsText}\n\n💰 *المجموع:* ${subtotal} MAD\n🚚 *التوصيل:* ${delivery === 0 ? 'مجاني ✓' : delivery + ' MAD'}\n💳 *الإجمالي:* ${total} MAD\n💳 *الدفع:* ${payment === 'cod' ? 'عند الاستلام' : 'بطاقة بنكية'}\n\n📋 *رقم الطلب:* ${num}`;
+    window.open(`https://wa.me/212772086545?text=${encodeURIComponent(msg)}`, '_blank');
+    setSaving(false);
+    setStep(4);
+  };
 
   if (step === 4) return (
     <div className="page2" style={{ padding: '100px 28px', textAlign: 'center' }}>
@@ -528,7 +553,7 @@ const CheckoutYoung = ({ lang, cart, onSuccess }) => {
       <p style={{ opacity: 0.65, marginTop: 12, maxWidth: 480, margin: '12px auto 28px' }}>{t.checkout.successDesc}</p>
       <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, maxWidth: 380, margin: '0 auto 28px', textAlign: lang === 'ar' ? 'right' : 'left' }}>
         <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Numéro de commande' : 'رقم الطلب'}</div>
-        <div className="display" style={{ fontSize: 26, marginTop: 4 }}>WC-{Math.floor(Math.random() * 900000) + 100000}</div>
+        <div className="display" style={{ fontSize: 26, marginTop: 4 }}>{orderNum}</div>
         <div className="mono" style={{ fontSize: 13, marginTop: 8, opacity: 0.7 }}>{total} MAD · {payment === 'cod' ? t.checkout.cod : t.checkout.cib}</div>
       </div>
       <button className="btn2 btn2-dark btn2-lg" onClick={onSuccess}>← {lang === 'fr' ? 'Retour boutique' : 'العودة للمتجر'}</button>
@@ -559,10 +584,10 @@ const CheckoutYoung = ({ lang, cart, onSuccess }) => {
               <div>
                 <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>{t.checkout.shipping}</h2>
                 <div style={{ display: 'grid', gap: 12 }}>
-                  {['fullName','phone','address'].map(f => (
+                  {['fullName','phone','email','address'].map(f => (
                     <div key={f}>
                       <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{t.checkout[f]}</label>
-                      <input className="input2" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} style={{ marginTop: 4 }} />
+                      <input className="input2" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} style={{ marginTop: 4 }} type={f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text'} />
                     </div>
                   ))}
                   <div>
@@ -614,7 +639,7 @@ const CheckoutYoung = ({ lang, cart, onSuccess }) => {
                 ))}
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                   <button className="btn2 btn2-outline" onClick={() => setStep(2)}>← {lang === 'fr' ? 'Retour' : 'رجوع'}</button>
-                  <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={() => setStep(4)}>{t.checkout.place} ✨</button>
+                  <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={placeOrder} disabled={saving}>{saving ? '...' : t.checkout.place + ' ✨'}</button>
                 </div>
               </div>
             )}
@@ -825,4 +850,142 @@ const LookbookYoung = ({ lang }) => (
   </div>
 );
 
-Object.assign(window, { HomeYoung, ShopYoung, PDetailYoung, CartYoung, CheckoutYoung, CaftanYoung, PrayerYoung, AboutYoung, LookbookYoung });
+// ======== ADMIN ========
+const ADMIN_PASS = 'wridachic2026';
+const STATUS_COLORS = { nouveau: '#C85C3F', confirmé: '#4A90D9', expédié: '#7B68EE', livré: '#4CAF50' };
+const STATUS_LABELS = ['nouveau', 'confirmé', 'expédié', 'livré'];
+
+const AdminYoung = () => {
+  const [pwd, setPwd] = u2S('');
+  const [authed, setAuthed] = u2S(false);
+  const [orders, setOrders] = u2S([]);
+  const [loading, setLoading] = u2S(false);
+  const [error, setError] = u2S('');
+
+  const login = () => {
+    if (pwd === ADMIN_PASS) { setAuthed(true); fetchOrders(); }
+    else setError('Mot de passe incorrect');
+  };
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    const { data, error } = await window._sb.from('orders').select('*').order('created_at', { ascending: false });
+    if (error) setError(error.message);
+    else setOrders(data || []);
+    setLoading(false);
+  };
+
+  const updateStatus = async (id, status) => {
+    await window._sb.from('orders').update({ status }).eq('id', id);
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  };
+
+  const fmt = (iso) => new Date(iso).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+  if (!authed) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
+      <div style={{ background: 'var(--paper)', padding: 40, borderRadius: 20, width: 320, textAlign: 'center' }}>
+        <Logo2 size={48} />
+        <h2 className="display" style={{ fontSize: 24, marginTop: 20, marginBottom: 6 }}>Admin</h2>
+        <p className="mono" style={{ fontSize: 11, opacity: 0.5, marginBottom: 24 }}>TABLEAU DE BORD</p>
+        <input
+          type="password" placeholder="Mot de passe"
+          value={pwd} onChange={e => setPwd(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && login()}
+          className="input2" style={{ marginBottom: 12 }}
+        />
+        {error && <p style={{ color: 'var(--clay)', fontSize: 12, marginBottom: 10 }}>{error}</p>}
+        <button className="btn2 btn2-dark" style={{ width: '100%' }} onClick={login}>Connexion →</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0F0E0D', color: '#FAF6F1', padding: '32px 24px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Logo2 size={36} invert />
+            <div>
+              <div className="display" style={{ fontSize: 22 }}>Tableau de bord</div>
+              <div className="mono" style={{ fontSize: 10, opacity: 0.4 }}>{orders.length} COMMANDES</div>
+            </div>
+          </div>
+          <button onClick={fetchOrders} className="btn2 btn2-outline" style={{ fontSize: 12, color: '#FAF6F1', borderColor: 'rgba(250,246,241,0.3)' }}>
+            ↻ Actualiser
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+          {STATUS_LABELS.map(s => {
+            const count = orders.filter(o => o.status === s).length;
+            const total = orders.filter(o => o.status === s).reduce((acc, o) => acc + (o.total || 0), 0);
+            return (
+              <div key={s} style={{ background: 'rgba(250,246,241,0.05)', borderRadius: 16, padding: 20, borderLeft: `3px solid ${STATUS_COLORS[s]}` }}>
+                <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s}</div>
+                <div className="display" style={{ fontSize: 32, marginTop: 4 }}>{count}</div>
+                <div className="mono" style={{ fontSize: 11, opacity: 0.4, marginTop: 4 }}>{total} MAD</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Orders Table */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Chargement...</div>
+        ) : orders.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Aucune commande pour l'instant.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {orders.map(o => (
+              <div key={o.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 16, padding: '20px 24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr 1fr auto', gap: 20, alignItems: 'start' }}>
+                  {/* Order # + date */}
+                  <div>
+                    <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--clay)' }}>{o.order_number}</div>
+                    <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>{fmt(o.created_at)}</div>
+                  </div>
+                  {/* Customer */}
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{o.full_name}</div>
+                    <div className="mono" style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{o.phone}</div>
+                    <div className="mono" style={{ fontSize: 11, opacity: 0.4 }}>{o.email}</div>
+                    <div className="mono" style={{ fontSize: 11, opacity: 0.4 }}>{o.address}, {o.city}</div>
+                  </div>
+                  {/* Items + total */}
+                  <div>
+                    {(o.items || []).map((it, i) => (
+                      <div key={i} className="mono" style={{ fontSize: 11, opacity: 0.7, marginBottom: 3 }}>
+                        {it.name} × {it.qty} — {it.size}
+                        <span style={{ display: 'inline-block', width: 10, height: 10, background: it.color, borderRadius: '50%', verticalAlign: 'middle', marginLeft: 6, border: '1px solid rgba(250,246,241,0.3)' }} />
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 8, fontWeight: 700 }}>{o.total} MAD
+                      <span className="mono" style={{ fontSize: 10, opacity: 0.45, marginLeft: 8 }}>{o.payment === 'cod' ? 'COD' : 'CIB'}</span>
+                    </div>
+                  </div>
+                  {/* Status */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {STATUS_LABELS.map(s => (
+                      <button key={s} onClick={() => updateStatus(o.id, s)} className="mono" style={{
+                        padding: '5px 12px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
+                        background: o.status === s ? STATUS_COLORS[s] : 'transparent',
+                        color: o.status === s ? '#fff' : 'rgba(250,246,241,0.4)',
+                        border: `1px solid ${o.status === s ? STATUS_COLORS[s] : 'rgba(250,246,241,0.15)'}`,
+                        textTransform: 'uppercase', letterSpacing: '0.06em',
+                      }}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+Object.assign(window, { HomeYoung, ShopYoung, PDetailYoung, CartYoung, CheckoutYoung, CaftanYoung, PrayerYoung, AboutYoung, LookbookYoung, AdminYoung });
