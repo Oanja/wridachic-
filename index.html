@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>wridachic — young &amp; chic moroccan fashion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles2.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script src="data.js"></script>
+  <script type="text/babel" src="components2.jsx"></script>
+  <script type="text/babel" src="pages2young.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const TWEAKS = /*EDITMODE-BEGIN*/{
+      "accentColor": "#C85C3F",
+      "defaultLang": "fr"
+    }/*EDITMODE-END*/;
+
+    function App() {
+      const [lang, setLang] = useState(TWEAKS.defaultLang);
+      const [page, setPage] = useState(() => localStorage.getItem('wc2-page') || 'home');
+      const [currentProduct, setCurrentProduct] = useState(null);
+      const [cart, setCart] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('wc2-cart') || '[]'); } catch { return []; }
+      });
+      const [wishlist, setWishlist] = useState([]);
+      const [accentColor, setAccentColor] = useState(TWEAKS.accentColor);
+      const [editMode, setEditMode] = useState(false);
+
+      useEffect(() => { localStorage.setItem('wc2-page', page); }, [page]);
+      useEffect(() => { localStorage.setItem('wc2-cart', JSON.stringify(cart)); }, [cart]);
+      useEffect(() => { document.body.className = lang === 'ar' ? 'ar' : ''; }, [lang]);
+      useEffect(() => { document.documentElement.style.setProperty('--clay', accentColor); }, [accentColor]);
+      useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [page, currentProduct]);
+
+      useEffect(() => {
+        const handler = (e) => {
+          if (e.data?.type === '__activate_edit_mode') setEditMode(true);
+          if (e.data?.type === '__deactivate_edit_mode') setEditMode(false);
+        };
+        window.addEventListener('message', handler);
+        window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+        return () => window.removeEventListener('message', handler);
+      }, []);
+
+      const persist = (edits) => window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+
+      const goto = (p) => { setCurrentProduct(null); setPage(p); };
+      const openProduct = (p) => { setCurrentProduct(p); setPage('product'); };
+      const addToCart = (item) => setCart((c) => [...c, item]);
+      const toggleWish = (id) => setWishlist((w) => w.includes(id) ? w.filter(x => x !== id) : [...w, id]);
+
+      const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+
+      let content;
+      if (page === 'home') content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+      else if (page === 'shop' || page === 'new') content = <ShopYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+      else if (page === 'product' && currentProduct) content = <PDetailYoung lang={lang} product={currentProduct} onBack={() => goto('home')} onAddToCart={addToCart} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+      else if (page === 'cart') content = <CartYoung lang={lang} cart={cart} updateQty={(i, q) => setCart(c => c.map((it, idx) => idx === i ? { ...it, qty: q } : it))} removeItem={(i) => setCart(c => c.filter((_, idx) => idx !== i))} onCheckout={() => setPage('checkout')} onContinue={() => goto('shop')} />;
+      else if (page === 'checkout') content = <CheckoutYoung lang={lang} cart={cart} onSuccess={() => { setCart([]); goto('home'); }} />;
+      else if (page === 'prayer') content = <PrayerYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+      else if (page === 'about') content = <AboutYoung lang={lang} />;
+      else if (page === 'lookbook') content = <LookbookYoung lang={lang} />;
+      else content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+
+      return (
+        <div data-screen-label={`wridachic young · ${page}`}>
+          <Nav2 lang={lang} setLang={setLang} cartCount={cartCount} onNav={goto} current={page} />
+          {content}
+          <Footer2 lang={lang} onNav={goto} />
+          <WaFloat2 lang={lang} />
+
+          {editMode && (
+            <div style={{ position: 'fixed', bottom: 90, right: 24, width: 260, background: 'var(--paper)', border: '1.5px solid var(--ink)', borderRadius: 18, padding: 18, boxShadow: '0 12px 32px rgba(15,14,13,0.16)', zIndex: 100, fontFamily: 'Space Grotesk' }}>
+              <div style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 14, fontFamily: 'JetBrains Mono, monospace' }}>◆ tweaks</div>
+              <div style={{ marginBottom: 14 }}>
+                <label className="mono" style={{ fontSize: 10, opacity: 0.6, textTransform: 'uppercase' }}>accent</label>
+                <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                  {['#C85C3F', '#D87A6A', '#0F0E0D', '#D4E157', '#A5C4D9'].map(c => (
+                    <button key={c} onClick={() => { setAccentColor(c); persist({ accentColor: c }); }} style={{ width: 28, height: 28, borderRadius: '50%', background: c, border: accentColor === c ? '2px solid var(--ink)' : '1px solid var(--line)', cursor: 'pointer' }} />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="mono" style={{ fontSize: 10, opacity: 0.6, textTransform: 'uppercase' }}>langue</label>
+                <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                  {[{ id: 'fr', label: 'FR' }, { id: 'ar', label: 'ع' }].map(l => (
+                    <button key={l.id} onClick={() => { setLang(l.id); persist({ defaultLang: l.id }); }} style={{ flex: 1, padding: 8, border: `1.5px solid var(--ink)`, borderRadius: 999, background: lang === l.id ? 'var(--ink)' : 'transparent', color: lang === l.id ? 'var(--paper)' : 'var(--ink)', fontSize: 12, cursor: 'pointer' }}>{l.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                <a href="wridachic.html" className="mono" style={{ fontSize: 11, opacity: 0.6, textDecoration: 'underline' }}>← v1 classique</a>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
