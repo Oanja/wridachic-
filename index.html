@@ -72,7 +72,7 @@
       const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
       let content;
-      if (window.location.search.includes('admin') || page === 'admin') content = <AdminYoung />;
+      if (window.location.hash.includes('admin') || page === 'admin') content = <AdminYoung />;
       else if (page === 'home') content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'shop' || page === 'new') content = <ShopYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'product' && currentProduct) content = <PDetailYoung lang={lang} product={currentProduct} onBack={() => goto('home')} onAddToCart={addToCart} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
@@ -81,7 +81,7 @@
       else if (page === 'prayer') content = <PrayerYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
       else if (page === 'about') content = <AboutYoung lang={lang} />;
       else if (page === 'lookbook') content = <LookbookYoung lang={lang} />;
-      else if (page === 'admin' || window.location.search.includes('admin')) content = <AdminYoung />;
+      else if (page === 'admin' || window.location.hash.includes('admin')) content = <AdminYoung />;
       else content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
 
       return (
