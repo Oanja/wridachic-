@@ -146,9 +146,10 @@
       const addToCart = (item) => setCart((c) => [...c, item]);
       const buyNow = (item) => { setCart([item]); setPage('checkout'); };
       const toggleWish = (id) => {
+        if (!user) { setAuthOpen(true); return; }
         setWishlist((w) => {
           const next = w.includes(id) ? w.filter(x => x !== id) : [...w, id];
-          if (user) saveWishToCloud(user.id, next);
+          saveWishToCloud(user.id, next);
           return next;
         });
       };

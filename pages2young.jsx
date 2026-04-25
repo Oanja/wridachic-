@@ -1321,9 +1321,11 @@ const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
     const ok = await verifyPwd(currentPwdName);
     if (!ok) { setBusy(false); return setMsg(lang === 'fr' ? '⚠ Mot de passe incorrect' : '⚠ كلمة السر غير صحيحة'); }
     const { error } = await window._sb.auth.updateUser({ data: { full_name: name } });
-    setMsg(error ? '⚠ ' + error.message : (lang === 'fr' ? '✓ Nom mis à jour' : '✓ تم حفظ الاسم'));
     setCurrentPwdName('');
     setBusy(false);
+    if (error) { setMsg('⚠ ' + error.message); return; }
+    setMsg(lang === 'fr' ? '✓ Nom mis à jour. Reconnexion...' : '✓ تم حفظ الاسم. إعادة الدخول...');
+    setTimeout(() => { onLogout(); }, 1800);
   };
 
   const savePwd = async () => {
@@ -1335,9 +1337,11 @@ const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
     const ok = await verifyPwd(currentPwdPwd);
     if (!ok) { setBusy(false); return setMsg(lang === 'fr' ? '⚠ Mot de passe actuel incorrect' : '⚠ كلمة السر الحالية غير صحيحة'); }
     const { error } = await window._sb.auth.updateUser({ password: pwd });
-    setMsg(error ? '⚠ ' + error.message : (lang === 'fr' ? '✓ Mot de passe modifié' : '✓ تم تغيير كلمة السر'));
     setPwd(''); setPwd2(''); setCurrentPwdPwd('');
     setBusy(false);
+    if (error) { setMsg('⚠ ' + error.message); return; }
+    setMsg(lang === 'fr' ? '✓ Mot de passe modifié. Reconnexion...' : '✓ تم تغيير كلمة السر. إعادة الدخول...');
+    setTimeout(() => { onLogout(); }, 1800);
   };
 
   const tabs = [
