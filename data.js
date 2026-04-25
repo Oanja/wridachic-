@@ -1,5 +1,10 @@
 // Shared data & i18n for wridachic young
 const WC_PRODUCTS = [
+  /* ── Nouveaux modèles ── */
+  { id: 'p20', name: 'Ensemble Prière Jasmin', nameAr: 'طقم صلاة ياسمين',   cat: 'prayer',  price: 259, tag: 'new',  colors: ['#E8D5C4','#F7EEE8'],          img: '00',  imgFiles: ['assets/00.jpg'] },
+  { id: 'p21', name: 'Ensemble Wrap Lin',      nameAr: 'طقم راب كتان',       cat: 'robes',   price: 369, tag: 'new',  colors: ['#5C3D2E','#C4B49A','#C8D9A0'], img: '11', imgFiles: ['assets/11.jpg','assets/1.jpg','assets/2.jpg'] },
+  { id: 'p22', name: 'Robe Mousseline Rosée',  nameAr: 'فستان شيفون وردي',   cat: 'robes',   price: 329,              colors: ['#C4746B','#D49088'],           img: '3',  imgFiles: ['assets/3.jpg','assets/33.jpg'] },
+  { id: 'p23', name: 'Ensemble Denim Maroc',   nameAr: 'تنسيق جينز مغربي',   cat: 'basics',  price: 299, tag: 'new',  colors: ['#3B5BA5','#F5F5F0','#1B4332'], img: '4',  imgFiles: ['assets/4.jpg'] },
   /* ── Mode Quotidienne ── */
   { id: 'p2',  name: 'Robe Lin Casablanca',   nameAr: 'فستان كتان الدار',   cat: 'robes',   price: 389, tag: 'new',  colors: ['#F7F1EA','#B8654A'],          img: 'robe-lin-casa'   },
   { id: 'p12', name: 'Robe Longue Sahara',    nameAr: 'فستان صحراء طويل',   cat: 'robes',   price: 429,              colors: ['#B8654A','#3D2E26'],          img: 'robe-sahara'     },
@@ -11,11 +16,6 @@ const WC_PRODUCTS = [
   { id: 'p5',  name: 'Jean Taille Haute',     nameAr: 'جينز عالي الخصر',    cat: 'basics',  price: 259,              colors: ['#3D2E26','#5C4A3F'],          img: 'jean-taille-haute' },
   { id: 'p8',  name: 'Jupe Midi Douce',       nameAr: 'تنورة ميدي ناعمة',   cat: 'basics',  price: 299,              colors: ['#B8654A','#C9A86A'],          img: 'jupe-midi'       },
   { id: 'p11', name: 'Pantalon Ample Oasis',  nameAr: 'بنطلون واسع واحة',   cat: 'basics',  price: 279,              colors: ['#3D2E26','#F7F1EA'],          img: 'pantalon-oasis'  },
-  /* ── Nouveaux modèles ── */
-  { id: 'p20', name: 'Ensemble Prière Jasmin', nameAr: 'طقم صلاة ياسمين',   cat: 'prayer',  price: 259, tag: 'new',  colors: ['#E8D5C4','#F7EEE8'],          img: '00',  imgFiles: ['assets/00.jpg'] },
-  { id: 'p21', name: 'Ensemble Wrap Lin',      nameAr: 'طقم راب كتان',       cat: 'robes',   price: 369, tag: 'new',  colors: ['#5C3D2E','#C4B49A','#C8D9A0'], img: '11', imgFiles: ['assets/11.jpg','assets/1.jpg','assets/2.jpg'] },
-  { id: 'p22', name: 'Robe Mousseline Rosée',  nameAr: 'فستان شيفون وردي',   cat: 'robes',   price: 329,              colors: ['#C4746B','#D49088'],           img: '3',  imgFiles: ['assets/3.jpg','assets/33.jpg'] },
-  { id: 'p23', name: 'Ensemble Denim Maroc',   nameAr: 'تنسيق جينز مغربي',   cat: 'basics',  price: 299, tag: 'new',  colors: ['#3B5BA5','#F5F5F0','#1B4332'], img: '4',  imgFiles: ['assets/4.jpg'] },
 ];
 
 const WC_CATEGORIES = [
