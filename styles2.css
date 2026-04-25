@@ -134,7 +134,7 @@ body.ar .marquee-track { animation-direction: reverse; }
   align-items: center;
   align-items: center;
   gap: 32px;
-  padding: 14px 28px;
+  padding: 6px 28px;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -474,6 +474,20 @@ body.ar .marquee-track { animation-direction: reverse; }
   position: relative;
 }
 
+/* Desktop / tablet — flip the OPPOSITE of mobile.
+   Mobile FR: small=right → Desktop FR: small=left (default, no override needed).
+   Mobile AR: small=left  → Desktop AR: small=right (flip the small to the right). */
+@media (min-width: 769px) {
+  body.ar .hero-small {
+    left: auto !important;
+    right: -40px !important;
+  }
+  body.ar .hero-big {
+    right: auto !important;
+    left: 0 !important;
+  }
+}
+
 /* ======= CATEGORIES GRID ======= */
 .cat-grid {
   display: grid;
@@ -678,8 +692,8 @@ body.ar .wafloat2 { right: auto; left: 24px; }
     display: grid !important;
     grid-template-columns: 1fr auto 1fr !important;
     align-items: center !important;
-    padding: 6px 12px !important;
-    min-height: 64px !important;
+    padding: 4px 12px !important;
+    min-height: 70px !important;
     gap: 8px !important;
     position: relative !important;
   }
@@ -689,7 +703,7 @@ body.ar .wafloat2 { right: auto; left: 24px; }
     font-size: 20px !important;
   }
   .nav2-links { display: none !important; }
-  .nav2-logo img { height: 44px !important; }
+  .nav2-logo img { height: 60px !important; }
   .nav2-logo span { display: none; }
   .nav2-actions {
     grid-column: 3 !important;
@@ -717,13 +731,22 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .hero-grid {
     display: flex !important;
     flex-direction: column !important;
-    gap: 24px !important;
+    gap: 0 !important;
   }
   .hero-collage {
     display: block !important;
-    min-height: 380px !important;
+    min-height: 440px !important;
     order: -1 !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 0 !important;
+  }
+  /* French — small image takes a bit less space on mobile to fit */
+  body:not(.ar) .hero-small {
+    right: -20px !important;
+    width: 50% !important;
+  }
+  body:not(.ar) .hero-big {
+    left: 0 !important;
+    width: 92% !important;
   }
 
   /* Checkout — stack vertically (sidebar overlap fix) */
@@ -740,6 +763,7 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   /* Hero */
   .hero-grid { grid-template-columns: 1fr; }
   .hero-collage { display: none; }
+  .hero-eyebrow { display: none !important; }
 
   /* Hero stats — force single row, shrink text */
   .hero-stats {

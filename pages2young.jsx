@@ -15,7 +15,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
             {/* Text side */}
             <div>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="hero-eyebrow" style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? `Printemps ${year}` : `ربيع ${year}`}</span>
                 <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
               </div>
@@ -60,10 +60,10 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
             {/* Collage side */}
             <div className="hero-collage" style={{ position: 'relative', minHeight: 720 }}>
-              <div className="blob" style={{ position: 'absolute', top: 0, right: 0, width: '95%', aspectRatio: '3/4', borderRadius: 24, overflow: 'hidden' }}>
+              <div className="blob hero-big" style={{ position: 'absolute', top: 0, right: 0, width: '95%', aspectRatio: '3/4', borderRadius: 24, overflow: 'hidden' }}>
                 <img src="assets/3.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
-              <div className="blob" style={{ position: 'absolute', top: '58%', left: -40, width: '55%', aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 12px 32px rgba(15,14,13,0.14)' }}>
+              <div className="blob hero-small" style={{ position: 'absolute', top: '48%', left: -40, width: '55%', aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 12px 32px rgba(15,14,13,0.14)' }}>
                 <img src="assets/1.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               <div className="blob" style={{ position: 'absolute', top: 20, left: -8, animationDelay: '-4s' }}>
@@ -102,17 +102,17 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
           </div>
 
           <div className="cat-grid">
-            {/* Main — Espace Prière */}
-            <div className="cat-main" onClick={() => onNav('prayer')}>
-              <img src="assets/00.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {/* Main — Robes & Ensembles */}
+            <div className="cat-main" onClick={() => onNav('shop')}>
+              <img src="assets/3.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
               <div style={{ position: 'absolute', bottom: 24, left: 24, color: 'var(--paper)', zIndex: 3 }}>
-                <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>PRIÈRE / 01</div>
-                <div className="display cat-title-lg" style={{ fontSize: 56, lineHeight: 1.0, marginTop: 6 }}>
-                  {lang === 'fr' ? 'Prière' : 'الصلاة'}
+                <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>ROBES / 01</div>
+                <div className="display cat-title-lg" style={{ fontSize: 'clamp(28px, 4.4vw, 56px)', lineHeight: 1.05, marginTop: 6 }}>
+                  {lang === 'fr' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6, opacity: 0.8 }}>
-                  {lang === 'fr' ? 'Jilbab · Khimar · Ensemble' : 'جلباب · خمار · طقم صلاة'}
+                  {lang === 'fr' ? 'Wrap · Mousseline · Lin' : 'راب · شيفون · كتان'}
                 </div>
               </div>
               <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 3 }}>
@@ -122,25 +122,25 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               </div>
             </div>
 
-            {/* Side — Robes & Ensembles + Denim */}
+            {/* Side — Denim + Prière */}
             <div className="cat-side">
-              <div className="cat-small" onClick={() => onNav('shop')}>
-                <img src="assets/3.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>ROBES / 02</div>
-                  <div className="display cat-title-sm" style={{ fontSize: 'clamp(20px, 2.4vw, 30px)', lineHeight: 1.05 }}>
-                    {lang === 'fr' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
-                  </div>
-                </div>
-              </div>
               <div className="cat-small" onClick={() => onNav('shop')}>
                 <img src="assets/4.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 03</div>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 02</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
                     {lang === 'fr' ? 'Denim' : 'جينز'}
+                  </div>
+                </div>
+              </div>
+              <div className="cat-small" onClick={() => onNav('prayer')}>
+                <img src="assets/00.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
+                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>PRIÈRE / 03</div>
+                  <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
+                    {lang === 'fr' ? 'Prière' : 'الصلاة'}
                   </div>
                 </div>
               </div>
@@ -157,8 +157,8 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
             <h2 className="sh2-title">{lang === 'fr' ? 'Coups de cœur' : 'الأكثر طلباً'}</h2>
             <span className="sh2-link" onClick={() => onNav('shop')}>{lang === 'ar' ? '← ' : '→ '}{lang === 'fr' ? 'Voir tout' : 'كل المتجر'}</span>
           </div>
-          <div className="g4">
-            {WC_PRODUCTS.slice(0, 8).map((p, i) => (
+          <div className="g3">
+            {WC_PRODUCTS.slice(0, 6).map((p, i) => (
               <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
             ))}
           </div>
@@ -292,7 +292,7 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
           ))}
         </div>
 
-        <div className="g4">
+        <div className="g3">
           {filtered.map((p, i) => (
             <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
           ))}
@@ -783,7 +783,7 @@ const AboutYoung = ({ lang }) => (
   <div className="page2" style={{ padding: '60px 0 40px' }}>
     <div className="wrap">
       <div style={{ textAlign: 'center', marginBottom: 60 }}>
-        <img src="assets/wridachic-logo-new.png" style={{ height: 60, margin: '0 auto 24px' }} alt="wridachic" />
+        <img src="assets/wridachicNlogo.svg" style={{ height: 60, margin: '0 auto 24px' }} alt="wridachic" />
         <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? 'Notre histoire' : 'قصتنا'}</span>
         <h1 className="display" style={{ fontSize: 'clamp(52px, 8vw, 110px)', lineHeight: 0.92, letterSpacing: '-0.04em', marginTop: 20 }}>
           {lang === 'fr'

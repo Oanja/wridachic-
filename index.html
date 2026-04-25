@@ -38,16 +38,23 @@
     function App() {
       const [lang, setLang] = useState(TWEAKS.defaultLang);
       // Read page from URL hash first, fallback to localStorage (NEVER restore admin from storage)
-      const initialPage = (() => {
-        const h = window.location.hash.replace('#', '');
-        if (h === 'admin') return 'admin';
-        if (h) return h;
+      const parseHash = () => {
+        const h = decodeURIComponent(window.location.hash.replace('#', ''));
+        if (h.startsWith('product/')) {
+          const key = h.split('/')[1];
+          const prod = (window.WC_PRODUCTS || []).find(p => p.slug === key || p.id === key);
+          if (prod) return { page: 'product', product: prod };
+        }
+        if (h === 'admin') return { page: 'admin' };
+        if (h) return { page: h };
         const saved = localStorage.getItem('wc2-page');
-        if (saved && saved !== 'admin') return saved;
-        return 'home';
-      })();
-      const [page, setPage] = useState(initialPage);
-      const [currentProduct, setCurrentProduct] = useState(null);
+        if (saved && saved !== 'admin' && saved !== 'product') return { page: saved };
+        return { page: 'home' };
+      };
+      const initial = parseHash();
+      const [page, setPage] = useState(initial.page);
+      const [currentProduct, setCurrentProduct] = useState(initial.product || null);
+      const scrollPositions = React.useRef({});
       const [cart, setCart] = useState(() => {
         try { return JSON.parse(localStorage.getItem('wc2-cart') || '[]'); } catch { return []; }
       });
@@ -65,21 +72,39 @@
       useEffect(() => { localStorage.setItem('wc2-wishlist', JSON.stringify(wishlist)); }, [wishlist]);
       useEffect(() => { document.body.className = lang === 'ar' ? 'ar' : ''; }, [lang]);
       useEffect(() => { document.documentElement.style.setProperty('--clay', accentColor); }, [accentColor]);
-      useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [page, currentProduct]);
+      useEffect(() => {
+        if (page === 'product') {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          return;
+        }
+        const saved = scrollPositions.current[page] || 0;
+        const restore = () => window.scrollTo({ top: saved, behavior: 'instant' });
+        restore();
+        const r1 = requestAnimationFrame(() => {
+          restore();
+          requestAnimationFrame(restore);
+        });
+        const t = setTimeout(restore, 120);
+        return () => { cancelAnimationFrame(r1); clearTimeout(t); };
+      }, [page, currentProduct]);
 
       // ── HASH ROUTING : sync URL ↔ page state for back/forward buttons
       useEffect(() => {
-        const hash = page === 'home' ? '' : `#${page}`;
+        if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+      }, []);
+      useEffect(() => {
+        let hash = '';
+        if (page === 'product' && currentProduct) hash = `#product/${currentProduct.slug || currentProduct.id}`;
+        else if (page !== 'home') hash = `#${page}`;
         if (window.location.hash !== hash) {
-          window.history.pushState({ page }, '', hash || window.location.pathname);
+          window.history.pushState({ page, productId: currentProduct?.id }, '', hash || window.location.pathname);
         }
-      }, [page]);
+      }, [page, currentProduct]);
       useEffect(() => {
         const onPop = () => {
-          const h = window.location.hash.replace('#', '');
-          const target = h || 'home';
-          setCurrentProduct(null);
-          setPage(target);
+          const parsed = parseHash();
+          setCurrentProduct(parsed.product || null);
+          setPage(parsed.page);
         };
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
@@ -142,7 +167,11 @@
       const persist = (edits) => window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
 
       const goto = (p) => { setCurrentProduct(null); setPage(p); };
-      const openProduct = (p) => { setCurrentProduct(p); setPage('product'); };
+      const openProduct = (p) => {
+        if (page !== 'product') scrollPositions.current[page] = window.scrollY;
+        setCurrentProduct(p);
+        setPage('product');
+      };
       const addToCart = (item) => setCart((c) => [...c, item]);
       const buyNow = (item) => { setCart([item]); setPage('checkout'); };
       const toggleWish = (id) => {

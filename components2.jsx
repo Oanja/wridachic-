@@ -4,7 +4,7 @@ const { useState: uS, useEffect: uE, useMemo: uM, useRef: uR } = React;
 /* Logo — invert=true makes it white (for dark backgrounds) */
 const Logo2 = ({ size = 38, invert = false }) => (
   <img
-    src="assets/wridachic-logo-new.png"
+    src="assets/wridachicNlogo.svg"
     alt="wridachic"
     style={{
       height: size,
@@ -77,7 +77,7 @@ const Nav2 = ({ lang, setLang, cartCount, onNav, current, user, onAuth, onLogout
       <nav className="nav2">
         <div className="nav2-inner">
           <div className="nav2-logo" onClick={() => { onNav('home'); setMenuOpen(false); }}>
-            <Logo2 size={56} />
+            <Logo2 size={72} />
           </div>
 
           {/* Desktop links */}
@@ -224,7 +224,7 @@ const Ph2 = ({ label, tint, aspect = '3/4', rose = false }) => (
   >
     {rose && (
       <div className="ph2-rose-mark">
-        <img src="assets/wridachic-logo-new.png" alt="" />
+        <img src="assets/wridachicNlogo.svg" alt="" />
       </div>
     )}
   </div>
@@ -234,9 +234,14 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
   const t = WC_TR[lang];
   const name = lang === 'ar' ? product.nameAr : product.name;
   const [hovered, setHovered] = uS(false);
-  const [activeIdx, setActiveIdx] = uS(0);
+  const [autoIdx, setAutoIdx] = uS(0);
   const hasTwo = product.imgFiles && product.imgFiles.length > 1;
-  const showSecond = hasTwo && (hovered || activeIdx === 1);
+  uE(() => {
+    if (!hasTwo) return;
+    const id = setInterval(() => setAutoIdx(i => (i + 1) % 2), 2800);
+    return () => clearInterval(id);
+  }, [hasTwo]);
+  const showSecond = hasTwo && (hovered || autoIdx === 1);
   return (
     <div className="pcard" onClick={() => onClick(product)}>
       <div className="pcard-img" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
@@ -245,25 +250,14 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
             <img
               src={product.imgFiles[0]}
               alt={name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: showSecond ? 0 : 1 }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.6s ease', opacity: showSecond ? 0 : 1 }}
             />
             {hasTwo && (
               <img
                 src={product.imgFiles[1]}
                 alt={name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: showSecond ? 1 : 0 }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.6s ease', opacity: showSecond ? 1 : 0 }}
               />
-            )}
-            {hasTwo && (
-              <div className="pcard-dots" onClick={(e) => e.stopPropagation()}>
-                {product.imgFiles.slice(0, 2).map((_, i) => (
-                  <span
-                    key={i}
-                    className={activeIdx === i ? 'on' : ''}
-                    onClick={(e) => { e.stopPropagation(); setActiveIdx(i); }}
-                  />
-                ))}
-              </div>
             )}
           </>
         ) : (
@@ -327,7 +321,7 @@ const Footer2 = ({ lang, onNav }) => {
 
         <div className="f2-cols">
           <div>
-            <Logo2 size={100} invert />
+            <Logo2 size={150} invert />
             <p style={{ fontSize: 14, opacity: 0.65, marginTop: 16, maxWidth: 280, lineHeight: 1.7 }}>
               {t.footer.tagline}
             </p>
