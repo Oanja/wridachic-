@@ -61,10 +61,10 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
             {/* Collage side */}
             <div className="hero-collage" style={{ position: 'relative', minHeight: 580 }}>
               <div className="blob" style={{ position: 'absolute', top: 0, right: 0, width: '82%', aspectRatio: '3/4', borderRadius: 24, overflow: 'hidden' }}>
-                <Ph2 tint="clay" rose />
+                <img src="assets/4.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               <div className="blob" style={{ position: 'absolute', top: '52%', left: 0, width: '52%', aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 12px 32px rgba(15,14,13,0.14)' }}>
-                <Ph2 tint="lime" />
+                <img src="assets/3.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               <div className="blob" style={{ position: 'absolute', top: 20, left: -8, animationDelay: '-4s' }}>
                 <span className="sticker">{lang === 'fr' ? '✦ dès 149 MAD' : '✦ من 149 درهم'}</span>
@@ -104,7 +104,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
           <div className="cat-grid">
             {/* Main — Espace Prière */}
             <div className="cat-main" onClick={() => onNav('prayer')}>
-              <Ph2 tint="mint" rose aspect="none" />
+              <img src="assets/00.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
               <div style={{ position: 'absolute', bottom: 24, left: 24, color: 'var(--paper)', zIndex: 3 }}>
                 <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>PRIÈRE / 01</div>
@@ -184,7 +184,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
           <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 40, alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <div style={{ aspectRatio: '4/5', borderRadius: 24, overflow: 'hidden' }}>
-                <Ph2 tint="mint" rose />
+                <img src="assets/00.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               <div style={{ position: 'absolute', bottom: 28, right: -16 }}>
                 <span className="sticker sticker-sky" style={{ transform: 'rotate(-4deg)' }}>
