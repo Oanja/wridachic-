@@ -645,20 +645,62 @@ body.ar .wafloat2 { right: auto; left: 24px; }
 @media (max-width: 768px) {
   .hero-section { padding: 24px 16px 40px !important; }
 
-  /* Nav */
+  /* Nav — 3 colonnes : LANG | logo | actions */
   .nav2-inner {
-    grid-template-columns: auto 1fr auto;
-    padding: 4px 16px;
-    gap: 0;
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+    padding: 6px 12px !important;
+    min-height: 64px !important;
+    gap: 8px !important;
+    position: relative !important;
   }
-  .nav2-links { display: none; }
-  .nav2-logo { font-size: 20px; }
-  .nav2-logo img { height: 52px !important; }
+  .nav2-logo {
+    grid-column: 2 !important;
+    justify-self: center !important;
+    font-size: 20px !important;
+  }
+  .nav2-links { display: none !important; }
+  .nav2-logo img { height: 44px !important; }
   .nav2-logo span { display: none; }
+  .nav2-actions {
+    grid-column: 3 !important;
+    justify-self: end !important;
+    flex-wrap: nowrap !important;
+  }
+  /* Lang switcher → left spacer (column 1) */
+  .nav2-lang {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+  }
   .nav2-search-btn, .nav2-heart-btn { display: none !important; }
+  /* Force LTR layout for nav on mobile so positions stay visual (not flipped by RTL) */
+  body.ar .nav2-inner { direction: ltr !important; }
+  body.ar .nav2-actions { justify-self: end !important; }
   /* Product tags smaller on mobile */
   .pcard-tag { font-size: 9px !important; padding: 4px 8px !important; }
-  .nav2-lang { margin-right: 0; }
+  .nav2-lang button { padding: 4px 8px !important; font-size: 10px !important; }
+  .nav2-actions button { width: 34px !important; height: 34px !important; }
+
+  /* Hero — collage AVANT le texte sur mobile */
+  .hero-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+  .hero-collage {
+    display: block !important;
+    min-height: 380px !important;
+    order: -1 !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Checkout — stack vertically (sidebar overlap fix) */
+  .checkout-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .checkout-grid > aside { order: 2; }
 
   /* Wrap */
   .wrap { padding: 0 16px; }
@@ -711,10 +753,14 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .cart-grid { grid-template-columns: 1fr !important; }
   .cart-grid aside { border-radius: 16px !important; }
 
-  /* Grids */
-  .g4 { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+  /* Grids — single column for products (only 4 models, big images) */
+  .g4 { grid-template-columns: 1fr !important; gap: 20px !important; }
   .g3 { grid-template-columns: 1fr !important; }
   .g6 { grid-template-columns: repeat(3, 1fr) !important; }
+  /* Bigger product card images on mobile */
+  .pcard-img { aspect-ratio: 4/5 !important; border-radius: 18px !important; }
+  .pcard-name { font-size: 17px !important; }
+  .pcard-price { font-size: 16px !important; }
 
   /* Big ticker — smaller on mobile */
   .big-ticker-section { padding: 24px 0 !important; }
@@ -745,3 +791,4 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   /* Buttons */
   .btn2-lg { padding: 14px 24px; font-size: 13px; }
 }
+

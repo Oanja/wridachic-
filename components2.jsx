@@ -53,9 +53,17 @@ const Marquee = ({ items }) => {
   );
 };
 
-const Nav2 = ({ lang, setLang, cartCount, onNav, current }) => {
+const Nav2 = ({ lang, setLang, cartCount, onNav, current, user, onAuth, onLogout }) => {
   const t = WC_TR[lang];
   const [menuOpen, setMenuOpen] = uS(false);
+  const [userOpen, setUserOpen] = uS(false);
+  const userRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!userOpen) return;
+    const onDoc = (e) => { if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [userOpen]);
   const items = [
     { id: 'shop',     label: t.nav.shop },
     { id: 'prayer',   label: t.nav.prayer },
@@ -88,7 +96,61 @@ const Nav2 = ({ lang, setLang, cartCount, onNav, current }) => {
               <button className={lang === 'ar' ? 'active' : ''} onClick={() => setLang('ar')}>ع</button>
             </div>
             <button className="nav2-search-btn" title="Recherche"><Ic n="search" /></button>
-            <button className="nav2-heart-btn" title="Favoris"><Ic n="heart" /></button>
+            <div ref={userRef} style={{ position: 'relative' }}>
+              <button title={user ? (lang === 'fr' ? 'Mon compte' : 'حسابي') : (lang === 'fr' ? 'Connexion' : 'دخول')} onClick={() => user ? setUserOpen(o => !o) : onAuth()} style={user ? { background: 'var(--ink)', color: 'var(--paper)' } : {}}>
+                <Ic n="user" />
+              </button>
+              {user && userOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  left: 'auto',
+                  width: 240,
+                  maxWidth: 'calc(100vw - 24px)',
+                  background: 'var(--paper)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 14,
+                  boxShadow: '0 12px 32px rgba(15,14,13,0.12)',
+                  padding: 8,
+                  zIndex: 80,
+                  fontFamily: 'Space Grotesk',
+                  textAlign: lang === 'ar' ? 'right' : 'left',
+                }}>
+                  <div style={{ padding: '10px 12px 12px', borderBottom: '1px solid var(--line)', marginBottom: 6 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.2 }}>
+                      {user.user_metadata?.full_name || user.email.split('@')[0]}
+                    </div>
+                    <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                  </div>
+                  {[
+                    { id: 'account',  label: lang === 'fr' ? 'Mon profil'   : 'ملفي الشخصي',   tab: 'profile' },
+                    { id: 'account',  label: lang === 'fr' ? 'Mes commandes' : 'طلباتي',       tab: 'orders' },
+                    { id: 'account',  label: lang === 'fr' ? 'Mes favoris'  : 'مفضلاتي',      tab: 'wishlist' },
+                  ].map((it, i) => (
+                    <a key={i} onClick={() => {
+                      setUserOpen(false);
+                      window.__accountTab = it.tab;
+                      window.dispatchEvent(new Event('account:gotab'));
+                      onNav('account');
+                    }}
+                      style={{ display: 'block', padding: '9px 12px', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--paper-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      {it.label}
+                    </a>
+                  ))}
+                  {onLogout && (
+                    <a onClick={() => { setUserOpen(false); onLogout(); }}
+                      style={{ display: 'block', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: 'var(--clay)', cursor: 'pointer', borderTop: '1px solid var(--line)', marginTop: 4 }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--paper-2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      ↗ {lang === 'fr' ? 'Déconnexion' : 'تسجيل خروج'}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
             <button title="Panier" onClick={() => onNav('cart')}>
               <Ic n="bag" />
               {cartCount > 0 && <span className="cart-dot">{cartCount}</span>}

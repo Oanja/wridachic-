@@ -260,21 +260,21 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
     <div className="page2" style={{ padding: '40px 0 80px' }}>
       <div className="wrap">
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid var(--ink)', paddingBottom: 16, marginBottom: 28 }}>
-          <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap', borderBottom: '1px solid var(--ink)', paddingBottom: 16, marginBottom: 28 }}>
+          <div style={{ minWidth: 0 }}>
             <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'boutique' : 'المتجر'} /</span>
             <h1 className="display" style={{ fontSize: 'clamp(44px, 7vw, 72px)', lineHeight: 1, letterSpacing: '-0.03em' }}>
               {lang === 'fr' ? 'La boutique.' : 'المتجر.'}
             </h1>
+            <span className="mono" style={{ fontSize: 12, opacity: 0.5, display: 'inline-block', marginTop: 10 }}>
+              {filtered.length} {lang === 'fr' ? 'articles' : 'قطعة'}
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span className="mono" style={{ fontSize: 12, opacity: 0.5 }}>{filtered.length} {lang === 'fr' ? 'articles' : 'قطعة'}</span>
-            <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ padding: '8px 14px', border: '1.5px solid var(--ink)', borderRadius: 999, background: 'var(--paper)', fontFamily: 'inherit', fontSize: 13 }}>
-              <option value="featured">{lang === 'fr' ? 'Sélection' : 'مميز'}</option>
-              <option value="price-asc">{lang === 'fr' ? 'Prix croissant' : 'السعر ↗'}</option>
-              <option value="price-desc">{lang === 'fr' ? 'Prix décroissant' : 'السعر ↘'}</option>
-            </select>
-          </div>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ padding: '8px 14px', border: '1.5px solid var(--ink)', borderRadius: 999, background: 'var(--paper)', fontFamily: 'inherit', fontSize: 13 }}>
+            <option value="featured">{lang === 'fr' ? 'Sélection' : 'مميز'}</option>
+            <option value="price-asc">{lang === 'fr' ? 'Prix croissant' : 'السعر ↗'}</option>
+            <option value="price-desc">{lang === 'fr' ? 'Prix décroissant' : 'السعر ↘'}</option>
+          </select>
         </div>
 
         {/* Category filters */}
@@ -303,7 +303,7 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
 };
 
 // ======== PRODUCT DETAIL ========
-const PDetailYoung = ({ lang, product, onBack, onAddToCart, onProduct, wishlist, toggleWish }) => {
+const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct, wishlist, toggleWish }) => {
   const t = WC_TR[lang];
   const [size, setSize] = u2S('M');
   const [color, setColor] = u2S(product.colors[0]);
@@ -392,9 +392,9 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onProduct, wishlist,
               </button>
               <button className="btn2 btn2-outline" onClick={() => toggleWish(product.id)}><Ic n="heart" s={16} /></button>
             </div>
-            <a className="btn2 btn2-wa" href="https://wa.me/212600000000" target="_blank" style={{ width: '100%', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Ic n="wa" s={16} /> {t.product.buyWa}
-            </a>
+            <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12 }} onClick={() => onBuyNow({ ...product, size, color, qty })}>
+              {lang === 'fr' ? 'Commander maintenant →' : 'اطلبي دابا ←'}
+            </button>
 
             {/* Badges */}
             <div className="pdetail-badges" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
@@ -512,7 +512,7 @@ const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue }
 };
 
 // ======== CHECKOUT ========
-const CheckoutYoung = ({ lang, cart, onSuccess }) => {
+const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
   const t = WC_TR[lang];
   const [step, setStep] = u2S(1);
   const [payment, setPayment] = u2S('cod');
@@ -532,16 +532,15 @@ const CheckoutYoung = ({ lang, cart, onSuccess }) => {
       qty: it.qty, size: it.size, color: it.color, price: it.price,
     }));
     try {
-      await window._sb.from('orders').insert({
+      const payload = {
         order_number: num, status: 'nouveau',
         full_name: form.fullName, phone: form.phone, email: form.email,
         address: form.address, city: form.city, payment,
         subtotal, delivery, total, items: itemsData, lang,
-      });
+      };
+      if (user) payload.user_id = user.id;
+      await window._sb.from('orders').insert(payload);
     } catch(e) { console.error('Supabase:', e); }
-    const itemsText = itemsData.map(it => `• ${it.name} × ${it.qty} — ${it.size} — ${it.color}`).join('\n');
-    const msg = `🛍️ *طلب جديد — wridachic*\n━━━━━━━━━━━━━━━━━━━━\n👤 *الاسم:* ${form.fullName}\n📱 *الهاتف:* ${form.phone}\n📧 *الإيميل:* ${form.email}\n📍 *العنوان:* ${form.address}، ${form.city}\n\n🛒 *المنتجات:*\n${itemsText}\n\n💰 *المجموع:* ${subtotal} MAD\n🚚 *التوصيل:* ${delivery === 0 ? 'مجاني ✓' : delivery + ' MAD'}\n💳 *الإجمالي:* ${total} MAD\n💳 *الدفع:* ${payment === 'cod' ? 'عند الاستلام' : 'بطاقة بنكية'}\n\n📋 *رقم الطلب:* ${num}`;
-    window.open(`https://wa.me/212772086545?text=${encodeURIComponent(msg)}`, '_blank');
     setSaving(false);
     setStep(4);
   };
@@ -565,80 +564,84 @@ const CheckoutYoung = ({ lang, cart, onSuccess }) => {
       <div className="wrap" style={{ maxWidth: 1100 }}>
         <h1 className="display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', textAlign: 'center', marginBottom: 20, letterSpacing: '-0.03em' }}>{t.checkout.title}</h1>
 
-        {/* Steps */}
+        {/* Steps — only 2 now (shipping + review, payment forcé COD) */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, flexWrap: 'wrap' }}>
-          {[t.checkout.shipping, t.checkout.payment, t.checkout.review].map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, color: step > i ? 'var(--ink)' : step === i + 1 ? 'var(--clay)' : 'var(--muted)' }}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', border: '1.5px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', background: step > i ? 'var(--ink)' : 'transparent', color: step > i ? 'var(--paper)' : 'inherit' }}>
-                {step > i ? <Ic n="check" s={10} /> : `0${i + 1}`}
+          {[t.checkout.shipping, t.checkout.review].map((s, i) => {
+            const stepIdx = i === 0 ? 1 : 3;
+            const passed = step > stepIdx;
+            const active = step === stepIdx;
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, color: passed ? 'var(--ink)' : active ? 'var(--clay)' : 'var(--muted)' }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', border: '1.5px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', background: passed ? 'var(--ink)' : 'transparent', color: passed ? 'var(--paper)' : 'inherit' }}>
+                  {passed ? <Ic n="check" s={10} /> : `0${i + 1}`}
+                </div>
+                <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s}</span>
+                {i < 1 && <span style={{ width: 20, height: 1, background: 'currentColor', opacity: 0.25 }} />}
               </div>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s}</span>
-              {i < 2 && <span style={{ width: 20, height: 1, background: 'currentColor', opacity: 0.25 }} />}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40 }}>
+        <div className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40 }}>
           <div>
             {step === 1 && (
               <div>
                 <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>{t.checkout.shipping}</h2>
                 <div style={{ display: 'grid', gap: 12 }}>
-                  {['fullName','phone','email','address'].map(f => (
-                    <div key={f}>
-                      <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{t.checkout[f]}</label>
-                      <input className="input2" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} style={{ marginTop: 4 }} type={f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text'} />
-                    </div>
-                  ))}
+                  {['fullName','phone','email','address'].map(f => {
+                    const required = f !== 'email';
+                    return (
+                      <div key={f}>
+                        <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>
+                          {t.checkout[f]} {required && <span style={{ color: 'var(--clay)' }}>*</span>}
+                        </label>
+                        <input className="input2" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} style={{ marginTop: 4 }} type={f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text'} required={required} />
+                      </div>
+                    );
+                  })}
                   <div>
-                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{t.checkout.city}</label>
+                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>
+                      {t.checkout.city} <span style={{ color: 'var(--clay)' }}>*</span>
+                    </label>
                     <select className="input2" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ marginTop: 4 }}>
                       {['Casablanca','Rabat','Marrakech','Fès','Tanger','Agadir','Meknès','Oujda'].map(c => <option key={c}>{c}</option>)}
                     </select>
                   </div>
                 </div>
-                <button className="btn2 btn2-dark btn2-lg" style={{ marginTop: 24 }} onClick={() => setStep(2)}>{lang === 'fr' ? 'Continuer' : 'متابعة'} →</button>
-              </div>
-            )}
-            {step === 2 && (
-              <div>
-                <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>{t.checkout.payment}</h2>
-                {[
-                  { id: 'cod', t: t.checkout.cod, d: t.checkout.codDesc, ic: 'truck', tag: lang === 'fr' ? 'populaire' : 'الأكثر استخداماً' },
-                  { id: 'cib', t: t.checkout.cib, d: t.checkout.cibDesc, ic: 'shield' },
-                ].map(p => (
-                  <label key={p.id} style={{ display: 'flex', gap: 14, padding: 20, border: `1.5px solid ${payment === p.id ? 'var(--ink)' : 'var(--line)'}`, borderRadius: 14, marginBottom: 10, cursor: 'pointer', background: payment === p.id ? 'var(--paper-2)' : 'transparent' }}>
-                    <input type="radio" checked={payment === p.id} onChange={() => setPayment(p.id)} style={{ accentColor: 'var(--ink)', marginTop: 2 }} />
-                    <Ic n={p.ic} s={22} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <span style={{ fontWeight: 600 }}>{p.t}</span>
-                        {p.tag && <span className="sticker" style={{ padding: '2px 8px', fontSize: 9 }}>{p.tag}</span>}
-                      </div>
-                      <div style={{ fontSize: 13, opacity: 0.55, marginTop: 4 }}>{p.d}</div>
-                    </div>
-                  </label>
-                ))}
-                <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                  <button className="btn2 btn2-outline" onClick={() => setStep(1)}>← {lang === 'fr' ? 'Retour' : 'رجوع'}</button>
-                  <button className="btn2 btn2-dark btn2-lg" onClick={() => setStep(3)}>{lang === 'fr' ? 'Continuer' : 'متابعة'} →</button>
-                </div>
+                {(() => {
+                  const valid = form.fullName.trim() && /^[0-9]{9,10}$/.test(form.phone.trim()) && form.address.trim() && form.city.trim();
+                  return (
+                    <>
+                      {!valid && (form.fullName || form.phone || form.address) && (
+                        <p className="mono" style={{ fontSize: 11, color: 'var(--clay)', marginTop: 12 }}>
+                          {lang === 'fr' ? '⚠ Remplis tous les champs obligatoires (téléphone valide).' : '⚠ كملي جميع الحقول الإجبارية (رقم هاتف صحيح).'}
+                        </p>
+                      )}
+                      <button
+                        className="btn2 btn2-dark btn2-lg"
+                        style={{ marginTop: 16, opacity: valid ? 1 : 0.4, cursor: valid ? 'pointer' : 'not-allowed' }}
+                        disabled={!valid}
+                        onClick={() => valid && setStep(3)}
+                      >{lang === 'fr' ? 'Continuer' : 'متابعة'} →</button>
+                    </>
+                  );
+                })()}
               </div>
             )}
             {step === 3 && (
               <div>
                 <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>{t.checkout.review}</h2>
-                {[
-                  { label: t.checkout.shipping, content: <><div>{form.fullName || '—'}</div><div style={{ opacity: 0.6, fontSize: 13 }}>{form.address || '—'}, {form.city} · {form.phone || '—'}</div></> },
-                  { label: t.checkout.payment, content: <div>{payment === 'cod' ? t.checkout.cod : t.checkout.cib}</div> },
-                ].map(({ label, content }) => (
-                  <div key={label} style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14, marginBottom: 10 }}>
-                    <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
-                    {content}
-                  </div>
-                ))}
+                <div style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14, marginBottom: 10 }}>
+                  <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{t.checkout.shipping}</div>
+                  <div>{form.fullName || '—'}</div>
+                  <div style={{ opacity: 0.6, fontSize: 13 }}>{form.address || '—'}, {form.city} · {form.phone || '—'}</div>
+                </div>
+                <div style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14, marginBottom: 10 }}>
+                  <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{lang === 'fr' ? 'Paiement' : 'الدفع'}</div>
+                  <div>{t.checkout.cod}</div>
+                </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                  <button className="btn2 btn2-outline" onClick={() => setStep(2)}>← {lang === 'fr' ? 'Retour' : 'رجوع'}</button>
+                  <button className="btn2 btn2-outline" onClick={() => setStep(1)}>← {lang === 'fr' ? 'Retour' : 'رجوع'}</button>
                   <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={placeOrder} disabled={saving}>{saving ? '...' : t.checkout.place + ' ✨'}</button>
                 </div>
               </div>
@@ -859,11 +862,13 @@ const AdminYoung = () => {
   const [pwd, setPwd] = u2S('');
   const [authed, setAuthed] = u2S(false);
   const [orders, setOrders] = u2S([]);
+  const [users, setUsers] = u2S([]);
   const [loading, setLoading] = u2S(false);
   const [error, setError] = u2S('');
+  const [tab, setTab] = u2S('orders');
 
   const login = () => {
-    if (pwd === ADMIN_PASS) { setAuthed(true); fetchOrders(); }
+    if (pwd === ADMIN_PASS) { setAuthed(true); fetchOrders(); fetchUsers(); }
     else setError('Mot de passe incorrect');
   };
 
@@ -875,17 +880,39 @@ const AdminYoung = () => {
     setLoading(false);
   };
 
+  const fetchUsers = async () => {
+    const { data, error } = await window._sb.from('profiles').select('*').order('created_at', { ascending: false });
+    if (!error) setUsers(data || []);
+  };
+
   const updateStatus = async (id, status) => {
     await window._sb.from('orders').update({ status }).eq('id', id);
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
+  const deleteOrder = async (id) => {
+    if (!confirm('Supprimer cette commande définitivement ?')) return;
+    await window._sb.from('orders').delete().eq('id', id);
+    setOrders(prev => prev.filter(o => o.id !== id));
+  };
+
   const fmt = (iso) => new Date(iso).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+  const userStats = (uid) => {
+    const userOrders = orders.filter(o => o.user_id === uid);
+    return {
+      count: userOrders.length,
+      total: userOrders.reduce((s, o) => s + (o.total || 0), 0),
+    };
+  };
 
   if (!authed) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
-      <div style={{ background: 'var(--paper)', padding: 40, borderRadius: 20, width: 320, textAlign: 'center' }}>
-        <Logo2 size={48} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)', padding: 16 }}>
+      <div style={{ background: 'var(--paper)', padding: 40, borderRadius: 20, width: '100%', maxWidth: 320, textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
+          <Logo2 size={48} />
+        </div>
         <h2 className="display" style={{ fontSize: 24, marginTop: 20, marginBottom: 6 }}>Admin</h2>
         <p className="mono" style={{ fontSize: 11, opacity: 0.5, marginBottom: 24 }}>TABLEAU DE BORD</p>
         <input
@@ -901,91 +928,620 @@ const AdminYoung = () => {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0F0E0D', color: '#FAF6F1', padding: '32px 24px' }}>
+    <div style={{ minHeight: '100vh', background: '#0F0E0D', color: '#FAF6F1', padding: '24px 16px' }}>
+      <style>{`
+        .adm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .adm-order { display: grid; grid-template-columns: 120px 1fr 1fr auto; gap: 16px; align-items: start; }
+        .adm-status { display: flex; flex-direction: column; gap: 6px; }
+        @media (max-width: 640px) {
+          .adm-stats { grid-template-columns: repeat(2, 1fr); }
+          .adm-order { grid-template-columns: 1fr 1fr; }
+          .adm-order-num { grid-column: 1; }
+          .adm-order-customer { grid-column: 2; }
+          .adm-order-items { grid-column: 1 / -1; border-top: 1px solid rgba(250,246,241,0.08); padding-top: 10px; }
+          .adm-status { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; border-top: 1px solid rgba(250,246,241,0.08); padding-top: 10px; }
+        }
+      `}</style>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Logo2 size={36} invert />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Logo2 size={32} invert />
             <div>
-              <div className="display" style={{ fontSize: 22 }}>Tableau de bord</div>
+              <div className="display" style={{ fontSize: 20 }}>Tableau de bord</div>
               <div className="mono" style={{ fontSize: 10, opacity: 0.4 }}>{orders.length} COMMANDES</div>
             </div>
           </div>
-          <button onClick={fetchOrders} className="btn2 btn2-outline" style={{ fontSize: 12, color: '#FAF6F1', borderColor: 'rgba(250,246,241,0.3)' }}>
+          <button onClick={() => { fetchOrders(); fetchUsers(); }} className="btn2 btn2-outline" style={{ fontSize: 12, color: '#FAF6F1', borderColor: 'rgba(250,246,241,0.3)', padding: '10px 16px' }}>
             ↻ Actualiser
           </button>
         </div>
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
-          {STATUS_LABELS.map(s => {
-            const count = orders.filter(o => o.status === s).length;
-            const total = orders.filter(o => o.status === s).reduce((acc, o) => acc + (o.total || 0), 0);
-            return (
-              <div key={s} style={{ background: 'rgba(250,246,241,0.05)', borderRadius: 16, padding: 20, borderLeft: `3px solid ${STATUS_COLORS[s]}` }}>
-                <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s}</div>
-                <div className="display" style={{ fontSize: 32, marginTop: 4 }}>{count}</div>
-                <div className="mono" style={{ fontSize: 11, opacity: 0.4, marginTop: 4 }}>{total} MAD</div>
-              </div>
-            );
-          })}
+        {/* TABS */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid rgba(250,246,241,0.1)', flexWrap: 'wrap' }}>
+          {[
+            { id: 'orders', label: `Commandes (${orders.length})` },
+            { id: 'users',  label: `Utilisateurs (${users.length})` },
+          ].map(tb => (
+            <button key={tb.id} onClick={() => setTab(tb.id)} className="mono" style={{
+              padding: '12px 20px', fontSize: 12, marginBottom: -1, cursor: 'pointer',
+              borderBottom: tab === tb.id ? '2px solid var(--clay)' : '2px solid transparent',
+              color: tab === tb.id ? '#FAF6F1' : 'rgba(250,246,241,0.4)',
+              fontWeight: tab === tb.id ? 600 : 400,
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+            }}>{tb.label}</button>
+          ))}
         </div>
 
-        {/* Orders Table */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Chargement...</div>
-        ) : orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Aucune commande pour l'instant.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {orders.map(o => (
-              <div key={o.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 16, padding: '20px 24px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr 1fr auto', gap: 20, alignItems: 'start' }}>
-                  {/* Order # + date */}
-                  <div>
-                    <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--clay)' }}>{o.order_number}</div>
-                    <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>{fmt(o.created_at)}</div>
-                  </div>
-                  {/* Customer */}
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{o.full_name}</div>
-                    <div className="mono" style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{o.phone}</div>
-                    <div className="mono" style={{ fontSize: 11, opacity: 0.4 }}>{o.email}</div>
-                    <div className="mono" style={{ fontSize: 11, opacity: 0.4 }}>{o.address}, {o.city}</div>
-                  </div>
-                  {/* Items + total */}
-                  <div>
-                    {(o.items || []).map((it, i) => (
-                      <div key={i} className="mono" style={{ fontSize: 11, opacity: 0.7, marginBottom: 3 }}>
-                        {it.name} × {it.qty} — {it.size}
-                        <span style={{ display: 'inline-block', width: 10, height: 10, background: it.color, borderRadius: '50%', verticalAlign: 'middle', marginLeft: 6, border: '1px solid rgba(250,246,241,0.3)' }} />
+        {tab === 'orders' && (<>
+          {/* Stats */}
+          <div className="adm-stats">
+            {STATUS_LABELS.map(s => {
+              const count = orders.filter(o => o.status === s).length;
+              const total = orders.filter(o => o.status === s).reduce((acc, o) => acc + (o.total || 0), 0);
+              return (
+                <div key={s} style={{ background: 'rgba(250,246,241,0.05)', borderRadius: 14, padding: 16, borderLeft: `3px solid ${STATUS_COLORS[s]}` }}>
+                  <div className="mono" style={{ fontSize: 9, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s}</div>
+                  <div className="display" style={{ fontSize: 28, marginTop: 4 }}>{count}</div>
+                  <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 2 }}>{total} MAD</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Orders */}
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Chargement...</div>
+          ) : orders.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Aucune commande pour l'instant.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {orders.map(o => (
+                <div key={o.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 14, padding: '16px' }}>
+                  <div className="adm-order">
+                    <div className="adm-order-num">
+                      <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--clay)' }}>{o.order_number}</div>
+                      <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>{fmt(o.created_at)}</div>
+                    </div>
+                    <div className="adm-order-customer">
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{o.full_name}</div>
+                      <div className="mono" style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{o.phone}</div>
+                      <div className="mono" style={{ fontSize: 11, opacity: 0.4 }}>{o.email}</div>
+                      <div className="mono" style={{ fontSize: 11, opacity: 0.4 }}>{o.address}, {o.city}</div>
+                    </div>
+                    <div className="adm-order-items">
+                      {(o.items || []).map((it, i) => (
+                        <div key={i} className="mono" style={{ fontSize: 11, opacity: 0.7, marginBottom: 3 }}>
+                          {it.name} × {it.qty} — {it.size}
+                          <span style={{ display: 'inline-block', width: 10, height: 10, background: it.color, borderRadius: '50%', verticalAlign: 'middle', marginLeft: 6, border: '1px solid rgba(250,246,241,0.3)' }} />
+                        </div>
+                      ))}
+                      <div style={{ marginTop: 6, fontWeight: 700 }}>{o.total} MAD
+                        <span className="mono" style={{ fontSize: 10, opacity: 0.45, marginLeft: 8 }}>COD</span>
                       </div>
-                    ))}
-                    <div style={{ marginTop: 8, fontWeight: 700 }}>{o.total} MAD
-                      <span className="mono" style={{ fontSize: 10, opacity: 0.45, marginLeft: 8 }}>{o.payment === 'cod' ? 'COD' : 'CIB'}</span>
+                    </div>
+                    <div className="adm-status">
+                      {STATUS_LABELS.map(s => (
+                        <button key={s} onClick={() => updateStatus(o.id, s)} className="mono" style={{
+                          padding: '5px 12px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
+                          background: o.status === s ? STATUS_COLORS[s] : 'transparent',
+                          color: o.status === s ? '#fff' : 'rgba(250,246,241,0.4)',
+                          border: `1px solid ${o.status === s ? STATUS_COLORS[s] : 'rgba(250,246,241,0.15)'}`,
+                          textTransform: 'uppercase', letterSpacing: '0.06em',
+                        }}>{s}</button>
+                      ))}
+                      <button onClick={() => deleteOrder(o.id)} className="mono" style={{
+                        padding: '5px 12px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
+                        background: 'transparent', color: 'rgba(255,90,90,0.7)',
+                        border: '1px solid rgba(255,90,90,0.35)',
+                        textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4,
+                      }}>✕ Supprimer</button>
                     </div>
                   </div>
-                  {/* Status */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {STATUS_LABELS.map(s => (
-                      <button key={s} onClick={() => updateStatus(o.id, s)} className="mono" style={{
-                        padding: '5px 12px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
-                        background: o.status === s ? STATUS_COLORS[s] : 'transparent',
-                        color: o.status === s ? '#fff' : 'rgba(250,246,241,0.4)',
-                        border: `1px solid ${o.status === s ? STATUS_COLORS[s] : 'rgba(250,246,241,0.15)'}`,
-                        textTransform: 'uppercase', letterSpacing: '0.06em',
-                      }}>{s}</button>
-                    ))}
-                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </>)}
+
+        {tab === 'users' && (
+          users.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">
+              Aucun utilisateur. Crée la table `profiles` dans Supabase (voir instructions).
+            </div>
+          ) : (
+            <>
+              <div style={{ background: 'rgba(250,246,241,0.05)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                <span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>
+                  ℹ Liste en lecture seule. Pour modifier ou supprimer → Supabase Dashboard
+                </span>
+                <a href="https://supabase.com/dashboard/project/guoapqclmskyoubyivuv/auth/users" target="_blank" rel="noopener" className="mono" style={{ fontSize: 10, color: 'var(--clay)', textDecoration: 'underline', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  → Ouvrir Supabase Auth ↗
+                </a>
               </div>
-            ))}
-          </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {users.map(u => {
+                const stats = userStats(u.id);
+                return (
+                  <div key={u.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 14, padding: 16 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{u.full_name || '—'}</div>
+                    <div className="mono" style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{u.email}</div>
+                    <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>
+                      Inscrit le {fmtDate(u.created_at)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
+                      <span className="mono" style={{ fontSize: 11 }}>
+                        <span style={{ opacity: 0.5 }}>Commandes :</span> <strong>{stats.count}</strong>
+                      </span>
+                      <span className="mono" style={{ fontSize: 11 }}>
+                        <span style={{ opacity: 0.5 }}>Total :</span> <strong style={{ color: 'var(--clay)' }}>{stats.total} MAD</strong>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </>
+          )
+        )}
+
+      </div>
+    </div>
+  );
+};
+
+// ======== AUTH MODAL ========
+const AuthYoung = ({ lang, onClose, onSuccess }) => {
+  const [mode, setMode] = u2S('login'); // login | signup | otp | reset
+  const [email, setEmail] = u2S('');
+  const [pwd, setPwd] = u2S('');
+  const [name, setName] = u2S('');
+  const [otp, setOtp] = u2S('');
+  const [busy, setBusy] = u2S(false);
+  const [err, setErr] = u2S('');
+  const [info, setInfo] = u2S('');
+
+  const submit = async () => {
+    setErr(''); setInfo(''); setBusy(true);
+    try {
+      if (mode === 'signup') {
+        if (pwd.length < 6) throw new Error(lang === 'fr' ? '6 caractères minimum' : '6 أحرف على الأقل');
+        const { data, error } = await window._sb.auth.signUp({
+          email, password: pwd,
+          options: { data: { full_name: name } }
+        });
+        if (error) throw error;
+        // Si email confirmation activée → passer à l'étape OTP
+        if (data.user && !data.session) {
+          setMode('otp');
+          setInfo(lang === 'fr' ? '✉ Code à 8 chiffres envoyé par email' : '✉ تم إرسال رمز من 8 أرقام للإيميل');
+        } else if (data.user && data.session) {
+          // Pas de confirmation requise → connecté direct
+          onSuccess(data.user);
+        }
+      } else if (mode === 'login') {
+        const { data, error } = await window._sb.auth.signInWithPassword({ email, password: pwd });
+        if (error) {
+          if (error.message.toLowerCase().includes('not confirmed') || error.message.toLowerCase().includes('email')) {
+            await window._sb.auth.resend({ type: 'signup', email });
+            setMode('otp');
+            setInfo(lang === 'fr' ? '⚠ Compte non confirmé. Code renvoyé par email.' : '⚠ الحساب غير مؤكد. تم إرسال رمز جديد.');
+          } else throw error;
+        } else if (data.user) {
+          onSuccess(data.user);
+        }
+      } else if (mode === 'otp') {
+        const { data, error } = await window._sb.auth.verifyOtp({ email, token: otp.trim(), type: 'signup' });
+        if (error) throw error;
+        if (data.user) onSuccess(data.user);
+      } else if (mode === 'reset') {
+        const { error } = await window._sb.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+        setInfo(lang === 'fr' ? '✓ Lien de réinitialisation envoyé.' : '✓ تم إرسال رابط إعادة التعيين.');
+      }
+    } catch (e) { setErr(e.message || 'Erreur'); }
+    setBusy(false);
+  };
+
+  const resendCode = async () => {
+    setErr(''); setBusy(true);
+    const { error } = await window._sb.auth.resend({ type: 'signup', email });
+    if (error) setErr(error.message);
+    else setInfo(lang === 'fr' ? '✓ Code renvoyé !' : '✓ تم إعادة الإرسال!');
+    setBusy(false);
+  };
+
+  const titles = {
+    login:  { fr: 'Connexion',           ar: 'تسجيل الدخول' },
+    signup: { fr: 'Créer un compte',     ar: 'إنشاء حساب' },
+    otp:    { fr: 'Confirmation',        ar: 'تأكيد' },
+    reset:  { fr: 'Mot de passe oublié', ar: 'نسيت كلمة السر' },
+  };
+  const subtitles = {
+    login:  { fr: 'Retrouve tes favoris',         ar: 'استرجعي مفضلاتك' },
+    signup: { fr: 'Sauvegarde tes favoris',       ar: 'احفظي مفضلاتك' },
+    otp:    { fr: 'Entre le code reçu par email', ar: 'أدخلي الرمز من الإيميل' },
+    reset:  { fr: 'On t\'envoie un lien',         ar: 'سنرسل لك رابطًا' },
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', padding: 32, borderRadius: 20, width: '100%', maxWidth: 380, position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)' }}>
+          <Ic n="close" s={14} />
+        </button>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+          <Logo2 size={40} />
+        </div>
+        <h2 className="display" style={{ fontSize: 24, textAlign: 'center', marginBottom: 6 }}>{titles[mode][lang]}</h2>
+        <p className="mono" style={{ fontSize: 11, opacity: 0.5, textAlign: 'center', marginBottom: 20 }}>{subtitles[mode][lang]}</p>
+
+        {/* SIGNUP */}
+        {mode === 'signup' && (
+          <>
+            <input className="input2" placeholder={lang === 'fr' ? 'Nom complet' : 'الاسم الكامل'} value={name} onChange={e => setName(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={e => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="password" placeholder={lang === 'fr' ? 'Mot de passe (6+ caractères)' : 'كلمة السر (6+ أحرف)'} value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
+          </>
+        )}
+
+        {/* LOGIN */}
+        {mode === 'login' && (
+          <>
+            <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={e => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="password" placeholder={lang === 'fr' ? 'Mot de passe' : 'كلمة السر'} value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} style={{ marginBottom: 6 }} />
+            <p style={{ textAlign: 'right', fontSize: 12, marginBottom: 10 }}>
+              <a onClick={() => { setMode('reset'); setErr(''); setInfo(''); }} style={{ opacity: 0.6, cursor: 'pointer', borderBottom: '1px solid currentColor' }}>
+                {lang === 'fr' ? 'Mot de passe oublié ?' : 'نسيت كلمة السر؟'}
+              </a>
+            </p>
+          </>
+        )}
+
+        {/* OTP */}
+        {mode === 'otp' && (
+          <>
+            <p style={{ fontSize: 13, opacity: 0.7, textAlign: 'center', marginBottom: 14 }}>
+              {lang === 'fr' ? 'Email envoyé à ' : 'تم الإرسال إلى '}<strong>{email}</strong>
+            </p>
+            <input
+              className="input2"
+              type="text"
+              inputMode="numeric"
+              maxLength={8}
+              placeholder="••••••••"
+              value={otp}
+              onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+              onKeyDown={e => e.key === 'Enter' && submit()}
+              style={{ marginBottom: 10, textAlign: 'center', fontSize: 22, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '8px' }}
+            />
+            <p style={{ textAlign: 'center', fontSize: 12, marginBottom: 10 }}>
+              <a onClick={resendCode} style={{ opacity: 0.6, cursor: 'pointer', borderBottom: '1px solid currentColor' }}>
+                {lang === 'fr' ? 'Renvoyer le code' : 'إعادة إرسال الرمز'}
+              </a>
+            </p>
+          </>
+        )}
+
+        {/* RESET */}
+        {mode === 'reset' && (
+          <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={e => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+        )}
+
+        {info && <p style={{ color: 'green', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>{info}</p>}
+        {err && <p style={{ color: 'var(--clay)', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>{err}</p>}
+
+        <button className="btn2 btn2-dark" style={{ width: '100%', opacity: busy ? 0.5 : 1 }} disabled={busy} onClick={submit}>
+          {busy ? '...' : (
+            mode === 'login'  ? (lang === 'fr' ? 'Se connecter →' : 'دخول ←') :
+            mode === 'signup' ? (lang === 'fr' ? 'Créer le compte →' : 'إنشاء ←') :
+            mode === 'otp'    ? (lang === 'fr' ? 'Confirmer →' : 'تأكيد ←') :
+                                (lang === 'fr' ? 'Envoyer le lien →' : 'إرسال الرابط ←')
+          )}
+        </button>
+
+        {/* Switch links */}
+        {mode === 'login' && (
+          <p style={{ textAlign: 'center', fontSize: 13, marginTop: 16, opacity: 0.7 }}>
+            {lang === 'fr' ? 'Pas de compte ? ' : 'ما عندكش حساب؟ '}
+            <a onClick={() => { setMode('signup'); setErr(''); setInfo(''); }} style={{ borderBottom: '1px solid currentColor', cursor: 'pointer' }}>
+              {lang === 'fr' ? "S'inscrire" : 'سجلي'}
+            </a>
+          </p>
+        )}
+        {mode === 'signup' && (
+          <p style={{ textAlign: 'center', fontSize: 13, marginTop: 16, opacity: 0.7 }}>
+            {lang === 'fr' ? 'Déjà inscrite ? ' : 'عندك حساب؟ '}
+            <a onClick={() => { setMode('login'); setErr(''); setInfo(''); }} style={{ borderBottom: '1px solid currentColor', cursor: 'pointer' }}>
+              {lang === 'fr' ? 'Connexion' : 'دخول'}
+            </a>
+          </p>
+        )}
+        {(mode === 'otp' || mode === 'reset') && (
+          <p style={{ textAlign: 'center', fontSize: 13, marginTop: 16, opacity: 0.7 }}>
+            <a onClick={() => { setMode('login'); setErr(''); setInfo(''); setOtp(''); }} style={{ borderBottom: '1px solid currentColor', cursor: 'pointer' }}>
+              ← {lang === 'fr' ? 'Retour à la connexion' : 'الرجوع لتسجيل الدخول'}
+            </a>
+          </p>
         )}
       </div>
     </div>
   );
 };
 
-Object.assign(window, { HomeYoung, ShopYoung, PDetailYoung, CartYoung, CheckoutYoung, CaftanYoung, PrayerYoung, AboutYoung, LookbookYoung, AdminYoung });
+// ======== ACCOUNT PAGE ========
+const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
+  const fav = WC_PRODUCTS.filter(p => wishlist.includes(p.id));
+  const meta = user.user_metadata || {};
+  const [tab, setTab] = u2S(() => {
+    const t = window.__accountTab;
+    if (t) { delete window.__accountTab; return t; }
+    return 'profile';
+  });
+  const [name, setName] = u2S(meta.full_name || '');
+  const [pwd, setPwd] = u2S('');
+  const [pwd2, setPwd2] = u2S('');
+  const [currentPwdName, setCurrentPwdName] = u2S('');
+  const [currentPwdPwd, setCurrentPwdPwd] = u2S('');
+  const [msg, setMsg] = u2S('');
+  const [busy, setBusy] = u2S(false);
+  const [orders, setOrders] = u2S([]);
+
+  u2E(() => {
+    if (tab === 'orders') {
+      window._sb.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+        .then(({ data }) => setOrders(data || []));
+    }
+  }, [tab]);
+
+  u2E(() => {
+    const handler = () => {
+      const t = window.__accountTab;
+      if (t) { setTab(t); setMsg(''); delete window.__accountTab; }
+    };
+    window.addEventListener('account:gotab', handler);
+    return () => window.removeEventListener('account:gotab', handler);
+  }, []);
+
+  u2E(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(''), 3000);
+    return () => clearTimeout(t);
+  }, [msg]);
+
+  const verifyPwd = async (currentPwd) => {
+    const { error } = await window._sb.auth.signInWithPassword({ email: user.email, password: currentPwd });
+    return !error;
+  };
+
+  const saveName = async () => {
+    setMsg('');
+    if (!currentPwdName) return setMsg(lang === 'fr' ? '⚠ Confirme ton mot de passe actuel' : '⚠ أكدي كلمة السر الحالية');
+    setBusy(true);
+    const ok = await verifyPwd(currentPwdName);
+    if (!ok) { setBusy(false); return setMsg(lang === 'fr' ? '⚠ Mot de passe incorrect' : '⚠ كلمة السر غير صحيحة'); }
+    const { error } = await window._sb.auth.updateUser({ data: { full_name: name } });
+    setMsg(error ? '⚠ ' + error.message : (lang === 'fr' ? '✓ Nom mis à jour' : '✓ تم حفظ الاسم'));
+    setCurrentPwdName('');
+    setBusy(false);
+  };
+
+  const savePwd = async () => {
+    setMsg('');
+    if (!currentPwdPwd) return setMsg(lang === 'fr' ? '⚠ Confirme ton mot de passe actuel' : '⚠ أكدي كلمة السر الحالية');
+    if (pwd.length < 6) return setMsg(lang === 'fr' ? '⚠ 6 caractères minimum' : '⚠ 6 أحرف على الأقل');
+    if (pwd !== pwd2) return setMsg(lang === 'fr' ? '⚠ Les mots de passe ne correspondent pas' : '⚠ كلمتا السر مختلفتان');
+    setBusy(true);
+    const ok = await verifyPwd(currentPwdPwd);
+    if (!ok) { setBusy(false); return setMsg(lang === 'fr' ? '⚠ Mot de passe actuel incorrect' : '⚠ كلمة السر الحالية غير صحيحة'); }
+    const { error } = await window._sb.auth.updateUser({ password: pwd });
+    setMsg(error ? '⚠ ' + error.message : (lang === 'fr' ? '✓ Mot de passe modifié' : '✓ تم تغيير كلمة السر'));
+    setPwd(''); setPwd2(''); setCurrentPwdPwd('');
+    setBusy(false);
+  };
+
+  const tabs = [
+    { id: 'profile',  label: lang === 'fr' ? 'Profil'    : 'الملف الشخصي' },
+    { id: 'orders',   label: lang === 'fr' ? 'Commandes' : 'طلباتي' },
+    { id: 'wishlist', label: lang === 'fr' ? 'Favoris'   : 'مفضلاتي', count: fav.length },
+  ];
+
+  const fmt = (iso) => new Date(iso).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+  const isOk = msg.startsWith('✓');
+
+  return (
+    <div className="page2" style={{ padding: '40px 0 80px' }}>
+      <style>{`@keyframes toastIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}`}</style>
+      {msg && (
+        <div style={{
+          position: 'fixed', top: 24, left: '50%', zIndex: 300,
+          transform: 'translateX(-50%)',
+          background: isOk ? '#2E7D32' : 'var(--clay)',
+          color: '#fff', padding: '12px 22px', borderRadius: 999,
+          fontSize: 14, fontWeight: 500,
+          boxShadow: '0 10px 28px rgba(0,0,0,0.22)',
+          animation: 'toastIn .25s ease',
+          maxWidth: 'calc(100vw - 32px)', textAlign: 'center',
+        }}>{msg}</div>
+      )}
+      <div className="wrap" style={{ maxWidth: 900 }}>
+        <div style={{ borderBottom: '1px solid var(--ink)', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'mon compte' : 'حسابي'} /</span>
+            <h1 className="display" style={{ fontSize: 'clamp(36px, 6vw, 56px)', lineHeight: 1, letterSpacing: '-0.03em' }}>
+              {lang === 'fr' ? 'Bonjour' : 'مرحبا'}, <em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>{meta.full_name || user.email.split('@')[0]}</em>
+            </h1>
+            <p className="mono" style={{ fontSize: 12, opacity: 0.5, marginTop: 6 }}>{user.email}</p>
+          </div>
+          <button className="btn2 btn2-outline" onClick={onLogout}>
+            {lang === 'fr' ? '↗ Déconnexion' : '↗ خروج'}
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28, borderBottom: '1px solid var(--line)', paddingBottom: 0 }}>
+          {tabs.map(tb => (
+            <button key={tb.id} onClick={() => { setTab(tb.id); setMsg(''); }} style={{
+              padding: '10px 18px', borderBottom: tab === tb.id ? '2px solid var(--ink)' : '2px solid transparent',
+              fontWeight: tab === tb.id ? 600 : 400, fontSize: 14, marginBottom: -1,
+              color: tab === tb.id ? 'var(--ink)' : 'var(--muted)',
+            }}>
+              {tb.label} {tb.count !== undefined && <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>({tb.count})</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* PROFILE TAB */}
+        {tab === 'profile' && (
+          <div style={{ maxWidth: 480 }}>
+            <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, marginBottom: 16 }}>
+              <h3 className="display" style={{ fontSize: 20, marginBottom: 14 }}>{lang === 'fr' ? 'Informations' : 'المعلومات'}</h3>
+              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Nom complet' : 'الاسم الكامل'}</label>
+              <input className="input2" value={name} onChange={e => setName(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>E-mail</label>
+              <input className="input2" value={user.email} disabled style={{ marginTop: 4, marginBottom: 12, opacity: 0.6 }} />
+              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
+              <input className="input2" type="password" value={currentPwdName} onChange={e => setCurrentPwdName(e.target.value)} placeholder={lang === 'fr' ? 'Pour confirmer' : 'للتأكيد'} style={{ marginTop: 4, marginBottom: 12 }} />
+              <button className="btn2 btn2-dark" onClick={saveName} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
+                {lang === 'fr' ? 'Enregistrer' : 'حفظ'}
+              </button>
+            </div>
+
+            <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16 }}>
+              <h3 className="display" style={{ fontSize: 20, marginBottom: 14 }}>{lang === 'fr' ? 'Mot de passe' : 'كلمة السر'}</h3>
+              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
+              <input className="input2" type="password" value={currentPwdPwd} onChange={e => setCurrentPwdPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Nouveau mot de passe' : 'كلمة السر الجديدة'}</label>
+              <input className="input2" type="password" value={pwd} onChange={e => setPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Confirmer' : 'تأكيد'}</label>
+              <input className="input2" type="password" value={pwd2} onChange={e => setPwd2(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+              <button className="btn2 btn2-dark" onClick={savePwd} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
+                {lang === 'fr' ? 'Modifier' : 'تغيير'}
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* ORDERS TAB */}
+        {tab === 'orders' && (
+          <div>
+            {orders.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, background: 'var(--paper-2)', borderRadius: 16 }}>
+                <div style={{ fontSize: 40 }}>📦</div>
+                <p style={{ marginTop: 10, opacity: 0.6 }}>
+                  {lang === 'fr' ? 'Aucune commande pour le moment.' : 'مكاين حتى طلب.'}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {orders.map(o => (
+                  <div key={o.id} style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                      <div>
+                        <span className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--clay)' }}>{o.order_number}</span>
+                        <span className="mono" style={{ fontSize: 11, opacity: 0.5, marginLeft: 10 }}>{fmt(o.created_at)}</span>
+                      </div>
+                      <span className="mono" style={{ fontSize: 10, padding: '4px 10px', borderRadius: 999, background: 'var(--ink)', color: 'var(--paper)', textTransform: 'uppercase' }}>{o.status}</span>
+                    </div>
+                    {(o.items || []).map((it, i) => (
+                      <div key={i} className="mono" style={{ fontSize: 12, opacity: 0.7 }}>
+                        • {it.name} × {it.qty} — {it.size}
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 8, fontWeight: 700 }}>{o.total} MAD</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* WISHLIST TAB */}
+        {tab === 'wishlist' && (
+          fav.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, background: 'var(--paper-2)', borderRadius: 16 }}>
+              <div style={{ fontSize: 40 }}>🤍</div>
+              <p style={{ marginTop: 10, opacity: 0.6 }}>
+                {lang === 'fr' ? 'Aucun favori pour le moment.' : 'مكاين والو فالمفضلات.'}
+              </p>
+            </div>
+          ) : (
+            <div className="g4">
+              {fav.map((p, i) => (
+                <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={() => {}} wished={true} tint={TINTS[i % TINTS.length]} />
+              ))}
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ======== RECOVERY MODAL (set new password from email link) ========
+const RecoveryYoung = ({ lang, onClose }) => {
+  const [pwd, setPwd] = u2S('');
+  const [pwd2, setPwd2] = u2S('');
+  const [busy, setBusy] = u2S(false);
+  const [msg, setMsg] = u2S('');
+  const [done, setDone] = u2S(false);
+
+  const submit = async () => {
+    setMsg('');
+    if (pwd.length < 6) return setMsg(lang === 'fr' ? '⚠ 6 caractères minimum' : '⚠ 6 أحرف على الأقل');
+    if (pwd !== pwd2) return setMsg(lang === 'fr' ? '⚠ Les mots de passe ne correspondent pas' : '⚠ كلمتا السر مختلفتان');
+    setBusy(true);
+    const { error } = await window._sb.auth.updateUser({ password: pwd });
+    setBusy(false);
+    if (error) { setMsg('⚠ ' + error.message); return; }
+    setDone(true);
+    setTimeout(() => { onClose(); }, 1800);
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: 'var(--paper)', padding: 32, borderRadius: 20, width: '100%', maxWidth: 400, position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+          <Logo2 size={40} />
+        </div>
+        <h2 className="display" style={{ fontSize: 24, textAlign: 'center', marginBottom: 6 }}>
+          {lang === 'fr' ? 'Nouveau mot de passe' : 'كلمة سر جديدة'}
+        </h2>
+        <p className="mono" style={{ fontSize: 11, opacity: 0.5, textAlign: 'center', marginBottom: 20 }}>
+          {lang === 'fr' ? 'Choisis un nouveau mot de passe' : 'اختاري كلمة سر جديدة'}
+        </p>
+
+        {done ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: 38, marginBottom: 8 }}>✓</div>
+            <p style={{ color: '#2E7D32', fontWeight: 600 }}>
+              {lang === 'fr' ? 'Mot de passe modifié !' : 'تم تغيير كلمة السر!'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <input className="input2" type="password"
+              placeholder={lang === 'fr' ? 'Nouveau mot de passe (6+)' : 'كلمة السر الجديدة (6+)'}
+              value={pwd} onChange={e => setPwd(e.target.value)}
+              style={{ marginBottom: 10 }} />
+            <input className="input2" type="password"
+              placeholder={lang === 'fr' ? 'Confirmer' : 'التأكيد'}
+              value={pwd2} onChange={e => setPwd2(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && submit()}
+              style={{ marginBottom: 14 }} />
+            {msg && <p className="mono" style={{ fontSize: 12, color: 'var(--clay)', marginBottom: 10 }}>{msg}</p>}
+            <button className="btn2 btn2-dark" onClick={submit} disabled={busy} style={{ width: '100%', opacity: busy ? 0.5 : 1 }}>
+              {busy
+                ? (lang === 'fr' ? '...' : '...')
+                : (lang === 'fr' ? 'Modifier →' : 'تغيير →')}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+Object.assign(window, { HomeYoung, ShopYoung, PDetailYoung, CartYoung, CheckoutYoung, CaftanYoung, PrayerYoung, AboutYoung, LookbookYoung, AdminYoung, AuthYoung, AccountYoung, RecoveryYoung });
