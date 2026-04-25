@@ -2,9 +2,10 @@
 const WC_PRODUCTS = [
   /* ── Nouveaux modèles ── */
   { id: 'p20', name: 'Ensemble Prière Jasmin', nameAr: 'طقم صلاة ياسمين',   cat: 'prayer',  price: 259, tag: 'new',  colors: ['#E8D5C4','#F7EEE8'],          img: '00',  imgFiles: ['assets/00.jpg'] },
-  { id: 'p21', name: 'Ensemble Wrap Lin',      nameAr: 'طقم راب كتان',       cat: 'robes',   price: 369, tag: 'new',  colors: ['#5C3D2E','#C4B49A','#C8D9A0'], img: '11', imgFiles: ['assets/11.jpg','assets/1.jpg','assets/2.jpg'] },
+  { id: 'p21', name: 'Ensemble Wrap Lin',      nameAr: 'طقم راب كتان',       cat: 'robes',   price: 369, tag: 'new',  colors: ['#5C3D2E','#C4B49A','#C8D9A0'], img: '11', imgFiles: ['assets/11.jpg','assets/1.jpg'] },
+  { id: 'p24', name: 'Robe Wrap Naturelle',    nameAr: 'رداء راب طبيعي',     cat: 'robes',   price: 349, tag: 'new',  colors: ['#C4B49A','#5C3D2E'],           img: '2',  imgFiles: ['assets/2.jpg'] },
   { id: 'p22', name: 'Robe Mousseline Rosée',  nameAr: 'فستان شيفون وردي',   cat: 'robes',   price: 329,              colors: ['#C4746B','#D49088'],           img: '3',  imgFiles: ['assets/3.jpg','assets/33.jpg'] },
-  { id: 'p23', name: 'Ensemble Denim Maroc',   nameAr: 'تنسيق جينز مغربي',   cat: 'basics',  price: 299, tag: 'new',  colors: ['#3B5BA5','#F5F5F0','#1B4332'], img: '4',  imgFiles: ['assets/4.jpg'] },
+  { id: 'p23', name: 'Ensemble Denim Maroc',   nameAr: 'تنسيق جينز مغربي',   cat: 'basics',  price: 299, tag: 'new',  colors: ['#3B5BA5','#F5F5F0','#1B4332'], img: '33', imgFiles: ['assets/33.jpg'] },
   /* ── Mode Quotidienne ── */
   { id: 'p2',  name: 'Robe Lin Casablanca',   nameAr: 'فستان كتان الدار',   cat: 'robes',   price: 389, tag: 'new',  colors: ['#F7F1EA','#B8654A'],          img: 'robe-lin-casa'   },
   { id: 'p12', name: 'Robe Longue Sahara',    nameAr: 'فستان صحراء طويل',   cat: 'robes',   price: 429,              colors: ['#B8654A','#3D2E26'],          img: 'robe-sahara'     },
@@ -113,7 +114,7 @@ const WC_TR = {
       stores: 'Points de vente',
       sustainability: 'Notre engagement',
       press: 'Presse',
-      rights: '© 2026 wridachic — Tous droits réservés',
+      rights: '© 2026 wridachic.com — Tous droits réservés',
     },
   },
   ar: {
@@ -204,7 +205,7 @@ const WC_TR = {
       stores: 'نقاط البيع',
       sustainability: 'التزامنا',
       press: 'الصحافة',
-      rights: '© 2026 wridachic — كل الحقوق محفوظة',
+      rights: '© 2026 wridachic.com — كل الحقوق محفوظة',
     },
   },
 };

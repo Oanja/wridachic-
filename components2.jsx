@@ -233,11 +233,26 @@ const Ph2 = ({ label, tint, aspect = '3/4', rose = false }) => (
 const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
   const t = WC_TR[lang];
   const name = lang === 'ar' ? product.nameAr : product.name;
+  const [hovered, setHovered] = uS(false);
+  const hasTwo = product.imgFiles && product.imgFiles.length > 1;
   return (
     <div className="pcard" onClick={() => onClick(product)}>
-      <div className="pcard-img">
+      <div className="pcard-img" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
         {product.imgFiles ? (
-          <img src={product.imgFiles[0]} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <>
+            <img
+              src={product.imgFiles[0]}
+              alt={name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: hasTwo && hovered ? 0 : 1 }}
+            />
+            {hasTwo && (
+              <img
+                src={product.imgFiles[1]}
+                alt={name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: hovered ? 1 : 0 }}
+              />
+            )}
+          </>
         ) : (
           <Ph2 tint={tint || TINTS[parseInt(product.id.slice(1)) % TINTS.length]} rose />
         )}
