@@ -326,16 +326,33 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
         <div className="pdetail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48 }}>
           {/* Images */}
           <div className="pdetail-img" style={{ display: 'grid', gridTemplateColumns: '72px 1fr', gap: 10 }}>
-            <div className="pdetail-thumbs" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[0, 1, 2, 3].map(i => (
-                <button key={i} onClick={() => setMain(i)} style={{ padding: 0, border: main === i ? '2px solid var(--ink)' : '1.5px solid var(--line)', borderRadius: 10, aspectRatio: '3/4', overflow: 'hidden' }}>
-                  <Ph2 tint={TINTS[i % TINTS.length]} />
-                </button>
-              ))}
-            </div>
-            <div style={{ aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden' }}>
-              <Ph2 tint={TINTS[main % TINTS.length]} rose />
-            </div>
+            {product.imgFiles ? (
+              <>
+                <div className="pdetail-thumbs" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {product.imgFiles.map((src, i) => (
+                    <button key={i} onClick={() => setMain(i)} style={{ padding: 0, border: main === i ? '2px solid var(--ink)' : '1.5px solid var(--line)', borderRadius: 10, aspectRatio: '3/4', overflow: 'hidden' }}>
+                      <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </button>
+                  ))}
+                </div>
+                <div style={{ aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden' }}>
+                  <img src={product.imgFiles[main] || product.imgFiles[0]} alt={lang === 'fr' ? product.name : product.nameAr} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="pdetail-thumbs" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[0, 1, 2, 3].map(i => (
+                    <button key={i} onClick={() => setMain(i)} style={{ padding: 0, border: main === i ? '2px solid var(--ink)' : '1.5px solid var(--line)', borderRadius: 10, aspectRatio: '3/4', overflow: 'hidden' }}>
+                      <Ph2 tint={TINTS[i % TINTS.length]} />
+                    </button>
+                  ))}
+                </div>
+                <div style={{ aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden' }}>
+                  <Ph2 tint={TINTS[main % TINTS.length]} rose />
+                </div>
+              </>
+            )}
           </div>
 
           {/* Info */}

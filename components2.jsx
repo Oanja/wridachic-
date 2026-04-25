@@ -236,7 +236,11 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
   return (
     <div className="pcard" onClick={() => onClick(product)}>
       <div className="pcard-img">
-        <Ph2 tint={tint || TINTS[parseInt(product.id.slice(1)) % TINTS.length]} rose />
+        {product.imgFiles ? (
+          <img src={product.imgFiles[0]} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        ) : (
+          <Ph2 tint={tint || TINTS[parseInt(product.id.slice(1)) % TINTS.length]} rose />
+        )}
         {product.tag === 'new'  && <span className="pcard-tag new">{lang === 'ar' ? 'جديد ✦' : 'Nouveau ✦'}</span>}
         {product.tag === 'sale' && <span className="pcard-tag sale">{lang === 'ar' ? `خصم −${Math.round((1 - product.price / product.oldPrice) * 100)}%` : `−${Math.round((1 - product.price / product.oldPrice) * 100)}%`}</span>}
         <button className={`pcard-wish ${wished ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); onWish(product.id); }}>
