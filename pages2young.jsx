@@ -10,7 +10,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
       {/* ── HERO ── */}
       <section className="hero-section" style={{ padding: '48px 28px 64px', position: 'relative', overflow: 'hidden' }}>
-        <div className="wrap">
+        <div className="wrap" style={{ maxWidth: 1280 }}>
           <div className="hero-grid">
 
             {/* Text side */}
@@ -20,11 +20,11 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                 <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
               </div>
 
-              <h1 className="display" style={{ fontSize: 'clamp(52px, 9vw, 136px)', lineHeight: 0.9, letterSpacing: '-0.04em', marginBottom: 28 }}>
+              <h1 className="display" style={{ fontSize: 'clamp(36px, 5.5vw, 78px)', lineHeight: 1.0, letterSpacing: '-0.04em', marginBottom: 28 }}>
                 {lang === 'fr' ? (
-                  <>Le style<br /><em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
+                  <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 ) : (
-                  <>أناقة<br /><em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغربية</em><br />أصيلة.</>
+                  <>أناقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغربية</em><br />أصيلة.</>
                 )}
               </h1>
 
@@ -59,12 +59,12 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
             </div>
 
             {/* Collage side */}
-            <div className="hero-collage" style={{ position: 'relative', minHeight: 580 }}>
-              <div className="blob" style={{ position: 'absolute', top: 0, right: 0, width: '82%', aspectRatio: '3/4', borderRadius: 24, overflow: 'hidden' }}>
-                <img src="assets/4.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              </div>
-              <div className="blob" style={{ position: 'absolute', top: '52%', left: 0, width: '52%', aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 12px 32px rgba(15,14,13,0.14)' }}>
+            <div className="hero-collage" style={{ position: 'relative', minHeight: 720 }}>
+              <div className="blob" style={{ position: 'absolute', top: 0, right: 0, width: '95%', aspectRatio: '3/4', borderRadius: 24, overflow: 'hidden' }}>
                 <img src="assets/3.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </div>
+              <div className="blob" style={{ position: 'absolute', top: '58%', left: -40, width: '55%', aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 12px 32px rgba(15,14,13,0.14)' }}>
+                <img src="assets/1.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               <div className="blob" style={{ position: 'absolute', top: 20, left: -8, animationDelay: '-4s' }}>
                 <span className="sticker">{lang === 'fr' ? '✦ dès 149 MAD' : '✦ من 149 درهم'}</span>
@@ -122,25 +122,25 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               </div>
             </div>
 
-            {/* Side — Mode Quotidienne + Essentiels */}
+            {/* Side — Robes & Ensembles + Denim */}
             <div className="cat-side">
               <div className="cat-small" onClick={() => onNav('shop')}>
-                <Ph2 tint="clay" aspect="none" />
+                <img src="assets/3.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3 }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>MODE / 02</div>
-                  <div className="display cat-title-sm" style={{ fontSize: 34, lineHeight: 1.0 }}>
-                    {lang === 'fr' ? 'Robes' : 'فساتين'}
+                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>ROBES / 02</div>
+                  <div className="display cat-title-sm" style={{ fontSize: 'clamp(20px, 2.4vw, 30px)', lineHeight: 1.05 }}>
+                    {lang === 'fr' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
                   </div>
                 </div>
               </div>
               <div className="cat-small" onClick={() => onNav('shop')}>
-                <Ph2 tint="sky" aspect="none" />
+                <img src="assets/4.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3 }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>BASICS / 03</div>
-                  <div className="display cat-title-sm" style={{ fontSize: 34, lineHeight: 1.0 }}>
-                    {lang === 'fr' ? 'Essentiels' : 'أساسيات'}
+                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 03</div>
+                  <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
+                    {lang === 'fr' ? 'Denim' : 'جينز'}
                   </div>
                 </div>
               </div>

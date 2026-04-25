@@ -234,7 +234,9 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
   const t = WC_TR[lang];
   const name = lang === 'ar' ? product.nameAr : product.name;
   const [hovered, setHovered] = uS(false);
+  const [activeIdx, setActiveIdx] = uS(0);
   const hasTwo = product.imgFiles && product.imgFiles.length > 1;
+  const showSecond = hasTwo && (hovered || activeIdx === 1);
   return (
     <div className="pcard" onClick={() => onClick(product)}>
       <div className="pcard-img" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
@@ -243,14 +245,25 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
             <img
               src={product.imgFiles[0]}
               alt={name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: hasTwo && hovered ? 0 : 1 }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: showSecond ? 0 : 1 }}
             />
             {hasTwo && (
               <img
                 src={product.imgFiles[1]}
                 alt={name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: hovered ? 1 : 0 }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.35s ease', opacity: showSecond ? 1 : 0 }}
               />
+            )}
+            {hasTwo && (
+              <div className="pcard-dots" onClick={(e) => e.stopPropagation()}>
+                {product.imgFiles.slice(0, 2).map((_, i) => (
+                  <span
+                    key={i}
+                    className={activeIdx === i ? 'on' : ''}
+                    onClick={(e) => { e.stopPropagation(); setActiveIdx(i); }}
+                  />
+                ))}
+              </div>
             )}
           </>
         ) : (

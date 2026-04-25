@@ -135,6 +135,8 @@ body.ar .marquee-track { animation-direction: reverse; }
   align-items: center;
   gap: 32px;
   padding: 14px 28px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 .nav2-logo {
   display: flex;
@@ -374,6 +376,32 @@ body.ar .marquee-track { animation-direction: reverse; }
   z-index: 4;
 }
 .pcard:hover .pcard-quick { opacity: 1; transform: translateY(0); }
+.pcard-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+  background: rgba(255,255,255,0.85);
+  padding: 5px 8px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+.pcard-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(15,14,13,0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pcard-dots span.on { background: var(--ink); width: 18px; border-radius: 3px; }
+@media (hover: hover) {
+  .pcard-dots { opacity: 0; transition: opacity 0.25s ease; }
+  .pcard:hover .pcard-dots { opacity: 1; }
+}
 .pcard-name {
   font-size: 15px;
   font-weight: 500;
@@ -441,7 +469,7 @@ body.ar .marquee-track { animation-direction: reverse; }
 /* ======= HERO GRID ======= */
 .hero-grid {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: 1fr 1.25fr;
   gap: 28px;
   position: relative;
 }
@@ -741,8 +769,20 @@ body.ar .wafloat2 { right: auto; left: 24px; }
 
   /* Product detail — stack vertically */
   .pdetail-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-  .pdetail-thumbs { display: none !important; }
-  .pdetail-img { grid-template-columns: 1fr !important; }
+  .pdetail-img { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .pdetail-thumbs {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    order: 2 !important;
+    gap: 10px !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+  }
+  .pdetail-thumbs::-webkit-scrollbar { display: none !important; }
+  .pdetail-thumbs button {
+    flex: 0 0 64px !important;
+    width: 64px !important;
+  }
   .pdetail-badges { grid-template-columns: 1fr 1fr !important; }
 
   /* Feature section — stack vertically */

@@ -5,24 +5,13 @@ const WC_PRODUCTS = [
   { id: 'p21', name: 'Ensemble Wrap Lin',      nameAr: 'طقم راب كتان',       cat: 'robes',   price: 369, tag: 'new',  colors: ['#5C3D2E','#C4B49A','#C8D9A0'], img: '11', imgFiles: ['assets/11.jpg','assets/1.jpg'] },
   { id: 'p24', name: 'Robe Wrap Naturelle',    nameAr: 'رداء راب طبيعي',     cat: 'robes',   price: 349, tag: 'new',  colors: ['#C4B49A','#5C3D2E'],           img: '2',  imgFiles: ['assets/2.jpg'] },
   { id: 'p22', name: 'Robe Mousseline Rosée',  nameAr: 'فستان شيفون وردي',   cat: 'robes',   price: 329,              colors: ['#C4746B','#D49088'],           img: '3',  imgFiles: ['assets/3.jpg','assets/33.jpg'] },
-  { id: 'p23', name: 'Ensemble Denim Maroc',   nameAr: 'تنسيق جينز مغربي',   cat: 'basics',  price: 299, tag: 'new',  colors: ['#3B5BA5','#F5F5F0','#1B4332'], img: '33', imgFiles: ['assets/33.jpg'] },
-  /* ── Mode Quotidienne ── */
-  { id: 'p2',  name: 'Robe Lin Casablanca',   nameAr: 'فستان كتان الدار',   cat: 'robes',   price: 389, tag: 'new',  colors: ['#F7F1EA','#B8654A'],          img: 'robe-lin-casa'   },
-  { id: 'p12', name: 'Robe Longue Sahara',    nameAr: 'فستان صحراء طويل',   cat: 'robes',   price: 429,              colors: ['#B8654A','#3D2E26'],          img: 'robe-sahara'     },
-  /* ── Espace Prière ── */
-  { id: 'p3',  name: 'Jilbab Sérénité',       nameAr: 'جلباب السكينة',      cat: 'prayer',  price: 249, tag: 'new',  colors: ['#F7F1EA','#D4E1B8'],          img: 'jilbab-serenite' },
-  { id: 'p7',  name: 'Ensemble Prière Safia', nameAr: 'طقم صلاة صافية',     cat: 'prayer',  price: 189, tag: 'sale', oldPrice: 239, colors: ['#C08A7D','#F7F1EA'], img: 'ensemble-priere' },
-  { id: 'p9',  name: 'Khimar Nour',           nameAr: 'خمار نور',            cat: 'prayer',  price: 149,              colors: ['#F7F1EA','#8B7A6E','#3D2E26'], img: 'khimar-nour'    },
-  /* ── Essentiels ── */
-  { id: 'p5',  name: 'Jean Taille Haute',     nameAr: 'جينز عالي الخصر',    cat: 'basics',  price: 259,              colors: ['#3D2E26','#5C4A3F'],          img: 'jean-taille-haute' },
-  { id: 'p8',  name: 'Jupe Midi Douce',       nameAr: 'تنورة ميدي ناعمة',   cat: 'basics',  price: 299,              colors: ['#B8654A','#C9A86A'],          img: 'jupe-midi'       },
-  { id: 'p11', name: 'Pantalon Ample Oasis',  nameAr: 'بنطلون واسع واحة',   cat: 'basics',  price: 279,              colors: ['#3D2E26','#F7F1EA'],          img: 'pantalon-oasis'  },
+  { id: 'p23', name: 'Ensemble Denim Maroc',   nameAr: 'تنسيق جينز مغربي',   cat: 'basics',  price: 299, tag: 'new',  colors: ['#3B5BA5','#F5F5F0','#1B4332'], img: '4', imgFiles: ['assets/4.jpg'] },
 ];
 
 const WC_CATEGORIES = [
   { id: 'prayer',  name: 'Espace Prière',     nameAr: 'ملابس الصلاة', desc: 'Jilbabs, khimars & ensembles', img: 'cat-prayer' },
-  { id: 'robes',   name: 'Mode Quotidienne',  nameAr: 'ملابس يومية',  desc: 'Robes & tenues décontractées', img: 'cat-robes'  },
-  { id: 'basics',  name: 'Essentiels',        nameAr: 'أساسيات',      desc: 'Tops, pantalons & jeans',      img: 'cat-basics' },
+  { id: 'robes',   name: 'Robes & Ensembles', nameAr: 'فساتين وأطقم',  desc: 'Robes longues, wrap & ensembles', img: 'cat-robes'  },
+  { id: 'basics',  name: 'Denim',             nameAr: 'جينز',          desc: 'Jeans & ensembles denim',         img: 'cat-basics' },
 ];
 
 const WC_TR = {
