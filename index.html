@@ -208,7 +208,7 @@
           {content}
           {!isAdmin && <Footer2 lang={lang} onNav={goto} />}
           {!isAdmin && <WaFloat2 lang={lang} />}
-          {authOpen && <AuthYoung lang={lang} onClose={() => setAuthOpen(false)} onSuccess={(u) => { setUser(u); setAuthOpen(false); }} />}
+          {authOpen && <AuthYoung lang={lang} onClose={() => setAuthOpen(false)} onSuccess={(u, opts) => { setUser(u); setAuthOpen(false); if (opts?.welcome) goto('account'); }} />}
           {recoveryOpen && <RecoveryYoung lang={lang} onClose={() => { setRecoveryOpen(false); window.history.replaceState(null, '', window.location.pathname); }} />}
 
           {editMode && (

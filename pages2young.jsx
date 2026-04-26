@@ -167,7 +167,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
       {/* ── BIG TICKER ── */}
       <section className="big-ticker-section" style={{ padding: '40px 0', overflow: 'hidden', borderTop: '1px solid var(--ink)', borderBottom: '1px solid var(--ink)' }}>
-        <div className="big-ticker-text" style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'slide 55s linear infinite', fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif', fontSize: 'clamp(72px, 11vw, 160px)', lineHeight: 1, letterSpacing: '-0.04em' }}>
+        <div className="big-ticker-text" style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'slide 55s linear infinite', fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif', fontSize: 'clamp(48px, 7vw, 96px)', lineHeight: 1, letterSpacing: '-0.04em' }}>
           {[...Array(3)].map((_, k) => (
             <span key={k} style={{ paddingRight: 56 }}>
               wrida<em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>chic</em>
@@ -1134,7 +1134,8 @@ const AuthYoung = ({ lang, onClose, onSuccess }) => {
           setInfo(lang === 'fr' ? '✉ Code à 8 chiffres envoyé par email' : '✉ تم إرسال رمز من 8 أرقام للإيميل');
         } else if (data.user && data.session) {
           // Pas de confirmation requise → connecté direct
-          onSuccess(data.user);
+          sessionStorage.setItem('wc2-welcome', name || '');
+          onSuccess(data.user, { welcome: true });
         }
       } else if (mode === 'login') {
         const { data, error } = await window._sb.auth.signInWithPassword({ email, password: pwd });
@@ -1150,7 +1151,10 @@ const AuthYoung = ({ lang, onClose, onSuccess }) => {
       } else if (mode === 'otp') {
         const { data, error } = await window._sb.auth.verifyOtp({ email, token: otp.trim(), type: 'signup' });
         if (error) throw error;
-        if (data.user) onSuccess(data.user);
+        if (data.user) {
+          sessionStorage.setItem('wc2-welcome', name || data.user.user_metadata?.full_name || '');
+          onSuccess(data.user, { welcome: true });
+        }
       } else if (mode === 'reset') {
         const { error } = await window._sb.auth.resetPasswordForEmail(email);
         if (error) throw error;
@@ -1303,6 +1307,17 @@ const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
   const [msg, setMsg] = u2S('');
   const [busy, setBusy] = u2S(false);
   const [orders, setOrders] = u2S([]);
+  const [welcomeName, setWelcomeName] = u2S(() => {
+    const w = sessionStorage.getItem('wc2-welcome');
+    if (w !== null) sessionStorage.removeItem('wc2-welcome');
+    return w;
+  });
+
+  u2E(() => {
+    if (welcomeName === null) return;
+    const t = setTimeout(() => setWelcomeName(null), 6000);
+    return () => clearTimeout(t);
+  }, [welcomeName]);
 
   u2E(() => {
     if (tab === 'orders') {
@@ -1387,6 +1402,36 @@ const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
         }}>{msg}</div>
       )}
       <div className="wrap" style={{ maxWidth: 900 }}>
+        {welcomeName !== null && (
+          <div style={{
+            background: 'linear-gradient(135deg, var(--clay), #d49088)',
+            color: '#fff',
+            padding: '20px 24px',
+            borderRadius: 16,
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            boxShadow: '0 8px 24px rgba(196,116,107,0.25)',
+            animation: 'toastIn .35s ease',
+            position: 'relative',
+          }}>
+            <span style={{ fontSize: 28, lineHeight: 1 }}>✦</span>
+            <div style={{ flex: 1 }}>
+              <div className="display" style={{ fontSize: 22, lineHeight: 1.2, marginBottom: 4 }}>
+                {lang === 'fr'
+                  ? <>Bienvenue <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email.split('@')[0]}</em> ✦</>
+                  : <>مرحبا بك <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email.split('@')[0]}</em> ✦</>}
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.9 }}>
+                {lang === 'fr' ? 'dans ta boutique wridachic — ton compte a été créé avec succès.' : 'في متجرك وريدة شيك — تم إنشاء حسابك بنجاح.'}
+              </div>
+            </div>
+            <button onClick={() => setWelcomeName(null)} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', width: 28, height: 28, borderRadius: '50%', flexShrink: 0 }}>
+              <Ic n="close" s={12} />
+            </button>
+          </div>
+        )}
         <div style={{ borderBottom: '1px solid var(--ink)', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'mon compte' : 'حسابي'} /</span>
