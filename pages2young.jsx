@@ -111,7 +111,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
             <div className="cat-main" onClick={() => onNav('shop')}>
               <img src="assets/3.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
-              <div style={{ position: 'absolute', bottom: 24, left: 24, color: 'var(--paper)', zIndex: 3 }}>
+              <div style={{ position: 'absolute', bottom: 24, [lang === 'ar' ? 'right' : 'left']: 24, color: 'var(--paper)', zIndex: 3, textAlign: lang === 'ar' ? 'right' : 'left' }}>
                 <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>ROBES / 01</div>
                 <div className="display cat-title-lg" style={{ fontSize: 'clamp(28px, 4.4vw, 56px)', lineHeight: 1.05, marginTop: 6 }}>
                   {lang === 'fr' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
@@ -120,11 +120,6 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                   {lang === 'fr' ? 'Wrap · Mousseline · Lin' : 'راب · شيفون · كتان'}
                 </div>
               </div>
-              <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 3 }}>
-                <span className="sticker sticker-sky" style={{ transform: 'rotate(2deg)' }}>
-                  {lang === 'fr' ? 'Dès 149 MAD ✦' : 'من 149 درهم ✦'}
-                </span>
-              </div>
             </div>
 
             {/* Side — Denim + Prière */}
@@ -132,7 +127,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               <div className="cat-small" onClick={() => onNav('shop')}>
                 <img src="assets/4.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
+                <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 02</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
                     {lang === 'fr' ? 'Denim' : 'جينز'}
@@ -142,7 +137,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               <div className="cat-small" onClick={() => onNav('prayer')}>
                 <img src="assets/00.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 3, color: 'var(--paper)' }}>
+                <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>PRIÈRE / 03</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
                     {lang === 'fr' ? 'Prière' : 'الصلاة'}

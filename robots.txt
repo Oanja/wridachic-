@@ -1,0 +1,7 @@
+# wridachic.com — robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /#admin
+
+Sitemap: https://wridachic.com/sitemap.xml
