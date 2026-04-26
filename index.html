@@ -63,6 +63,7 @@
       });
       const [user, setUser] = useState(null);
       const [authOpen, setAuthOpen] = useState(false);
+      const [authPrefill, setAuthPrefill] = useState({ email: '', mode: 'login' });
       const [recoveryOpen, setRecoveryOpen] = useState(false);
       const [accentColor, setAccentColor] = useState(TWEAKS.accentColor);
       const [editMode, setEditMode] = useState(false);
@@ -206,9 +207,9 @@
         <div data-screen-label={`wridachic young · ${page}`}>
           {!isAdmin && <Nav2 lang={lang} setLang={setLang} cartCount={cartCount} onNav={goto} current={page} user={user} onAuth={() => setAuthOpen(true)} onLogout={async () => { await logout(); goto('home'); }} />}
           {content}
-          {!isAdmin && <Footer2 lang={lang} onNav={goto} />}
+          {!isAdmin && <Footer2 lang={lang} onNav={goto} onSignup={(email) => { setAuthPrefill({ email: email || '', mode: 'signup' }); setAuthOpen(true); }} />}
           {!isAdmin && <WaFloat2 lang={lang} />}
-          {authOpen && <AuthYoung lang={lang} onClose={() => setAuthOpen(false)} onSuccess={(u, opts) => { setUser(u); setAuthOpen(false); if (opts?.welcome) goto('account'); }} />}
+          {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => { setUser(u); setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); if (opts?.welcome) goto('account'); }} />}
           {recoveryOpen && <RecoveryYoung lang={lang} onClose={() => { setRecoveryOpen(false); window.history.replaceState(null, '', window.location.pathname); }} />}
 
           {editMode && (

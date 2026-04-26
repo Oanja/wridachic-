@@ -9,18 +9,18 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
     <div className="page2">
 
       {/* ── HERO ── */}
-      <section className="hero-section" style={{ padding: '48px 28px 64px', position: 'relative', overflow: 'hidden' }}>
+      <section className="hero-section" style={{ padding: '56px 28px 72px', position: 'relative', overflow: 'hidden' }}>
         <div className="wrap" style={{ maxWidth: 1280 }}>
           <div className="hero-grid">
 
             {/* Text side */}
-            <div>
-              <div className="hero-eyebrow" style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="hero-text">
+              <div className="hero-eyebrow" style={{ display: 'flex', gap: 12, marginBottom: 28, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? `Printemps ${year}` : `ربيع ${year}`}</span>
                 <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
               </div>
 
-              <h1 className="display" style={{ fontSize: 'clamp(36px, 5.5vw, 78px)', lineHeight: 1.0, letterSpacing: '-0.04em', marginBottom: 28 }}>
+              <h1 className="display hero-title" style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24 }}>
                 {lang === 'fr' ? (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 ) : (
@@ -28,13 +28,13 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                 )}
               </h1>
 
-              <p style={{ fontSize: 16, maxWidth: 440, lineHeight: 1.65, opacity: 0.75, marginBottom: 32 }}>
+              <p className="hero-sub" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36 }}>
                 {lang === 'fr'
                   ? 'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en 2–5 jours.'
                   : 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.'}
               </p>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44 }}>
                 <button className="btn2 btn2-dark btn2-lg" onClick={() => onNav('shop')}>
                   {lang === 'fr' ? 'Découvrir la boutique' : 'اكتشفي المتجر'} <Ic n="arr" s={14} />
                 </button>
@@ -43,34 +43,39 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                 </button>
               </div>
 
-              {/* Stats */}
-              <div className="hero-stats" style={{ display: 'flex', gap: 32, marginTop: 52, flexWrap: 'wrap' }}>
+              {/* Stats — inline elegant strip */}
+              <div className="hero-stats" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
                 {[
-                  { n: '150+', l: lang === 'fr' ? 'Styles disponibles' : 'ستايل متاح' },
-                  { n: '48h',  l: lang === 'fr' ? 'Livraison express' : 'توصيل سريع' },
+                  { n: '150+', l: lang === 'fr' ? 'Styles' : 'ستايل' },
+                  { n: '48h',  l: lang === 'fr' ? 'Livraison' : 'توصيل' },
                   { n: '★ 4.9', l: lang === 'fr' ? 'Avis clientes' : 'تقييم الزبونات' },
                 ].map((s, i) => (
-                  <div key={i} className="hero-stat">
-                    <span className="display stat-num" style={{ fontSize: 34, display: 'block', color: 'var(--clay)', lineHeight: 1 }}>{s.n}</span>
-                    <span className="mono stat-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.55 }}>{s.l}</span>
+                  <div key={i} className="hero-stat" style={{ flex: 1, paddingRight: i < 2 ? 24 : 0, paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid rgba(15,14,13,0.12)' : 'none' }}>
+                    <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
+                    <span className="mono stat-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.55 }}>{s.l}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Collage side */}
-            <div className="hero-collage" style={{ position: 'relative', minHeight: 720 }}>
-              <div className="blob hero-big" style={{ position: 'absolute', top: 0, right: 0, width: '95%', aspectRatio: '3/4', borderRadius: 24, overflow: 'hidden' }}>
+            {/* Collage side — refined */}
+            <div className="hero-collage" style={{ position: 'relative', minHeight: 680 }}>
+              {/* Decorative arc behind images */}
+              <div aria-hidden="true" style={{ position: 'absolute', top: 40, right: 40, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,116,107,0.08), transparent 70%)', zIndex: 0 }} />
+
+              <div className="blob hero-big" style={{ position: 'absolute', top: 0, right: 0, width: '88%', aspectRatio: '3/4', borderRadius: 28, overflow: 'hidden', boxShadow: '0 24px 60px -20px rgba(15,14,13,0.25)', zIndex: 1 }}>
                 <img src="assets/3.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
-              <div className="blob hero-small" style={{ position: 'absolute', top: '48%', left: -40, width: '55%', aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 12px 32px rgba(15,14,13,0.14)' }}>
+
+              <div className="blob hero-small" style={{ position: 'absolute', top: '54%', left: -30, width: '50%', aspectRatio: '4/5', borderRadius: 22, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 18px 40px -10px rgba(15,14,13,0.28)', border: '6px solid var(--paper)', zIndex: 2 }}>
                 <img src="assets/1.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
-              <div className="blob" style={{ position: 'absolute', top: 20, left: -8, animationDelay: '-4s' }}>
-                <span className="sticker">{lang === 'fr' ? '✦ dès 149 MAD' : '✦ من 149 درهم'}</span>
-              </div>
-              <div className="blob" style={{ position: 'absolute', bottom: 24, right: 16, animationDelay: '-6s' }}>
-                <span className="sticker sticker-clay">{lang === 'fr' ? 'COD partout ✓' : 'دفع عند الاستلام ✓'}</span>
+
+              {/* Single elegant sticker — COD */}
+              <div className="blob hero-sticker" style={{ position: 'absolute', bottom: 40, right: -8, animationDelay: '-6s', zIndex: 3 }}>
+                <span className="sticker sticker-clay" style={{ fontSize: 13, padding: '10px 18px', boxShadow: '0 8px 20px rgba(196,116,107,0.3)' }}>
+                  {lang === 'fr' ? 'COD partout ✓' : 'دفع عند الاستلام ✓'}
+                </span>
               </div>
             </div>
           </div>
@@ -79,15 +84,15 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
       {/* ── PROMISE TICKER ── */}
       <section style={{ background: 'var(--ink)', color: 'var(--paper)', padding: '13px 0', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', gap: 56, animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
-          {[...Array(4)].map((_, k) => (
-            <React.Fragment key={k}>
+        <div style={{ display: 'flex', animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
+          {[...Array(2)].map((_, k) => (
+            <div key={k} style={{ display: 'flex', gap: 56, paddingRight: 56, flexShrink: 0 }}>
               <span>✦ {lang === 'fr' ? 'Livraison partout au Maroc' : 'توصيل في كل المغرب'}</span>
               <span style={{ color: 'var(--clay)' }}>✦ {lang === 'fr' ? 'Paiement à la livraison' : 'الدفع عند التسليم'}</span>
               <span>✦ {lang === 'fr' ? 'Tenues de prière' : 'ملابس الصلاة'}</span>
               <span style={{ color: 'var(--lime)' }}>✦ {lang === 'fr' ? 'Retours 14 jours' : 'إرجاع 14 يوماً'}</span>
               <span>✦ Made in 🇲🇦</span>
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </section>
@@ -168,7 +173,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
       {/* ── BIG TICKER ── */}
       <section className="big-ticker-section" style={{ padding: '40px 0', overflow: 'hidden', borderTop: '1px solid var(--ink)', borderBottom: '1px solid var(--ink)' }}>
         <div className="big-ticker-text" style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'slide 55s linear infinite', fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif', fontSize: 'clamp(48px, 7vw, 96px)', lineHeight: 1, letterSpacing: '-0.04em' }}>
-          {[...Array(3)].map((_, k) => (
+          {[...Array(2)].map((_, k) => (
             <span key={k} style={{ paddingRight: 56 }}>
               wrida<em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>chic</em>
               {' '}✦{' '}{lang === 'fr' ? 'marocaine & fière' : 'مغربية وفخورة'}
@@ -1108,9 +1113,9 @@ const AdminYoung = () => {
 };
 
 // ======== AUTH MODAL ========
-const AuthYoung = ({ lang, onClose, onSuccess }) => {
-  const [mode, setMode] = u2S('login'); // login | signup | otp | reset
-  const [email, setEmail] = u2S('');
+const AuthYoung = ({ lang, onClose, onSuccess, initialEmail = '', initialMode = 'login' }) => {
+  const [mode, setMode] = u2S(initialMode); // login | signup | otp | reset
+  const [email, setEmail] = u2S(initialEmail);
   const [pwd, setPwd] = u2S('');
   const [name, setName] = u2S('');
   const [otp, setOtp] = u2S('');

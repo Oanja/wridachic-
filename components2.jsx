@@ -43,11 +43,14 @@ const Ic = ({ n, s = 18 }) => {
 };
 
 const Marquee = ({ items }) => {
-  const msgs = [...items, ...items];
   return (
     <div className="marquee">
       <div className="marquee-track">
-        {msgs.map((m, i) => <span key={i}>{m}</span>)}
+        {[0, 1].map((k) => (
+          <div key={k} className="marquee-half">
+            {items.map((m, i) => <span key={i}>{m}</span>)}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -286,8 +289,13 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
   );
 };
 
-const Footer2 = ({ lang, onNav }) => {
+const Footer2 = ({ lang, onNav, onSignup }) => {
   const t = WC_TR[lang];
+  const [emailInput, setEmailInput] = uS('');
+  const submit = (e) => {
+    e?.preventDefault();
+    if (onSignup) onSignup(emailInput.trim());
+  };
   return (
     <footer className="f2">
       <div className="wrap">
@@ -300,13 +308,18 @@ const Footer2 = ({ lang, onNav }) => {
             </h2>
             <p style={{ fontSize: 15, opacity: 0.75, marginTop: 16, maxWidth: '100%' }}>
               {lang === 'fr'
-                ? '−10% sur ta 1ère commande, accès early aux nouvelles collections & ventes privées.'
-                : 'خصم 10% على طلبك الأول، وصول مبكر للمجموعات الجديدة والتخفيضات الخاصة.'}
+                ? 'Reçois nos nouveautés, lookbooks & coups de cœur chaque semaine — l\'élégance marocaine dans ta boîte mail.'
+                : 'استقبلي جديدنا، اللوكبوك ومختاراتنا كل أسبوع — أناقة مغربية مباشرة في بريدك.'}
             </p>
-            <div className="f2-newsletter">
-              <input placeholder={lang === 'fr' ? 'Ton e-mail…' : 'بريدك الإلكتروني…'} />
-              <button>{lang === 'fr' ? "Je m'inscris →" : 'اشتركي →'}</button>
-            </div>
+            <form className="f2-newsletter" onSubmit={submit}>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder={lang === 'fr' ? 'Ton e-mail…' : 'بريدك الإلكتروني…'}
+              />
+              <button type="submit">{lang === 'fr' ? "Je m'inscris →" : 'اشتركي →'}</button>
+            </form>
           </div>
           <div className="f2-stickers">
             <span className="sticker">100% Maroc 🇲🇦</span>

@@ -107,11 +107,16 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--ink);
 }
 .marquee-track {
-  display: inline-flex;
-  gap: 40px;
+  display: flex;
   animation: slide 30s linear infinite;
   white-space: nowrap;
   will-change: transform;
+}
+.marquee-half {
+  display: flex;
+  gap: 40px;
+  padding-right: 40px;
+  flex-shrink: 0;
 }
 .marquee-track span::before { content: '◈ '; color: var(--lime); }
 @keyframes slide {
@@ -469,10 +474,13 @@ body.ar .marquee-track { animation-direction: reverse; }
 /* ======= HERO GRID ======= */
 .hero-grid {
   display: grid;
-  grid-template-columns: 1fr 1.25fr;
-  gap: 28px;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 56px;
   position: relative;
+  align-items: center;
 }
+.hero-text { padding-right: 8px; }
+body.ar .hero-text { padding-right: 0; padding-left: 8px; }
 
 /* Desktop / tablet — flip the OPPOSITE of mobile.
    Mobile FR: small=right → Desktop FR: small=left (default, no override needed).
@@ -732,13 +740,16 @@ body.ar .wafloat2 { right: auto; left: 24px; }
     display: flex !important;
     flex-direction: column !important;
     gap: 0 !important;
+    align-items: stretch !important;
   }
+  .hero-text { padding-right: 0 !important; padding-left: 0 !important; }
   .hero-collage {
     display: block !important;
-    min-height: 440px !important;
+    min-height: 460px !important;
     order: -1 !important;
-    margin-bottom: 0 !important;
+    margin-bottom: 16px !important;
   }
+  .hero-sticker { display: none !important; }
   /* French — small image takes a bit less space on mobile to fit */
   body:not(.ar) .hero-small {
     left: auto !important;
@@ -769,19 +780,22 @@ body.ar .wafloat2 { right: auto; left: 24px; }
 
   /* Hero stats — force single row, shrink text */
   .hero-stats {
-    gap: 12px !important;
-    margin-top: 28px !important;
+    gap: 0 !important;
+    margin-top: 24px !important;
+    padding-top: 20px !important;
     flex-wrap: nowrap !important;
   }
-  .hero-stat { flex: 1; min-width: 0; }
-  .hero-stat .stat-num { font-size: 22px !important; }
+  .hero-stat { flex: 1; min-width: 0; padding-left: 12px !important; padding-right: 12px !important; }
+  .hero-stat:first-child { padding-left: 0 !important; }
+  .hero-stat:last-child { padding-right: 0 !important; }
+  .hero-stat .stat-num { font-size: 22px !important; margin-bottom: 4px !important; }
   .hero-stat .stat-label {
     display: block;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     font-size: 8px !important;
-    letter-spacing: 0.04em !important;
+    letter-spacing: 0.06em !important;
   }
 
   /* Categories */
