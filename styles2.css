@@ -741,10 +741,12 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   }
   /* French — small image takes a bit less space on mobile to fit */
   body:not(.ar) .hero-small {
+    left: auto !important;
     right: -20px !important;
     width: 50% !important;
   }
   body:not(.ar) .hero-big {
+    right: auto !important;
     left: 0 !important;
     width: 92% !important;
   }
