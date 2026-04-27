@@ -39,11 +39,13 @@ function App() {
   const [accentColor, setAccentColor] = useState(TWEAKS.accentColor);
   const [editMode, setEditMode] = useState(false);
   const [productsVersion, setProductsVersion] = useState(0);
+  const [productsReady, setProductsReady] = useState(() => !!window._productsLoaded);
 
   useEffect(() => {
-    const bump = () => setProductsVersion(v => v + 1);
+    const bump = () => { setProductsVersion(v => v + 1); setProductsReady(true); };
     window.addEventListener('products:loaded', bump);
-    return () => window.removeEventListener('products:loaded', bump);
+    const fallback = setTimeout(() => setProductsReady(true), 1500);
+    return () => { window.removeEventListener('products:loaded', bump); clearTimeout(fallback); };
   }, []);
 
   // Scroll-reveal animations — fade + slide-up when entering viewport
@@ -79,9 +81,9 @@ function App() {
           .order('sort_order', { ascending: true });
         if (error || !data || data.length === 0) {
           console.log('[products] Using local data.js fallback');
+          setProductsReady(true);
           return;
         }
-        // Transform DB format -> app format (camelCase)
         const transformed = data.map(p => ({
           id: p.id, slug: p.slug, name: p.name, nameAr: p.name_ar,
           cat: p.cat, price: Number(p.price), tag: p.tag,
@@ -89,18 +91,21 @@ function App() {
           imgFiles: p.img_files || [],
           description: p.description, descriptionAr: p.description_ar,
         }));
-        // Skip re-render if DB returned the same products (avoids the load flash)
         const sameAsCache = WC_PRODUCTS.length === transformed.length
           && transformed.every((p, i) => WC_PRODUCTS[i]
               && WC_PRODUCTS[i].id === p.id
               && WC_PRODUCTS[i].price === p.price
               && (WC_PRODUCTS[i].imgFiles || []).join('|') === (p.imgFiles || []).join('|'));
-        // MUTATE in place (const WC_PRODUCTS keeps same reference)
         WC_PRODUCTS.length = 0;
         transformed.forEach(p => WC_PRODUCTS.push(p));
         window.WC_PRODUCTS = WC_PRODUCTS;
+        window._productsLoaded = true;
         if (!sameAsCache) window.dispatchEvent(new Event('products:loaded'));
-      } catch (e) { console.warn('[products] load failed', e); }
+        else setProductsReady(true);
+      } catch (e) {
+        console.warn('[products] load failed', e);
+        setProductsReady(true);
+      }
     };
     loadProducts();
     window.addEventListener('products:reload', loadProducts);
@@ -238,6 +243,10 @@ function App() {
 
   const isAdmin = window.location.hash.includes('admin') || page === 'admin';
 
+  if (!isAdmin && !productsReady) {
+    return <div style={{ minHeight: '100vh', background: 'var(--paper, #FAF6F1)' }} />;
+  }
+
   let content;
   if (isAdmin) content = <AdminYoung />;
   else if (page === 'home') content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
@@ -256,8 +265,7 @@ function App() {
   return (
     <div data-screen-label={`wridachic young · ${page}`}>
       {!isAdmin && <Nav2 lang={lang} setLang={setLang} cartCount={cartCount} onNav={goto} current={page} user={user} onAuth={() => setAuthOpen(true)} onLogout={async () => { await logout(); goto('home'); }} />}
-      {/* key bumps only for non-admin pages so admin keeps its login + tab state */}
-      {isAdmin ? content : <div key={`pv-${productsVersion}`}>{content}</div>}
+      {isAdmin ? content : <div>{content}</div>}
       {!isAdmin && <Footer2 lang={lang} onNav={goto} onSignup={(email) => { setAuthPrefill({ email: email || '', mode: 'signup' }); setAuthOpen(true); }} />}
       {!isAdmin && <WaFloat2 lang={lang} />}
       {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => {

@@ -1729,7 +1729,7 @@ const AuthYoung = ({ lang, onClose, onSuccess, initialEmail = '', initialMode = 
         // Si email confirmation activée → passer à l'étape OTP
         if (data.user && !data.session) {
           setMode('otp');
-          setInfo(lang === 'fr' ? '✉ Code à 8 chiffres envoyé par email' : '✉ تم إرسال رمز من 8 أرقام للإيميل');
+          setInfo(lang === 'fr' ? '✉ Code à 6 chiffres envoyé par email' : '✉ تم إرسال رمز من 6 أرقام للإيميل');
         } else if (data.user && data.session) {
           // Pas de confirmation requise → connecté direct
           sessionStorage.setItem('wc2-welcome', name || '');
@@ -1827,8 +1827,8 @@ const AuthYoung = ({ lang, onClose, onSuccess, initialEmail = '', initialMode = 
               className="input2"
               type="text"
               inputMode="numeric"
-              maxLength={8}
-              placeholder="••••••••"
+              maxLength={6}
+              placeholder="••••••"
               value={otp}
               onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
               onKeyDown={e => e.key === 'Enter' && submit()}
