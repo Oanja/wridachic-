@@ -1432,21 +1432,38 @@ const AdminYoung = () => {
           font-weight: 600 !important;
         }
         .adm-light .pl-btn-primary:hover { background: #b34d2f !important; }
-        /* Convert legacy dark-bg backgrounds to light */
+        /* Convert legacy dark-bg backgrounds to light — DO NOT use shorthand `border` (would kill borderLeft accents) */
         .adm-light [style*="rgba(250,246,241,0.04)"],
-        .adm-light [style*="rgba(250,246,241,0.05)"] { background: #fff !important; border: 1px solid rgba(15,14,13,0.1) !important; }
+        .adm-light [style*="rgba(250,246,241,0.05)"] {
+          background: #fff !important;
+          box-shadow: 0 1px 3px rgba(15,14,13,0.04), 0 0 0 1px rgba(15,14,13,0.08) !important;
+        }
         .adm-light [style*="rgba(250,246,241,0.06)"],
         .adm-light [style*="rgba(250,246,241,0.08)"] { background: rgba(15,14,13,0.04) !important; }
-        .adm-light [style*="rgba(250,246,241,0.1)"] { border-color: rgba(15,14,13,0.1) !important; }
+        /* Border-color overrides only (won't disturb borderLeft side) */
+        .adm-light [style*="border: '1px solid rgba(250,246,241,0.1)"],
+        .adm-light [style*="border: 1px solid rgba(250,246,241,0.1)"] { border-color: rgba(15,14,13,0.12) !important; }
         .adm-light [style*="rgba(250,246,241,0.12)"],
         .adm-light [style*="rgba(250,246,241,0.15)"],
         .adm-light [style*="rgba(250,246,241,0.18)"] { border-color: rgba(15,14,13,0.18) !important; }
         .adm-light [style*="color: rgba(250,246,241"] { color: rgba(15,14,13,0.6) !important; }
         /* Generic readability — boost dim text */
-        .adm-light [style*="opacity: 0.4"], .adm-light [style*="opacity:0.4"] { opacity: 0.6 !important; }
-        .adm-light [style*="opacity: 0.5"], .adm-light [style*="opacity:0.5"] { opacity: 0.65 !important; }
+        .adm-light [style*="opacity: 0.4"], .adm-light [style*="opacity:0.4"] { opacity: 0.7 !important; }
+        .adm-light [style*="opacity: 0.5"], .adm-light [style*="opacity:0.5"] { opacity: 0.75 !important; }
+        .adm-light [style*="opacity: 0.55"], .adm-light [style*="opacity:0.55"] { opacity: 0.8 !important; }
+        /* Stat card label text — bigger + more readable */
+        .adm-light .stat-card-label {
+          font-size: 12px !important;
+          opacity: 0.7 !important;
+          font-weight: 500 !important;
+        }
         /* Order/status badges keep readable */
         .adm-light .btn2 { font-family: 'Space Grotesk', sans-serif !important; letter-spacing: 0 !important; }
+        /* Hover effect on order/product cards */
+        .adm-light [style*="rgba(250,246,241,0.04)"]:hover,
+        .adm-light [style*="rgba(250,246,241,0.05)"]:hover {
+          box-shadow: 0 2px 8px rgba(15,14,13,0.06), 0 0 0 1px rgba(15,14,13,0.12) !important;
+        }
       `}</style>
       <div className="adm-light" style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
@@ -1488,10 +1505,10 @@ const AdminYoung = () => {
               const count = orders.filter(o => o.status === s).length;
               const total = orders.filter(o => o.status === s).reduce((acc, o) => acc + (o.total || 0), 0);
               return (
-                <div key={s} style={{ background: 'rgba(250,246,241,0.05)', borderRadius: 14, padding: 16, borderLeft: `3px solid ${STATUS_COLORS[s]}` }}>
-                  <div className="mono" style={{ fontSize: 9, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s}</div>
-                  <div className="display" style={{ fontSize: 28, marginTop: 4 }}>{count}</div>
-                  <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 2 }}>{total} MAD</div>
+                <div key={s} style={{ background: 'rgba(250,246,241,0.05)', borderRadius: 14, padding: '18px 20px', borderLeft: `3px solid ${STATUS_COLORS[s]}` }}>
+                  <div className="stat-card-label" style={{ fontSize: 12, opacity: 0.65, textTransform: 'capitalize', fontWeight: 500 }}>{s}</div>
+                  <div className="display" style={{ fontSize: 34, marginTop: 6, lineHeight: 1, fontWeight: 500 }}>{count}</div>
+                  <div style={{ fontSize: 12, opacity: 0.55, marginTop: 6, fontWeight: 500 }}>{total} MAD</div>
                 </div>
               );
             })}
@@ -1505,7 +1522,7 @@ const AdminYoung = () => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {orders.map(o => (
-                <div key={o.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 14, padding: '16px' }}>
+                <div key={o.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 14, padding: '18px 20px' }}>
                   <div className="adm-order">
                     <div className="adm-order-num">
                       <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--clay)' }}>{o.order_number}</div>
