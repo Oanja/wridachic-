@@ -327,7 +327,8 @@
       return (
         <div data-screen-label={`wridachic young · ${page}`}>
           {!isAdmin && <Nav2 lang={lang} setLang={setLang} cartCount={cartCount} onNav={goto} current={page} user={user} onAuth={() => setAuthOpen(true)} onLogout={async () => { await logout(); goto('home'); }} />}
-          <div key={`pv-${productsVersion}`}>{content}</div>
+          {/* key bumps only for non-admin pages so admin keeps its login + tab state */}
+          {isAdmin ? content : <div key={`pv-${productsVersion}`}>{content}</div>}
           {!isAdmin && <Footer2 lang={lang} onNav={goto} onSignup={(email) => { setAuthPrefill({ email: email || '', mode: 'signup' }); setAuthOpen(true); }} />}
           {!isAdmin && <WaFloat2 lang={lang} />}
           {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => {

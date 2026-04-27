@@ -939,6 +939,7 @@ const AdminProducts = () => {
       <ProductEditor
         product={editing === 'new' ? null : products.find(p => p.id === editing)}
         nextSortOrder={Math.max(0, ...products.map(p => p.sort_order || 0)) + 1}
+        totalProducts={products.length}
         onClose={() => setEditing(null)}
         onSaved={() => { setEditing(null); load(); refreshLiveSite(); showToast('✓ Enregistré'); }}
       />
@@ -1022,7 +1023,7 @@ const AdminProducts = () => {
 // ─────────────────────────────────────────────
 // Admin: Product editor form
 // ─────────────────────────────────────────────
-const ProductEditor = ({ product, nextSortOrder, onClose, onSaved }) => {
+const ProductEditor = ({ product, nextSortOrder, totalProducts, onClose, onSaved }) => {
   const isNew = !product;
   const [form, setForm] = u2S({
     id:          product?.id          || `p${Date.now().toString().slice(-6)}`,
@@ -1237,10 +1238,18 @@ const ProductEditor = ({ product, nextSortOrder, onClose, onSaved }) => {
             <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 6 }}>La 1ère image est l'image principale. Glisse avec les flèches.</div>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(250,246,241,0.1)', paddingTop: 14 }}>
-            <label style={labelStyle}>Ordre d'affichage</label>
-            <input type="number" style={inputStyle} value={form.sort_order} onChange={e => set('sort_order', e.target.value)} />
-            <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>Plus petit = affiché en premier</div>
+          <div style={{ borderTop: '1px solid rgba(15,14,13,0.1)', paddingTop: 14 }}>
+            <label style={labelStyle}>
+              Ordre d'affichage
+              <span style={{ marginLeft: 8, opacity: 0.6, fontSize: 10, textTransform: 'none' }}>
+                ({totalProducts} produit{totalProducts > 1 ? 's' : ''} au total)
+              </span>
+            </label>
+            <input type="number" min="1" max={totalProducts + 1} style={inputStyle} value={form.sort_order} onChange={e => set('sort_order', e.target.value)} />
+            <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 6, lineHeight: 1.5 }}>
+              <strong>1</strong> = affiché en premier &nbsp;·&nbsp; <strong>{totalProducts || 1}</strong> = affiché en dernier<br />
+              Tu as {totalProducts} produit{totalProducts > 1 ? 's' : ''} → choisis un nombre entre <strong>1</strong> et <strong>{totalProducts + (product ? 0 : 1)}</strong>
+            </div>
           </div>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: 12, borderRadius: 10, background: 'rgba(250,246,241,0.04)' }}>
@@ -1343,7 +1352,8 @@ const AdminYoung = () => {
           .adm-order-items { grid-column: 1 / -1; border-top: 1px solid rgba(15,14,13,0.08); padding-top: 10px; }
           .adm-status { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; border-top: 1px solid rgba(15,14,13,0.08); padding-top: 10px; }
         }
-        /* Light-mode admin scope — fix dark-bg leftovers */
+        /* Light-mode admin scope — comprehensive overrides */
+        .adm-light, .adm-light * { color: #0F0E0D; }
         .adm-light input, .adm-light select, .adm-light textarea {
           background: #fff !important;
           color: #0F0E0D !important;
@@ -1364,6 +1374,17 @@ const AdminYoung = () => {
         .adm-light .pl-btn:hover { background: rgba(15,14,13,0.12) !important; }
         .adm-light .pl-btn-danger { color: #C62828 !important; border-color: rgba(198,40,40,0.3) !important; }
         .adm-light .pl-btn-primary { background: var(--clay) !important; border-color: var(--clay) !important; color: #fff !important; }
+        /* Convert legacy dark-bg backgrounds to light */
+        .adm-light [style*="rgba(250,246,241,0.04)"],
+        .adm-light [style*="rgba(250,246,241,0.05)"] { background: rgba(15,14,13,0.04) !important; }
+        .adm-light [style*="rgba(250,246,241,0.06)"],
+        .adm-light [style*="rgba(250,246,241,0.08)"] { background: rgba(15,14,13,0.06) !important; }
+        .adm-light [style*="rgba(250,246,241,0.1)"] { border-color: rgba(15,14,13,0.1) !important; }
+        .adm-light [style*="rgba(250,246,241,0.12)"],
+        .adm-light [style*="rgba(250,246,241,0.15)"],
+        .adm-light [style*="rgba(250,246,241,0.18)"] { border-color: rgba(15,14,13,0.15) !important; }
+        /* Status pills should keep their color tint but on light bg */
+        .adm-light [style*="color: rgba(250,246,241"] { color: rgba(15,14,13,0.5) !important; }
       `}</style>
       <div className="adm-light" style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
