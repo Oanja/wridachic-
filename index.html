@@ -137,6 +137,42 @@
       const [recoveryOpen, setRecoveryOpen] = useState(false);
       const [accentColor, setAccentColor] = useState(TWEAKS.accentColor);
       const [editMode, setEditMode] = useState(false);
+      const [productsVersion, setProductsVersion] = useState(0);
+
+      useEffect(() => {
+        const bump = () => setProductsVersion(v => v + 1);
+        window.addEventListener('products:loaded', bump);
+        return () => window.removeEventListener('products:loaded', bump);
+      }, []);
+
+      // Load products from Supabase on startup (fallback to data.js if empty/fails)
+      useEffect(() => {
+        const loadProducts = async () => {
+          try {
+            const { data, error } = await window._sb
+              .from('products')
+              .select('*')
+              .eq('active', true)
+              .order('sort_order', { ascending: true });
+            if (error || !data || data.length === 0) {
+              console.log('[products] Using local data.js fallback');
+              return;
+            }
+            // Transform DB format -> app format (camelCase)
+            window.WC_PRODUCTS = data.map(p => ({
+              id: p.id, slug: p.slug, name: p.name, nameAr: p.name_ar,
+              cat: p.cat, price: Number(p.price), tag: p.tag,
+              colors: p.colors || [], img: p.img,
+              imgFiles: p.img_files || [],
+              description: p.description, descriptionAr: p.description_ar,
+            }));
+            window.dispatchEvent(new Event('products:loaded'));
+          } catch (e) { console.warn('[products] load failed', e); }
+        };
+        loadProducts();
+        window.addEventListener('products:reload', loadProducts);
+        return () => window.removeEventListener('products:reload', loadProducts);
+      }, []);
 
       useEffect(() => { localStorage.setItem('wc2-page', page); }, [page]);
       useEffect(() => { localStorage.setItem('wc2-cart', JSON.stringify(cart)); }, [cart]);
@@ -281,7 +317,8 @@
       else if (page === 'lookbook') content = <LookbookYoung lang={lang} />;
       else if (page === 'account' && user) content = <AccountYoung lang={lang} user={user} onLogout={async () => { await logout(); goto('home'); }} wishlist={wishlist} onProduct={openProduct} />;
       else if (page === 'account' && !user) { setAuthOpen(true); content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />; }
-      else content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
+      else if (page === 'product' && !currentProduct) content = <NotFoundYoung lang={lang} onNav={goto} />;
+      else content = <NotFoundYoung lang={lang} onNav={goto} />;
 
       return (
         <div data-screen-label={`wridachic young · ${page}`}>
