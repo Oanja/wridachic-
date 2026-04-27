@@ -132,6 +132,7 @@
       });
       const [user, setUser] = useState(null);
       const [authOpen, setAuthOpen] = useState(false);
+      const [globalToast, setGlobalToast] = useState(null);
       const [authPrefill, setAuthPrefill] = useState({ email: '', mode: 'login' });
       const [recoveryOpen, setRecoveryOpen] = useState(false);
       const [accentColor, setAccentColor] = useState(TWEAKS.accentColor);
@@ -252,7 +253,17 @@
           return next;
         });
       };
-      const logout = async () => { await window._sb.auth.signOut(); setUser(null); };
+      const logout = async () => {
+        await window._sb.auth.signOut();
+        setUser(null);
+        setGlobalToast({ msg: lang === 'fr' ? '✓ Tu es déconnectée. À bientôt !' : '✓ تم تسجيل الخروج. إلى اللقاء!', type: 'ok' });
+      };
+
+      useEffect(() => {
+        if (!globalToast) return;
+        const t = setTimeout(() => setGlobalToast(null), 3500);
+        return () => clearTimeout(t);
+      }, [globalToast]);
 
       const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
@@ -278,8 +289,33 @@
           {content}
           {!isAdmin && <Footer2 lang={lang} onNav={goto} onSignup={(email) => { setAuthPrefill({ email: email || '', mode: 'signup' }); setAuthOpen(true); }} />}
           {!isAdmin && <WaFloat2 lang={lang} />}
-          {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => { setUser(u); setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); if (opts?.welcome) goto('account'); }} />}
+          {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => {
+            setUser(u);
+            setAuthOpen(false);
+            setAuthPrefill({ email: '', mode: 'login' });
+            if (opts?.welcome) {
+              goto('account');
+            } else {
+              const userName = u.user_metadata?.full_name || u.email.split('@')[0];
+              setGlobalToast({ msg: lang === 'fr' ? `✓ Bon retour, ${userName} !` : `✓ مرحبا بعودتك، ${userName}!`, type: 'ok' });
+            }
+          }} />}
           {recoveryOpen && <RecoveryYoung lang={lang} onClose={() => { setRecoveryOpen(false); window.history.replaceState(null, '', window.location.pathname); }} />}
+
+          {globalToast && (
+            <div style={{
+              position: 'fixed', top: 24, left: '50%', zIndex: 9999,
+              transform: 'translateX(-50%)',
+              background: globalToast.type === 'ok' ? '#2E7D32' : '#C62828',
+              color: '#fff', padding: '14px 26px', borderRadius: 999,
+              fontSize: 14, fontWeight: 500,
+              boxShadow: '0 10px 28px rgba(0,0,0,0.22)',
+              animation: 'toastIn .25s ease',
+              maxWidth: 'calc(100vw - 32px)', textAlign: 'center',
+              fontFamily: 'Space Grotesk, sans-serif',
+            }}>{globalToast.msg}</div>
+          )}
+          <style>{`@keyframes toastIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}`}</style>
 
           {editMode && (
             <div style={{ position: 'fixed', bottom: 90, right: 24, width: 260, background: 'var(--paper)', border: '1.5px solid var(--ink)', borderRadius: 18, padding: 18, boxShadow: '0 12px 32px rgba(15,14,13,0.16)', zIndex: 100, fontFamily: 'Space Grotesk' }}>

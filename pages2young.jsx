@@ -1306,6 +1306,8 @@ const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
   const [currentPwdPwd, setCurrentPwdPwd] = u2S('');
   const [msg, setMsg] = u2S('');
   const [busy, setBusy] = u2S(false);
+  const [editingName, setEditingName] = u2S(false);
+  const [editingPwd, setEditingPwd] = u2S(false);
   const [orders, setOrders] = u2S([]);
   const [welcomeName, setWelcomeName] = u2S(() => {
     const w = sessionStorage.getItem('wc2-welcome');
@@ -1461,30 +1463,82 @@ const AccountYoung = ({ lang, user, onLogout, wishlist, onProduct }) => {
         {/* PROFILE TAB */}
         {tab === 'profile' && (
           <div style={{ maxWidth: 480 }}>
+            {/* INFORMATIONS CARD */}
             <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, marginBottom: 16 }}>
-              <h3 className="display" style={{ fontSize: 20, marginBottom: 14 }}>{lang === 'fr' ? 'Informations' : 'المعلومات'}</h3>
-              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Nom complet' : 'الاسم الكامل'}</label>
-              <input className="input2" value={name} onChange={e => setName(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
-              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>E-mail</label>
-              <input className="input2" value={user.email} disabled style={{ marginTop: 4, marginBottom: 12, opacity: 0.6 }} />
-              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
-              <input className="input2" type="password" value={currentPwdName} onChange={e => setCurrentPwdName(e.target.value)} placeholder={lang === 'fr' ? 'Pour confirmer' : 'للتأكيد'} style={{ marginTop: 4, marginBottom: 12 }} />
-              <button className="btn2 btn2-dark" onClick={saveName} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
-                {lang === 'fr' ? 'Enregistrer' : 'حفظ'}
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <h3 className="display" style={{ fontSize: 20 }}>{lang === 'fr' ? 'Informations' : 'المعلومات'}</h3>
+                {!editingName && (
+                  <button onClick={() => setEditingName(true)} className="mono" style={{ fontSize: 11, padding: '6px 14px', border: '1px solid var(--ink)', borderRadius: 999, background: 'transparent', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    {lang === 'fr' ? '✎ Modifier' : '✎ تعديل'}
+                  </button>
+                )}
+              </div>
+
+              {!editingName ? (
+                <div>
+                  <div style={{ marginBottom: 14 }}>
+                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{lang === 'fr' ? 'Nom complet' : 'الاسم الكامل'}</label>
+                    <div style={{ fontSize: 16, fontWeight: 500 }}>{meta.full_name || (lang === 'fr' ? '—' : '—')}</div>
+                  </div>
+                  <div>
+                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>E-mail</label>
+                    <div style={{ fontSize: 16, fontWeight: 500 }}>{user.email}</div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Nom complet' : 'الاسم الكامل'}</label>
+                  <input className="input2" value={name} onChange={e => setName(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>E-mail</label>
+                  <input className="input2" value={user.email} disabled style={{ marginTop: 4, marginBottom: 12, opacity: 0.6 }} />
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
+                  <input className="input2" type="password" value={currentPwdName} onChange={e => setCurrentPwdName(e.target.value)} placeholder={lang === 'fr' ? 'Pour confirmer' : 'للتأكيد'} style={{ marginTop: 4, marginBottom: 12 }} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn2 btn2-dark" onClick={saveName} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
+                      {lang === 'fr' ? 'Enregistrer' : 'حفظ'}
+                    </button>
+                    <button onClick={() => { setEditingName(false); setName(meta.full_name || ''); setCurrentPwdName(''); setMsg(''); }} className="mono" style={{ fontSize: 12, padding: '0 18px', border: '1px solid var(--line)', borderRadius: 999, background: 'transparent', cursor: 'pointer' }}>
+                      {lang === 'fr' ? 'Annuler' : 'إلغاء'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* PASSWORD CARD */}
             <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16 }}>
-              <h3 className="display" style={{ fontSize: 20, marginBottom: 14 }}>{lang === 'fr' ? 'Mot de passe' : 'كلمة السر'}</h3>
-              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
-              <input className="input2" type="password" value={currentPwdPwd} onChange={e => setCurrentPwdPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
-              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Nouveau mot de passe' : 'كلمة السر الجديدة'}</label>
-              <input className="input2" type="password" value={pwd} onChange={e => setPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
-              <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Confirmer' : 'تأكيد'}</label>
-              <input className="input2" type="password" value={pwd2} onChange={e => setPwd2(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
-              <button className="btn2 btn2-dark" onClick={savePwd} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
-                {lang === 'fr' ? 'Modifier' : 'تغيير'}
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <h3 className="display" style={{ fontSize: 20 }}>{lang === 'fr' ? 'Mot de passe' : 'كلمة السر'}</h3>
+                {!editingPwd && (
+                  <button onClick={() => setEditingPwd(true)} className="mono" style={{ fontSize: 11, padding: '6px 14px', border: '1px solid var(--ink)', borderRadius: 999, background: 'transparent', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    {lang === 'fr' ? '✎ Modifier' : '✎ تعديل'}
+                  </button>
+                )}
+              </div>
+
+              {!editingPwd ? (
+                <div>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{lang === 'fr' ? 'Mot de passe' : 'كلمة السر'}</label>
+                  <div style={{ fontSize: 18, fontWeight: 500, letterSpacing: '0.2em' }}>••••••••</div>
+                </div>
+              ) : (
+                <div>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
+                  <input className="input2" type="password" value={currentPwdPwd} onChange={e => setCurrentPwdPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Nouveau mot de passe' : 'كلمة السر الجديدة'}</label>
+                  <input className="input2" type="password" value={pwd} onChange={e => setPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Confirmer' : 'تأكيد'}</label>
+                  <input className="input2" type="password" value={pwd2} onChange={e => setPwd2(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn2 btn2-dark" onClick={savePwd} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
+                      {lang === 'fr' ? 'Modifier' : 'تغيير'}
+                    </button>
+                    <button onClick={() => { setEditingPwd(false); setPwd(''); setPwd2(''); setCurrentPwdPwd(''); setMsg(''); }} className="mono" style={{ fontSize: 12, padding: '0 18px', border: '1px solid var(--line)', borderRadius: 999, background: 'transparent', cursor: 'pointer' }}>
+                      {lang === 'fr' ? 'Annuler' : 'إلغاء'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
