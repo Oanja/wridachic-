@@ -871,7 +871,7 @@ const LookbookYoung = ({ lang }) => (
 );
 
 // ======== ADMIN ========
-const ADMIN_PASS = 'wridachic2026';
+// Auth is handled by Supabase + is_admin() RPC. No client-side password.
 const STATUS_COLORS = { nouveau: '#C85C3F', confirmé: '#4A90D9', expédié: '#7B68EE', livré: '#4CAF50' };
 const STATUS_LABELS = ['nouveau', 'confirmé', 'expédié', 'livré'];
 
@@ -1270,17 +1270,56 @@ const ProductEditor = ({ product, nextSortOrder, totalProducts, onClose, onSaved
 };
 
 const AdminYoung = () => {
+  const [email, setEmail] = u2S('');
   const [pwd, setPwd] = u2S('');
   const [authed, setAuthed] = u2S(false);
+  const [checking, setChecking] = u2S(true);
+  const [busy, setBusy] = u2S(false);
   const [orders, setOrders] = u2S([]);
   const [users, setUsers] = u2S([]);
   const [loading, setLoading] = u2S(false);
   const [error, setError] = u2S('');
   const [tab, setTab] = u2S('orders');
 
-  const login = () => {
-    if (pwd === ADMIN_PASS) { setAuthed(true); fetchOrders(); fetchUsers(); }
-    else setError('Mot de passe incorrect');
+  // On mount: check if a Supabase session already belongs to an admin
+  u2E(() => {
+    (async () => {
+      const { data } = await window._sb.auth.getSession();
+      if (data?.session?.user) {
+        const { data: ok } = await window._sb.rpc('is_admin');
+        if (ok) { setAuthed(true); fetchOrders(); fetchUsers(); }
+      }
+      setChecking(false);
+    })();
+  }, []);
+
+  const login = async () => {
+    setError(''); setBusy(true);
+    const { data, error: e1 } = await window._sb.auth.signInWithPassword({ email: email.trim(), password: pwd });
+    if (e1 || !data?.user) {
+      setBusy(false);
+      setError('Email ou mot de passe incorrect');
+      return;
+    }
+    const { data: ok, error: e2 } = await window._sb.rpc('is_admin');
+    if (e2 || !ok) {
+      await window._sb.auth.signOut();
+      setBusy(false);
+      setError('Ce compte n\'a pas les permissions admin.');
+      return;
+    }
+    setAuthed(true);
+    setBusy(false);
+    setPwd('');
+    fetchOrders();
+    fetchUsers();
+  };
+
+  const logoutAdmin = async () => {
+    await window._sb.auth.signOut();
+    setAuthed(false);
+    setEmail(''); setPwd('');
+    setOrders([]); setUsers([]);
   };
 
   const fetchOrders = async () => {
@@ -1303,7 +1342,12 @@ const AdminYoung = () => {
 
   const deleteOrder = async (id) => {
     if (!confirm('Supprimer cette commande définitivement ?')) return;
-    await window._sb.from('orders').delete().eq('id', id);
+    const { data: deleted, error } = await window._sb.from('orders').delete().eq('id', id).select();
+    if (error) { alert('Erreur Supabase : ' + error.message); return; }
+    if (!deleted || deleted.length === 0) {
+      alert('Suppression bloquée par la base (RLS).\n\nIl faut activer la policy DELETE sur la table "orders" — voir supabase-orders-rls.sql.');
+      return;
+    }
     setOrders(prev => prev.filter(o => o.id !== id));
   };
 
@@ -1318,22 +1362,36 @@ const AdminYoung = () => {
     };
   };
 
+  if (checking) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--paper)' }}>
+      <div className="mono" style={{ opacity: 0.4, fontSize: 12 }}>...</div>
+    </div>
+  );
+
   if (!authed) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', padding: 16 }}>
-      <div style={{ background: '#fff', padding: 40, borderRadius: 20, width: '100%', maxWidth: 320, textAlign: 'center', border: '1px solid rgba(15,14,13,0.08)' }}>
+      <div style={{ background: '#fff', padding: 40, borderRadius: 20, width: '100%', maxWidth: 340, textAlign: 'center', border: '1px solid rgba(15,14,13,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
           <Logo2 size={48} />
         </div>
         <h2 className="display" style={{ fontSize: 24, marginTop: 20, marginBottom: 6 }}>Admin</h2>
         <p className="mono" style={{ fontSize: 11, opacity: 0.5, marginBottom: 24 }}>TABLEAU DE BORD</p>
         <input
-          type="password" placeholder="Mot de passe"
+          type="email" placeholder="Email" autoComplete="email"
+          value={email} onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && login()}
+          className="input2" style={{ marginBottom: 10 }}
+        />
+        <input
+          type="password" placeholder="Mot de passe" autoComplete="current-password"
           value={pwd} onChange={e => setPwd(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && login()}
           className="input2" style={{ marginBottom: 12 }}
         />
         {error && <p style={{ color: 'var(--clay)', fontSize: 12, marginBottom: 10 }}>{error}</p>}
-        <button className="btn2 btn2-dark" style={{ width: '100%' }} onClick={login}>Connexion →</button>
+        <button className="btn2 btn2-dark" style={{ width: '100%' }} disabled={busy} onClick={login}>
+          {busy ? '...' : 'Connexion →'}
+        </button>
       </div>
     </div>
   );
@@ -1475,9 +1533,14 @@ const AdminYoung = () => {
               <div className="mono" style={{ fontSize: 10, opacity: 0.5 }}>{orders.length} COMMANDES</div>
             </div>
           </div>
-          <button onClick={() => { fetchOrders(); fetchUsers(); }} className="btn2 btn2-outline" style={{ fontSize: 12, padding: '10px 16px' }}>
-            ↻ Actualiser
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { fetchOrders(); fetchUsers(); }} className="btn2 btn2-outline" style={{ fontSize: 12, padding: '10px 16px' }}>
+              ↻ Actualiser
+            </button>
+            <button onClick={logoutAdmin} className="btn2 btn2-outline" style={{ fontSize: 12, padding: '10px 16px' }}>
+              Déconnexion
+            </button>
+          </div>
         </div>
 
         {/* TABS */}
