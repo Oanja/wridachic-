@@ -1113,7 +1113,7 @@ const ProductEditor = ({ product, nextSortOrder, totalProducts, onClose, onSaved
     border: '1px solid rgba(15,14,13,0.15)', background: '#fff',
     color: '#0F0E0D', fontSize: 14, fontFamily: 'inherit',
   };
-  const labelStyle = { fontSize: 10, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', color: '#0F0E0D' };
+  const labelStyle = { fontSize: 13, opacity: 0.7, display: 'block', marginBottom: 6, fontFamily: 'Space Grotesk, sans-serif', color: '#0F0E0D', fontWeight: 500 };
 
   return (
     <div>
@@ -1352,39 +1352,101 @@ const AdminYoung = () => {
           .adm-order-items { grid-column: 1 / -1; border-top: 1px solid rgba(15,14,13,0.08); padding-top: 10px; }
           .adm-status { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; border-top: 1px solid rgba(15,14,13,0.08); padding-top: 10px; }
         }
-        /* Light-mode admin scope — comprehensive overrides */
-        .adm-light, .adm-light * { color: #0F0E0D; }
+        /* ═══════════════════════════════════════════
+           ADMIN — clean, readable, minimal style
+           ═══════════════════════════════════════════ */
+        .adm-light {
+          font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+          color: #1a1815;
+          line-height: 1.5;
+        }
+        .adm-light * { color: inherit; }
+        /* Kill awkward letter-spacing + uppercase across the admin */
+        .adm-light, .adm-light * { letter-spacing: 0 !important; }
+        .adm-light .mono, .adm-light [class*="mono"] { text-transform: none !important; }
+        .adm-light .mono {
+          font-family: 'Space Grotesk', system-ui, sans-serif !important;
+          text-transform: none !important;
+          letter-spacing: 0 !important;
+          font-weight: 500;
+        }
+        /* Section labels (NOUVEAU, CONFIRMÉ, etc.) keep small uppercase but tight */
+        .adm-light .stat-label {
+          font-size: 11px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.04em !important;
+          font-weight: 600 !important;
+          opacity: 0.55;
+        }
+        .adm-light h1, .adm-light h2, .adm-light h3, .adm-light .display {
+          letter-spacing: -0.01em !important;
+          color: #0F0E0D;
+        }
+        /* Inputs / selects / textareas */
         .adm-light input, .adm-light select, .adm-light textarea {
           background: #fff !important;
           color: #0F0E0D !important;
-          border: 1px solid rgba(15,14,13,0.15) !important;
+          border: 1px solid rgba(15,14,13,0.18) !important;
+          font-family: 'Space Grotesk', sans-serif !important;
+        }
+        .adm-light input:focus, .adm-light select:focus, .adm-light textarea:focus {
+          outline: none;
+          border-color: var(--clay) !important;
         }
         .adm-light select option { background: #fff; color: #0F0E0D; }
+        /* Product list rows */
         .adm-light .pl-row {
           background: #fff !important;
-          border: 1px solid rgba(15,14,13,0.08) !important;
+          border: 1px solid rgba(15,14,13,0.1) !important;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
         .adm-light .pl-thumb { background: rgba(15,14,13,0.06) !important; }
-        .adm-light .pl-name { color: #0F0E0D !important; }
-        .adm-light .pl-btn {
-          background: rgba(15,14,13,0.06) !important;
-          border: 1px solid rgba(15,14,13,0.12) !important;
+        .adm-light .pl-name {
           color: #0F0E0D !important;
+          font-weight: 600 !important;
+          font-size: 15px !important;
         }
-        .adm-light .pl-btn:hover { background: rgba(15,14,13,0.12) !important; }
+        .adm-light .pl-meta {
+          font-family: 'Space Grotesk', sans-serif !important;
+          text-transform: none !important;
+          letter-spacing: 0 !important;
+          opacity: 0.6;
+          font-size: 13px !important;
+        }
+        /* Buttons */
+        .adm-light .pl-btn {
+          background: #fff !important;
+          border: 1px solid rgba(15,14,13,0.18) !important;
+          color: #1a1815 !important;
+          font-family: 'Space Grotesk', sans-serif !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          padding: 8px 14px !important;
+          border-radius: 8px !important;
+        }
+        .adm-light .pl-btn:hover { background: #f5f1ea !important; border-color: rgba(15,14,13,0.3) !important; }
         .adm-light .pl-btn-danger { color: #C62828 !important; border-color: rgba(198,40,40,0.3) !important; }
-        .adm-light .pl-btn-primary { background: var(--clay) !important; border-color: var(--clay) !important; color: #fff !important; }
+        .adm-light .pl-btn-danger:hover { background: rgba(198,40,40,0.06) !important; }
+        .adm-light .pl-btn-primary {
+          background: var(--clay) !important; border-color: var(--clay) !important; color: #fff !important;
+          font-weight: 600 !important;
+        }
+        .adm-light .pl-btn-primary:hover { background: #b34d2f !important; }
         /* Convert legacy dark-bg backgrounds to light */
         .adm-light [style*="rgba(250,246,241,0.04)"],
-        .adm-light [style*="rgba(250,246,241,0.05)"] { background: rgba(15,14,13,0.04) !important; }
+        .adm-light [style*="rgba(250,246,241,0.05)"] { background: #fff !important; border: 1px solid rgba(15,14,13,0.1) !important; }
         .adm-light [style*="rgba(250,246,241,0.06)"],
-        .adm-light [style*="rgba(250,246,241,0.08)"] { background: rgba(15,14,13,0.06) !important; }
+        .adm-light [style*="rgba(250,246,241,0.08)"] { background: rgba(15,14,13,0.04) !important; }
         .adm-light [style*="rgba(250,246,241,0.1)"] { border-color: rgba(15,14,13,0.1) !important; }
         .adm-light [style*="rgba(250,246,241,0.12)"],
         .adm-light [style*="rgba(250,246,241,0.15)"],
-        .adm-light [style*="rgba(250,246,241,0.18)"] { border-color: rgba(15,14,13,0.15) !important; }
-        /* Status pills should keep their color tint but on light bg */
-        .adm-light [style*="color: rgba(250,246,241"] { color: rgba(15,14,13,0.5) !important; }
+        .adm-light [style*="rgba(250,246,241,0.18)"] { border-color: rgba(15,14,13,0.18) !important; }
+        .adm-light [style*="color: rgba(250,246,241"] { color: rgba(15,14,13,0.6) !important; }
+        /* Generic readability — boost dim text */
+        .adm-light [style*="opacity: 0.4"], .adm-light [style*="opacity:0.4"] { opacity: 0.6 !important; }
+        .adm-light [style*="opacity: 0.5"], .adm-light [style*="opacity:0.5"] { opacity: 0.65 !important; }
+        /* Order/status badges keep readable */
+        .adm-light .btn2 { font-family: 'Space Grotesk', sans-serif !important; letter-spacing: 0 !important; }
       `}</style>
       <div className="adm-light" style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
@@ -1408,13 +1470,13 @@ const AdminYoung = () => {
             { id: 'products', label: `Produits` },
             { id: 'users',    label: `Utilisateurs (${users.length})` },
           ].map(tb => (
-            <button key={tb.id} onClick={() => setTab(tb.id)} className="mono" style={{
-              padding: '12px 20px', fontSize: 12, marginBottom: -1, cursor: 'pointer',
+            <button key={tb.id} onClick={() => setTab(tb.id)} style={{
+              padding: '12px 20px', fontSize: 14, marginBottom: -1, cursor: 'pointer',
               borderBottom: tab === tb.id ? '2px solid var(--clay)' : '2px solid transparent',
-              color: tab === tb.id ? '#0F0E0D' : 'rgba(15,14,13,0.4)',
-              fontWeight: tab === tb.id ? 600 : 400,
-              textTransform: 'uppercase', letterSpacing: '0.08em',
+              color: tab === tb.id ? '#0F0E0D' : 'rgba(15,14,13,0.5)',
+              fontWeight: tab === tb.id ? 600 : 500,
               background: 'transparent',
+              fontFamily: 'Space Grotesk, sans-serif',
             }}>{tb.label}</button>
           ))}
         </div>
