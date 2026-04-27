@@ -89,11 +89,17 @@ function App() {
           imgFiles: p.img_files || [],
           description: p.description, descriptionAr: p.description_ar,
         }));
+        // Skip re-render if DB returned the same products (avoids the load flash)
+        const sameAsCache = WC_PRODUCTS.length === transformed.length
+          && transformed.every((p, i) => WC_PRODUCTS[i]
+              && WC_PRODUCTS[i].id === p.id
+              && WC_PRODUCTS[i].price === p.price
+              && (WC_PRODUCTS[i].imgFiles || []).join('|') === (p.imgFiles || []).join('|'));
         // MUTATE in place (const WC_PRODUCTS keeps same reference)
         WC_PRODUCTS.length = 0;
         transformed.forEach(p => WC_PRODUCTS.push(p));
         window.WC_PRODUCTS = WC_PRODUCTS;
-        window.dispatchEvent(new Event('products:loaded'));
+        if (!sameAsCache) window.dispatchEvent(new Event('products:loaded'));
       } catch (e) { console.warn('[products] load failed', e); }
     };
     loadProducts();
