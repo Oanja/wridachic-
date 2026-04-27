@@ -145,6 +145,28 @@
         return () => window.removeEventListener('products:loaded', bump);
       }, []);
 
+      // Scroll-reveal animations — fade + slide-up when entering viewport
+      useEffect(() => {
+        if (!('IntersectionObserver' in window)) return;
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+              io.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+        const observe = () => {
+          document.querySelectorAll('.reveal:not(.is-visible), .reveal-stagger:not(.is-visible), .reveal-img:not(.is-visible)')
+            .forEach(el => io.observe(el));
+        };
+        observe();
+        // Re-scan when content changes (new pages, products loaded, lang switch)
+        const id = setInterval(observe, 600);
+        return () => { io.disconnect(); clearInterval(id); };
+      }, [page, productsVersion, lang]);
+
       // Load products from Supabase on startup (fallback to data.js if empty/fails)
       useEffect(() => {
         const loadProducts = async () => {

@@ -100,13 +100,13 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
       {/* ── SHOP BY MOOD ── */}
       <section style={{ padding: '80px 28px' }}>
         <div className="wrap">
-          <div className="sh2">
+          <div className="sh2 reveal">
             <span className="sh2-num mono">01 / {lang === 'fr' ? 'catégories' : 'أقسام'}</span>
             <h2 className="sh2-title">{lang === 'fr' ? 'Shop by mood' : 'تسوقي حسب المود'}</h2>
             <span className="sh2-link" onClick={() => onNav('shop')}>{lang === 'ar' ? '← كل المتجر' : '→ Voir tout'}</span>
           </div>
 
-          <div className="cat-grid">
+          <div className="cat-grid reveal-stagger">
             {/* Main — Robes & Ensembles */}
             <div className="cat-main" onClick={() => onNav('shop')}>
               <img src="assets/3.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -152,12 +152,12 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
       {/* ── BEST SELLERS ── */}
       <section style={{ padding: '20px 28px 80px' }}>
         <div className="wrap">
-          <div className="sh2">
+          <div className="sh2 reveal">
             <span className="sh2-num mono">02 / {lang === 'fr' ? 'tendance' : 'الأكثر طلباً'}</span>
             <h2 className="sh2-title">{lang === 'fr' ? 'Coups de cœur' : 'الأكثر طلباً'}</h2>
             <span className="sh2-link" onClick={() => onNav('shop')}>{lang === 'ar' ? '← ' : '→ '}{lang === 'fr' ? 'Voir tout' : 'كل المتجر'}</span>
           </div>
-          <div className="g3">
+          <div className="g3 reveal-stagger">
             {WC_PRODUCTS.slice(0, 6).map((p, i) => (
               <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
             ))}
@@ -182,7 +182,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
       <section style={{ padding: '80px 28px' }}>
         <div className="wrap">
           <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 40, alignItems: 'center' }}>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} className="reveal">
               <div style={{ aspectRatio: '4/5', borderRadius: 24, overflow: 'hidden' }}>
                 <img src="assets/00.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
@@ -192,7 +192,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                 </span>
               </div>
             </div>
-            <div>
+            <div className="reveal">
               <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? 'Espace prière' : 'ملابس الصلاة'}</span>
               <h2 className="display" style={{ fontSize: 'clamp(40px, 5vw, 68px)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: '20px 0' }}>
                 {lang === 'fr'
@@ -220,12 +220,12 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
       {/* ── COMMUNITY ── */}
       <section style={{ padding: '20px 28px 80px' }}>
         <div className="wrap">
-          <div className="sh2">
+          <div className="sh2 reveal">
             <span className="sh2-num mono">03 / community</span>
             <h2 className="sh2-title" dir="ltr">#wridachic</h2>
             <span className="sh2-link" dir="ltr">→ @wridachic</span>
           </div>
-          <div className="g6">
+          <div className="g6 reveal-stagger">
             {['rose', 'clay', 'mint', 'lime', 'sky', 'ink'].map((tint, i) => (
               <div key={i} style={{ aspectRatio: '1', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}>
                 <Ph2 tint={tint} aspect="1/1" />
@@ -292,7 +292,7 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
           ))}
         </div>
 
-        <div className="g3">
+        <div className="g3 reveal-stagger">
           {filtered.map((p, i) => (
             <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
           ))}
@@ -726,7 +726,7 @@ const CaftanYoung = ({ lang, onProduct, wishlist, toggleWish }) => {
             <span className="sh2-num mono">01 / {lang === 'fr' ? 'collection' : 'مجموعة'}</span>
             <h2 className="sh2-title">{lang === 'fr' ? 'Toute la collection' : 'كل المجموعة'}</h2>
           </div>
-          <div className="g4">
+          <div className="g4 reveal-stagger">
             {items.map((p, i) => (
               <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
             ))}
