@@ -1520,13 +1520,14 @@ const AdminYoung = () => {
           ) : orders.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Aucune commande pour l'instant.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {orders.map(o => (
-                <div key={o.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 14, padding: '18px 20px' }}>
+                <div key={o.id} className="adm-order-card" style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderLeft: `4px solid ${STATUS_COLORS[o.status] || '#999'}`, borderRadius: 14, padding: '18px 20px' }}>
                   <div className="adm-order">
                     <div className="adm-order-num">
-                      <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--clay)' }}>{o.order_number}</div>
-                      <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>{fmt(o.created_at)}</div>
+                      <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: 'var(--clay)', letterSpacing: '0.02em' }}>{o.order_number}</div>
+                      <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 4 }}>{fmt(o.created_at)}</div>
+                      <div className="mono" style={{ display: 'inline-block', marginTop: 8, padding: '3px 10px', borderRadius: 999, fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', background: STATUS_COLORS[o.status] + '22', color: STATUS_COLORS[o.status] }}>{o.status}</div>
                     </div>
                     <div className="adm-order-customer">
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{o.full_name}</div>
@@ -1548,18 +1549,20 @@ const AdminYoung = () => {
                     <div className="adm-status">
                       {STATUS_LABELS.map(s => (
                         <button key={s} onClick={() => updateStatus(o.id, s)} className="mono" style={{
-                          padding: '5px 12px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
-                          background: o.status === s ? STATUS_COLORS[s] : 'transparent',
-                          color: o.status === s ? '#fff' : 'rgba(250,246,241,0.4)',
-                          border: `1px solid ${o.status === s ? STATUS_COLORS[s] : 'rgba(250,246,241,0.15)'}`,
-                          textTransform: 'uppercase', letterSpacing: '0.06em',
+                          padding: '6px 14px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
+                          background: o.status === s ? STATUS_COLORS[s] : '#fff',
+                          color: o.status === s ? '#fff' : 'rgba(15,14,13,0.6)',
+                          border: `1px solid ${o.status === s ? STATUS_COLORS[s] : 'rgba(15,14,13,0.18)'}`,
+                          textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600,
+                          transition: 'all 0.15s ease',
                         }}>{s}</button>
                       ))}
                       <button onClick={() => deleteOrder(o.id)} className="mono" style={{
-                        padding: '5px 12px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
-                        background: 'transparent', color: 'rgba(255,90,90,0.7)',
-                        border: '1px solid rgba(255,90,90,0.35)',
-                        textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4,
+                        padding: '6px 14px', borderRadius: 999, fontSize: 10, cursor: 'pointer',
+                        background: '#fff', color: '#C62828',
+                        border: '1px solid rgba(198,40,40,0.3)',
+                        textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600,
+                        marginTop: 8, transition: 'all 0.15s ease',
                       }}>✕ Supprimer</button>
                     </div>
                   </div>
