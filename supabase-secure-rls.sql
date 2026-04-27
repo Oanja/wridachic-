@@ -23,8 +23,9 @@ as $$
     from auth.users
     where id = auth.uid()
       and email in (
-        -- ⚠️ EDIT THIS LIST with your real admin email(s):
-        'othmaneanjada@gmail.com'
+        -- ⚠️ Admin emails — add/remove here, then re-run this SQL block:
+        'othmaneanjada@gmail.com',
+        'salmasissa1997@gmail.com'
       )
   );
 $$;
