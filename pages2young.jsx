@@ -1432,7 +1432,7 @@ const AdminYoung = () => {
           font-weight: 600 !important;
         }
         .adm-light .pl-btn-primary:hover { background: #b34d2f !important; }
-        /* Convert legacy dark-bg backgrounds to light — DO NOT use shorthand `border` (would kill borderLeft accents) */
+        /* Convert legacy dark-bg backgrounds to light — DO NOT use shorthand 'border' (would kill borderLeft accents) */
         .adm-light [style*="rgba(250,246,241,0.04)"],
         .adm-light [style*="rgba(250,246,241,0.05)"] {
           background: #fff !important;
