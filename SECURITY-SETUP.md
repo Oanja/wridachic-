@@ -79,6 +79,29 @@ Then re-run only the `is_admin()` block in SQL Editor (top section of the file).
 
 ## What is NOT done (out of scope for now)
 
-- **Rate limiting on order creation** — anyone can still spam fake orders via the public INSERT policy. This is operational, not a privacy leak. If spam becomes a problem, add a CAPTCHA or move checkout to a Supabase Edge Function.
-- **2FA on admin account** — Supabase supports it via TOTP. Recommended once you're set up: Authentication → Providers → Multi-Factor.
 - **Audit log** — no record of who changed what. Can be added with a Postgres trigger if needed.
+- **CSP headers** — recommended at the CDN level (Cloudflare → Rules → Transform Rules → Add `Content-Security-Policy` response header).
+
+---
+
+## How to enable 2FA on the admin account (recommended)
+
+Two-factor auth means even if someone steals your admin password, they still need your phone to log in.
+
+### One-time setup in Supabase
+
+1. **Supabase Dashboard → Authentication → Providers**
+2. Scroll to **Multi-Factor Authentication (MFA)** → toggle **Enable TOTP** on
+3. Save
+
+### Activate it on your admin account
+
+1. Open the site, go to `#admin`, log in normally with your email + password
+2. Open Supabase Dashboard → **Authentication → Users**
+3. Find your admin user → click the row → **"Enroll TOTP factor"**
+4. Scan the QR code with **Google Authenticator** / **Authy** / **1Password**
+5. Enter the 6-digit code to confirm
+
+> ⚠️ **Important:** Once enrolled, the next time you log in to admin, Supabase will require the 6-digit TOTP code. The current login form in this site does NOT yet handle the TOTP step. If you enable 2FA, you'll need to update the admin login UI to accept the code (Supabase JS docs: `_sb.auth.mfa.challengeAndVerify()`). Ask Claude to add this when you're ready.
+
+For now, the practical 2FA workaround: **use a long, unique password manager–generated password** for the admin account. Combined with the strict RLS policies, this is "good enough" for a small store.

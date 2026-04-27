@@ -536,6 +536,11 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
   const [form, setForm] = u2S({ fullName: '', phone: '', email: '', address: '', city: 'Casablanca' });
   const [saving, setSaving] = u2S(false);
   const [orderNum, setOrderNum] = u2S('');
+  // ── Spam protection ──
+  // Honeypot: bots fill any input they see; this one is hidden from humans via CSS.
+  // Timing: real users take >3s to fill the form; bots submit in milliseconds.
+  const [hp, setHp] = u2S('');
+  const startedAt = React.useRef(Date.now());
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery  = subtotal > 500 ? 0 : 35;
   const total     = subtotal + delivery;
@@ -544,6 +549,18 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
     setSaving(true);
     const num = 'WC-' + (Math.floor(Math.random() * 900000) + 100000);
     setOrderNum(num);
+
+    // ── Bot guards ──
+    const elapsed = Date.now() - startedAt.current;
+    const isBot = hp.length > 0 || elapsed < 3000;
+    if (isBot) {
+      // Pretend success — don't tip off the bot. No DB write.
+      console.warn('[order] suspected bot, skipped insert');
+      setSaving(false);
+      setStep(4);
+      return;
+    }
+
     const itemsData = cart.map(it => ({
       name: lang === 'ar' ? (it.nameAr || it.name) : it.name,
       qty: it.qty, size: it.size, color: it.color, price: it.price,
@@ -623,6 +640,11 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
                     <select className="input2" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ marginTop: 4 }}>
                       {['Casablanca','Rabat','Marrakech','Fès','Tanger','Agadir','Meknès','Oujda'].map(c => <option key={c}>{c}</option>)}
                     </select>
+                  </div>
+                  {/* Honeypot — hidden from humans, irresistible to bots */}
+                  <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 'auto', width: 1, height: 1, overflow: 'hidden' }}>
+                    <label>Site web (laisser vide)</label>
+                    <input type="text" tabIndex={-1} autoComplete="off" value={hp} onChange={e => setHp(e.target.value)} />
                   </div>
                 </div>
                 {(() => {

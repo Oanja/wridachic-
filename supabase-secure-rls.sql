@@ -170,6 +170,31 @@ end $$;
 
 
 -- ────────────────────────────────────────────────
+-- 6) STORAGE — public read, admin-only write/update/delete
+-- ────────────────────────────────────────────────
+-- Replace the old open policies (anyone could upload/replace/delete images)
+drop policy if exists "product_images_read"   on storage.objects;
+drop policy if exists "product_images_write"  on storage.objects;
+drop policy if exists "product_images_update" on storage.objects;
+drop policy if exists "product_images_delete" on storage.objects;
+
+-- Public read (so customers see product photos)
+create policy "product_images_read" on storage.objects
+  for select using (bucket_id = 'product-images');
+
+-- Admin only: insert / update / delete
+create policy "product_images_write" on storage.objects
+  for insert with check (bucket_id = 'product-images' and public.is_admin());
+
+create policy "product_images_update" on storage.objects
+  for update using (bucket_id = 'product-images' and public.is_admin())
+  with check (bucket_id = 'product-images' and public.is_admin());
+
+create policy "product_images_delete" on storage.objects
+  for delete using (bucket_id = 'product-images' and public.is_admin());
+
+
+-- ────────────────────────────────────────────────
 -- ✓ Done!
 -- ────────────────────────────────────────────────
 -- Verify after running:
