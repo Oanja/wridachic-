@@ -77,9 +77,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles2.css" />
+
+  <!-- Critical CSS — prevents flash of empty page before React mounts -->
+  <style>
+    html, body { background: #FAF6F1; margin: 0; }
+    body { font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif; color: #0F0E0D; }
+    #boot-mark {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #FAF6F1; z-index: 1; pointer-events: none;
+      animation: bootFade 0.5s ease 0.15s both;
+    }
+    #boot-mark .boot-brand {
+      font-family: 'Fraunces', 'Times New Roman', serif;
+      font-size: clamp(38px, 7vw, 64px);
+      letter-spacing: -0.03em;
+      color: #0F0E0D;
+      font-weight: 400;
+    }
+    #boot-mark .boot-brand em { color: #C85C3F; font-style: italic; }
+    @keyframes bootFade { from { opacity: 0; } to { opacity: 1; } }
+    /* Hide instantly once React has rendered something */
+    #root:not(:empty) ~ #boot-mark { display: none; }
+  </style>
 </head>
 <body>
   <div id="root"></div>
+  <div id="boot-mark" aria-hidden="true">
+    <div class="boot-brand">wrida<em>chic</em></div>
+  </div>
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -143,6 +168,16 @@
         const bump = () => setProductsVersion(v => v + 1);
         window.addEventListener('products:loaded', bump);
         return () => window.removeEventListener('products:loaded', bump);
+      }, []);
+
+      // Remove boot mark once App has rendered
+      useEffect(() => {
+        const mark = document.getElementById('boot-mark');
+        if (mark) {
+          mark.style.transition = 'opacity 0.35s ease';
+          mark.style.opacity = '0';
+          setTimeout(() => mark.remove(), 400);
+        }
       }, []);
 
       // Scroll-reveal animations — fade + slide-up when entering viewport

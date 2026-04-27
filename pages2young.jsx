@@ -15,12 +15,12 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
             {/* Text side */}
             <div className="hero-text">
-              <div className="hero-eyebrow" style={{ display: 'flex', gap: 12, marginBottom: 28, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="hero-eyebrow reveal" style={{ display: 'flex', gap: 12, marginBottom: 28, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? `Printemps ${year}` : `ربيع ${year}`}</span>
                 <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
               </div>
 
-              <h1 className="display hero-title" style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24 }}>
+              <h1 className="display hero-title reveal" style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24, transitionDelay: '0.1s' }}>
                 {lang === 'fr' ? (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 ) : (
@@ -28,13 +28,13 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                 )}
               </h1>
 
-              <p className="hero-sub" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36 }}>
+              <p className="hero-sub reveal" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36, transitionDelay: '0.2s' }}>
                 {lang === 'fr'
                   ? 'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en 2–5 jours.'
                   : 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.'}
               </p>
 
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44 }}>
+              <div className="reveal" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44, transitionDelay: '0.3s' }}>
                 <button className="btn2 btn2-dark btn2-lg" onClick={() => onNav('shop')}>
                   {lang === 'fr' ? 'Découvrir la boutique' : 'اكتشفي المتجر'} <Ic n="arr" s={14} />
                 </button>
@@ -44,7 +44,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               </div>
 
               {/* Stats — inline elegant strip */}
-              <div className="hero-stats" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
+              <div className="hero-stats reveal-stagger" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
                 {[
                   { n: '150+', l: lang === 'fr' ? 'Styles' : 'ستايل' },
                   { n: '48h',  l: lang === 'fr' ? 'Livraison' : 'توصيل' },
@@ -59,7 +59,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
             </div>
 
             {/* Collage side — refined */}
-            <div className="hero-collage" style={{ position: 'relative', minHeight: 680 }}>
+            <div className="hero-collage reveal" style={{ position: 'relative', minHeight: 680, transitionDelay: '0.15s' }}>
               {/* Decorative arc behind images */}
               <div aria-hidden="true" style={{ position: 'absolute', top: 40, right: 40, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,116,107,0.08), transparent 70%)', zIndex: 0 }} />
 
@@ -325,7 +325,7 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
 
         <div className="pdetail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48 }}>
           {/* Images */}
-          <div className="pdetail-img" style={{ display: 'grid', gridTemplateColumns: '72px 1fr', gap: 10 }}>
+          <div className="pdetail-img reveal" style={{ display: 'grid', gridTemplateColumns: '72px 1fr', gap: 10 }}>
             {product.imgFiles ? (
               <>
                 <div className="pdetail-thumbs" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -356,7 +356,7 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
           </div>
 
           {/* Info */}
-          <div>
+          <div className="reveal" style={{ transitionDelay: '0.15s' }}>
             {product.tag === 'new'  && <span className="sticker">NOUVEAU ✦</span>}
             {product.tag === 'sale' && <span className="sticker sticker-clay">SOLDE −{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
             <h1 className="display" style={{ fontSize: 'clamp(32px, 4vw, 52px)', lineHeight: 1, marginTop: 12, marginBottom: 10, letterSpacing: '-0.02em' }}>{name}</h1>
@@ -431,11 +431,11 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
 
         {related.length > 0 && (
           <section style={{ marginTop: 80 }}>
-            <div className="sh2">
+            <div className="sh2 reveal">
               <span className="sh2-num mono">/ {lang === 'fr' ? 'vous aimerez aussi' : 'قد يعجبك'}</span>
               <h2 className="sh2-title">{lang === 'fr' ? 'Dans le même style' : 'في نفس الأسلوب'}</h2>
             </div>
-            <div className="g4">
+            <div className="g4 reveal-stagger">
               {related.map((p, i) => (
                 <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
               ))}
