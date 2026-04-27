@@ -1109,10 +1109,10 @@ const ProductEditor = ({ product, nextSortOrder, onClose, onSaved }) => {
 
   const inputStyle = {
     width: '100%', padding: '10px 14px', borderRadius: 10,
-    border: '1px solid rgba(250,246,241,0.15)', background: 'rgba(250,246,241,0.04)',
-    color: '#FAF6F1', fontSize: 14, fontFamily: 'inherit',
+    border: '1px solid rgba(15,14,13,0.15)', background: '#fff',
+    color: '#0F0E0D', fontSize: 14, fontFamily: 'inherit',
   };
-  const labelStyle = { fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace' };
+  const labelStyle = { fontSize: 10, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', color: '#0F0E0D' };
 
   return (
     <div>
@@ -1180,20 +1180,35 @@ const ProductEditor = ({ product, nextSortOrder, onClose, onSaved }) => {
             <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.description_ar} onChange={e => set('description_ar', e.target.value)} dir="rtl" />
           </div>
           <div>
-            <label style={labelStyle}>Couleurs (hex)</label>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+            <label style={labelStyle}>Couleurs disponibles</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
               {form.colors.map((c, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(250,246,241,0.06)', padding: '4px 8px', borderRadius: 999 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: c, border: '1px solid rgba(255,255,255,0.2)' }} />
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(15,14,13,0.06)', padding: '4px 10px', borderRadius: 999 }}>
+                  <span style={{ width: 16, height: 16, borderRadius: '50%', background: c, border: '1px solid rgba(0,0,0,0.15)' }} />
                   <span className="mono" style={{ fontSize: 10 }}>{c}</span>
-                  <button onClick={() => removeColor(i)} style={{ background: 'transparent', color: '#FF8A80', fontSize: 11, padding: 0 }}>✕</button>
+                  <button onClick={() => removeColor(i)} style={{ background: 'transparent', color: '#C62828', fontSize: 12, padding: 0, lineHeight: 1 }}>✕</button>
                 </div>
               ))}
+              {form.colors.length === 0 && <span className="mono" style={{ fontSize: 11, opacity: 0.4 }}>Aucune couleur</span>}
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <input style={{ ...inputStyle, flex: 1 }} value={colorInput} onChange={e => setColorInput(e.target.value)} placeholder="#C4746B" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addColor())} />
-              <button className="pl-btn" onClick={addColor}>+ Ajouter</button>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+              <input
+                type="color"
+                value={colorInput && /^#[0-9A-F]{6}$/i.test(colorInput) ? colorInput : '#C85C3F'}
+                onChange={e => setColorInput(e.target.value)}
+                style={{ width: 52, height: 42, padding: 2, borderRadius: 10, border: '1px solid rgba(15,14,13,0.15)', background: '#fff', cursor: 'pointer' }}
+                title="Choisir une couleur"
+              />
+              <input
+                style={{ ...inputStyle, flex: 1, fontFamily: 'JetBrains Mono, monospace' }}
+                value={colorInput}
+                onChange={e => setColorInput(e.target.value)}
+                placeholder="#C4746B ou tape le code hex"
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addColor())}
+              />
+              <button className="pl-btn pl-btn-primary" style={{ padding: '0 16px', whiteSpace: 'nowrap' }} onClick={addColor}>+ Ajouter</button>
             </div>
+            <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 6 }}>Utilise la palette OU tape un code hex (ex: #C4746B)</div>
           </div>
         </div>
 
@@ -1295,8 +1310,8 @@ const AdminYoung = () => {
   };
 
   if (!authed) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)', padding: 16 }}>
-      <div style={{ background: 'var(--paper)', padding: 40, borderRadius: 20, width: '100%', maxWidth: 320, textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--paper)', padding: 16 }}>
+      <div style={{ background: '#fff', padding: 40, borderRadius: 20, width: '100%', maxWidth: 320, textAlign: 'center', border: '1px solid rgba(15,14,13,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
           <Logo2 size={48} />
         </div>
@@ -1315,7 +1330,7 @@ const AdminYoung = () => {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0F0E0D', color: '#FAF6F1', padding: '24px 16px' }}>
+    <div style={{ minHeight: '100vh', background: '#FAF6F1', color: '#0F0E0D', padding: '24px 16px' }}>
       <style>{`
         .adm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
         .adm-order { display: grid; grid-template-columns: 120px 1fr 1fr auto; gap: 16px; align-items: start; }
@@ -1325,27 +1340,48 @@ const AdminYoung = () => {
           .adm-order { grid-template-columns: 1fr 1fr; }
           .adm-order-num { grid-column: 1; }
           .adm-order-customer { grid-column: 2; }
-          .adm-order-items { grid-column: 1 / -1; border-top: 1px solid rgba(250,246,241,0.08); padding-top: 10px; }
-          .adm-status { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; border-top: 1px solid rgba(250,246,241,0.08); padding-top: 10px; }
+          .adm-order-items { grid-column: 1 / -1; border-top: 1px solid rgba(15,14,13,0.08); padding-top: 10px; }
+          .adm-status { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; border-top: 1px solid rgba(15,14,13,0.08); padding-top: 10px; }
         }
+        /* Light-mode admin scope — fix dark-bg leftovers */
+        .adm-light input, .adm-light select, .adm-light textarea {
+          background: #fff !important;
+          color: #0F0E0D !important;
+          border: 1px solid rgba(15,14,13,0.15) !important;
+        }
+        .adm-light select option { background: #fff; color: #0F0E0D; }
+        .adm-light .pl-row {
+          background: #fff !important;
+          border: 1px solid rgba(15,14,13,0.08) !important;
+        }
+        .adm-light .pl-thumb { background: rgba(15,14,13,0.06) !important; }
+        .adm-light .pl-name { color: #0F0E0D !important; }
+        .adm-light .pl-btn {
+          background: rgba(15,14,13,0.06) !important;
+          border: 1px solid rgba(15,14,13,0.12) !important;
+          color: #0F0E0D !important;
+        }
+        .adm-light .pl-btn:hover { background: rgba(15,14,13,0.12) !important; }
+        .adm-light .pl-btn-danger { color: #C62828 !important; border-color: rgba(198,40,40,0.3) !important; }
+        .adm-light .pl-btn-primary { background: var(--clay) !important; border-color: var(--clay) !important; color: #fff !important; }
       `}</style>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div className="adm-light" style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Logo2 size={32} invert />
+            <Logo2 size={32} />
             <div>
               <div className="display" style={{ fontSize: 20 }}>Tableau de bord</div>
-              <div className="mono" style={{ fontSize: 10, opacity: 0.4 }}>{orders.length} COMMANDES</div>
+              <div className="mono" style={{ fontSize: 10, opacity: 0.5 }}>{orders.length} COMMANDES</div>
             </div>
           </div>
-          <button onClick={() => { fetchOrders(); fetchUsers(); }} className="btn2 btn2-outline" style={{ fontSize: 12, color: '#FAF6F1', borderColor: 'rgba(250,246,241,0.3)', padding: '10px 16px' }}>
+          <button onClick={() => { fetchOrders(); fetchUsers(); }} className="btn2 btn2-outline" style={{ fontSize: 12, padding: '10px 16px' }}>
             ↻ Actualiser
           </button>
         </div>
 
         {/* TABS */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid rgba(250,246,241,0.1)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid rgba(15,14,13,0.1)', flexWrap: 'wrap' }}>
           {[
             { id: 'orders',   label: `Commandes (${orders.length})` },
             { id: 'products', label: `Produits` },
@@ -1354,9 +1390,10 @@ const AdminYoung = () => {
             <button key={tb.id} onClick={() => setTab(tb.id)} className="mono" style={{
               padding: '12px 20px', fontSize: 12, marginBottom: -1, cursor: 'pointer',
               borderBottom: tab === tb.id ? '2px solid var(--clay)' : '2px solid transparent',
-              color: tab === tb.id ? '#FAF6F1' : 'rgba(250,246,241,0.4)',
+              color: tab === tb.id ? '#0F0E0D' : 'rgba(15,14,13,0.4)',
               fontWeight: tab === tb.id ? 600 : 400,
               textTransform: 'uppercase', letterSpacing: '0.08em',
+              background: 'transparent',
             }}>{tb.label}</button>
           ))}
         </div>

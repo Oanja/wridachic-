@@ -159,13 +159,17 @@
               return;
             }
             // Transform DB format -> app format (camelCase)
-            window.WC_PRODUCTS = data.map(p => ({
+            const transformed = data.map(p => ({
               id: p.id, slug: p.slug, name: p.name, nameAr: p.name_ar,
               cat: p.cat, price: Number(p.price), tag: p.tag,
               colors: p.colors || [], img: p.img,
               imgFiles: p.img_files || [],
               description: p.description, descriptionAr: p.description_ar,
             }));
+            // MUTATE in place (const WC_PRODUCTS keeps same reference)
+            WC_PRODUCTS.length = 0;
+            transformed.forEach(p => WC_PRODUCTS.push(p));
+            window.WC_PRODUCTS = WC_PRODUCTS;
             window.dispatchEvent(new Event('products:loaded'));
           } catch (e) { console.warn('[products] load failed', e); }
         };
@@ -323,7 +327,7 @@
       return (
         <div data-screen-label={`wridachic young · ${page}`}>
           {!isAdmin && <Nav2 lang={lang} setLang={setLang} cartCount={cartCount} onNav={goto} current={page} user={user} onAuth={() => setAuthOpen(true)} onLogout={async () => { await logout(); goto('home'); }} />}
-          {content}
+          <div key={`pv-${productsVersion}`}>{content}</div>
           {!isAdmin && <Footer2 lang={lang} onNav={goto} onSignup={(email) => { setAuthPrefill({ email: email || '', mode: 'signup' }); setAuthOpen(true); }} />}
           {!isAdmin && <WaFloat2 lang={lang} />}
           {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => {
