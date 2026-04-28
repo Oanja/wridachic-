@@ -1165,8 +1165,8 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
                 <span>{subtotal} MAD</span>
               </div>
               {autoDiscount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--lime)' }} className="mono">
-                  <span style={{ opacity: 0.9 }}>2+ articles (−{AUTO_DISCOUNT_PCT}%)</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: '#3D7A2C', fontWeight: 500 }} className="mono">
+                  <span>2+ articles (−{AUTO_DISCOUNT_PCT}%)</span>
                   <span>−{autoDiscount} MAD</span>
                 </div>
               )}
@@ -1912,9 +1912,12 @@ const AdminCoupons = () => {
 const AdminNewsletter = () => {
   const [list, setList]     = u2S([]);
   const [loading, setLoading] = u2S(true);
+  const [subject, setSubject] = u2S('wridachic — nouveauté');
   const [message, setMessage] = u2S('');
   const [filter, setFilter]   = u2S('all'); // all | email | phone
   const [toast, setToast]     = u2S('');
+  const [sending, setSending] = u2S(false);
+  const [sendResult, setSendResult] = u2S(null); // {sent, failed} | null
   const showToast = (m) => { setToast(m); setTimeout(() => setToast(''), 2200); };
 
   u2E(() => {
@@ -1951,7 +1954,33 @@ const AdminNewsletter = () => {
     return `https://wa.me/${intl}${message ? '?text=' + encodeURIComponent(message) : ''}`;
   };
   const mailLink = (email) =>
-    `mailto:${email}?subject=${encodeURIComponent('wridachic — nouveauté')}&body=${encodeURIComponent(message)}`;
+    `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+
+  // ── Bulk send via Resend (Supabase Edge Function "send-newsletter") ──
+  const sendBulk = async () => {
+    const targets = list.map(s => s.email).filter(Boolean);
+    if (targets.length === 0) { showToast('⚠ Aucun e-mail à envoyer'); return; }
+    if (!subject.trim() || !message.trim()) { showToast('⚠ Sujet et message requis'); return; }
+    if (!confirm(`Envoyer à ${targets.length} personne(s) ?`)) return;
+
+    setSending(true);
+    setSendResult(null);
+    try {
+      const html = message
+        .split('\n').map(l => l.trim() ? `<p style="margin:0 0 14px;line-height:1.6;font-family:-apple-system,'Segoe UI',sans-serif;color:#0F0E0D">${l.replace(/</g,'&lt;')}</p>` : '<br/>')
+        .join('');
+      const wrapped = `<div style="max-width:560px;margin:0 auto;padding:24px;background:#FAF6F1">${html}<p style="margin-top:28px;font-size:12px;color:rgba(15,14,13,0.5);font-family:-apple-system,'Segoe UI',sans-serif">— wridachic · <a href="https://wridachic.com" style="color:#C8746B">wridachic.com</a></p></div>`;
+
+      const { data, error } = await window._sb.functions.invoke('send-newsletter', {
+        body: { subject: subject.trim(), html: wrapped, recipients: targets },
+      });
+      if (error) throw error;
+      setSendResult({ sent: data?.sent || 0, failed: data?.failed || 0 });
+    } catch (e) {
+      setSendResult({ sent: 0, failed: targets.length, error: e.message || String(e) });
+    }
+    setSending(false);
+  };
 
   return (
     <div>
@@ -1973,20 +2002,52 @@ const AdminNewsletter = () => {
 
       {/* Compose box */}
       <div style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderRadius: 12, padding: 18, marginBottom: 18 }}>
-        <div className="mono" style={{ fontSize: 11, opacity: 0.6, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Message à envoyer
+        <div className="mono" style={{ fontSize: 11, opacity: 0.6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Sujet (e-mail uniquement)
+        </div>
+        <input
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="ex: Nouvelle collection -10% cette semaine"
+          style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, marginBottom: 12 }}
+        />
+
+        <div className="mono" style={{ fontSize: 11, opacity: 0.6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Message
         </div>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Ex: Salam ! Nouvelle collection dispo cette semaine — −10% sur tout avec le code SPRING. wridachic.com"
-          rows={4}
+          rows={5}
           style={{ width: '100%', padding: 12, border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, resize: 'vertical' }}
         />
-        <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 6 }}>
-          Le message sera pré-rempli quand tu cliques sur 📱 WhatsApp ou ✉ Email à côté de chaque inscrite.
+
+        {/* Bulk send via Resend */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            onClick={sendBulk}
+            disabled={sending || !message.trim() || !subject.trim() || stats.withEmail === 0}
+            className="btn2 btn2-clay"
+            style={{ fontSize: 13, padding: '10px 18px', opacity: (sending || !message.trim() || !subject.trim() || stats.withEmail === 0) ? 0.5 : 1 }}
+          >
+            {sending ? '⏳ Envoi en cours…' : `📨 Envoyer à toutes (${stats.withEmail})`}
+          </button>
+          <span className="mono" style={{ fontSize: 10, opacity: 0.55 }}>
+            via Resend · domaine vérifié requis
+          </span>
         </div>
-        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+        {sendResult && (
+          <div className="mono" style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, fontSize: 12, background: sendResult.failed === 0 ? 'rgba(76,175,80,0.12)' : 'rgba(198,40,40,0.08)', color: sendResult.failed === 0 ? '#3D7A2C' : '#C62828' }}>
+            ✓ {sendResult.sent} envoyés · ✕ {sendResult.failed} échoués
+            {sendResult.error && <div style={{ marginTop: 4, opacity: 0.85 }}>Erreur: {sendResult.error}</div>}
+          </div>
+        )}
+
+        <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 14, paddingTop: 12, borderTop: '1px dashed rgba(15,14,13,0.1)' }}>
+          Ou envoie individuellement: clique 📱 WhatsApp ou ✉ Email à côté de chaque inscrite ci-dessous.
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={() => copyAll('email')} className="pl-btn" style={{ fontSize: 12 }}>📋 Copier tous les e-mails</button>
           <button onClick={() => copyAll('phone')} className="pl-btn" style={{ fontSize: 12 }}>📋 Copier tous les téléphones</button>
         </div>
