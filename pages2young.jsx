@@ -545,6 +545,20 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
             <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12 }} onClick={() => onBuyNow({ ...product, size, color, qty })}>
               {lang === 'fr' ? 'Commander maintenant →' : 'اطلبي دابا ←'}
             </button>
+            {(() => {
+              const total = (product.price || 0) * qty;
+              const msg = lang === 'fr'
+                ? `Bonjour wridachic 👋\n\nJe voudrais commander :\n• ${product.name}\n• Taille : ${size} · Couleur : ${color}\n• Quantité : ${qty}\n• Prix : ${total} MAD`
+                : `السلام، بغيت نطلب:\n• ${product.nameAr || product.name}\n• القياس: ${size} · اللون: ${color}\n• الكمية: ${qty}\n• الثمن: ${total} درهم`;
+              const href = `https://wa.me/212772086545?text=${encodeURIComponent(msg)}`;
+              return (
+                <div style={{ textAlign: 'center', marginBottom: 24, fontSize: 13 }}>
+                  <a href={href} target="_blank" rel="noopener noreferrer" style={{ opacity: 0.7, borderBottom: '1px solid currentColor', paddingBottom: 1, cursor: 'pointer' }}>
+                    {lang === 'fr' ? 'Préfères WhatsApp ? Cliquer ici' : 'تفضلين واتساب؟ اضغطي هنا'}
+                  </a>
+                </div>
+              );
+            })()}
 
             {/* Badges */}
             <div className="pdetail-badges" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 32 }}>
