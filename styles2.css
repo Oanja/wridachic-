@@ -346,7 +346,7 @@ body.ar .marquee-track { animation-direction: reverse; }
   z-index: 4;
 }
 .pcard-tag.sale { background: var(--clay); }
-.pcard-tag.new { background: var(--lime); color: var(--ink); }
+.pcard-tag.new { background: var(--cream); color: var(--ink); border: 1px solid var(--ink); }
 .pcard-wish {
   position: absolute;
   top: 12px;
@@ -622,11 +622,11 @@ body.ar .hero-text { padding-right: 0; padding-left: 8px; }
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #25D366;
-  color: white;
+  background: var(--ink);
+  color: var(--paper);
   padding: 13px 20px;
   border-radius: 999px;
-  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
+  box-shadow: 0 10px 30px rgba(15, 14, 13, 0.28);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -635,7 +635,7 @@ body.ar .hero-text { padding-right: 0; padding-left: 8px; }
   font-weight: 500;
   transition: all 0.2s;
 }
-.wafloat2:hover { transform: translateY(-2px) scale(1.02); }
+.wafloat2:hover { transform: translateY(-2px) scale(1.02); background: var(--clay); box-shadow: 0 12px 32px rgba(200, 92, 63, 0.36); }
 body.ar .wafloat2 { right: auto; left: 24px; }
 
 /* Page fade */
@@ -662,8 +662,9 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--lime);
+  background: var(--cream);
   color: var(--ink);
+  border: 1px solid var(--ink);
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 11px;

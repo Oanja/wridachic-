@@ -268,6 +268,7 @@ function App() {
       {isAdmin ? content : <div>{content}</div>}
       {!isAdmin && <Footer2 lang={lang} onNav={goto} onSignup={(email) => { setAuthPrefill({ email: email || '', mode: 'signup' }); setAuthOpen(true); }} />}
       {!isAdmin && <WaFloat2 lang={lang} />}
+      {!isAdmin && <NewsletterPopup lang={lang} />}
       {authOpen && <AuthYoung lang={lang} initialEmail={authPrefill.email} initialMode={authPrefill.mode} onClose={() => { setAuthOpen(false); setAuthPrefill({ email: '', mode: 'login' }); }} onSuccess={(u, opts) => {
         setUser(u);
         setAuthOpen(false);

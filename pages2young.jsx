@@ -46,9 +46,9 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               {/* Stats — inline elegant strip */}
               <div className="hero-stats reveal-stagger" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
                 {[
-                  { n: '150+', l: lang === 'fr' ? 'Styles' : 'ستايل' },
+                  { n: '🇲🇦', l: lang === 'fr' ? 'Made in Maroc' : 'صنع في المغرب' },
                   { n: '48h',  l: lang === 'fr' ? 'Livraison' : 'توصيل' },
-                  { n: '★ 4.9', l: lang === 'fr' ? 'Avis clientes' : 'تقييم الزبونات' },
+                  { n: 'COD',  l: lang === 'fr' ? 'Paiement livraison' : 'الدفع عند التوصيل' },
                 ].map((s, i) => (
                   <div key={i} className="hero-stat" style={{ flex: 1, paddingRight: i < 2 ? 24 : 0, paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid rgba(15,14,13,0.12)' : 'none' }}>
                     <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
@@ -87,11 +87,11 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
         <div style={{ display: 'flex', animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
           {[...Array(2)].map((_, k) => (
             <div key={k} style={{ display: 'flex', gap: 56, paddingRight: 56, flexShrink: 0 }}>
-              <span>✦ {lang === 'fr' ? 'Livraison partout au Maroc' : 'توصيل في كل المغرب'}</span>
-              <span style={{ color: 'var(--clay)' }}>✦ {lang === 'fr' ? 'Paiement à la livraison' : 'الدفع عند التسليم'}</span>
-              <span>✦ {lang === 'fr' ? 'Tenues de prière' : 'ملابس الصلاة'}</span>
-              <span style={{ color: 'var(--lime)' }}>✦ {lang === 'fr' ? 'Retours 14 jours' : 'إرجاع 14 يوماً'}</span>
-              <span>✦ Made in 🇲🇦</span>
+              <span>✦ {lang === 'fr' ? 'Tissus naturels & mousseline' : 'أقمشة طبيعية وشيفون'}</span>
+              <span style={{ color: 'var(--clay)' }}>✦ {lang === 'fr' ? 'Production limitée' : 'إنتاج محدود'}</span>
+              <span>✦ {lang === 'fr' ? 'Mode pudique & raffinée' : 'موضة محتشمة وراقية'}</span>
+              <span style={{ color: 'var(--clay)' }}>✦ {lang === 'fr' ? 'Finitions artisanales' : 'تشطيب يدوي'}</span>
+              <span>✦ {lang === 'fr' ? 'Pensé au Maroc, pour la femme marocaine' : 'مصمم في المغرب، للمرأة المغربية'}</span>
             </div>
           ))}
         </div>
@@ -243,17 +243,40 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
   const t = WC_TR[lang];
   const [cat, setCat] = u2S(initialCat || 'all');
   const [sort, setSort] = u2S('featured');
+  const [priceRange, setPriceRange] = u2S('all'); // all | 0-200 | 200-400 | 400+
+  const [activeColor, setActiveColor] = u2S(null);
+
+  // Collect unique colors across all products
+  const allColors = u2M(() => {
+    const set = new Set();
+    WC_PRODUCTS.forEach(p => (p.colors || []).forEach(c => set.add(c)));
+    return Array.from(set);
+  }, []);
 
   const filtered = u2M(() => {
     let l = WC_PRODUCTS.filter(p => cat === 'all' || p.cat === cat);
+    if (priceRange === '0-200')   l = l.filter(p => p.price < 200);
+    if (priceRange === '200-400') l = l.filter(p => p.price >= 200 && p.price < 400);
+    if (priceRange === '400+')    l = l.filter(p => p.price >= 400);
+    if (activeColor)              l = l.filter(p => (p.colors || []).includes(activeColor));
     if (sort === 'price-asc')  l = [...l].sort((a, b) => a.price - b.price);
     if (sort === 'price-desc') l = [...l].sort((a, b) => b.price - a.price);
+    if (sort === 'new')        l = [...l].sort((a, b) => (b.tag === 'new' ? 1 : 0) - (a.tag === 'new' ? 1 : 0));
     return l;
-  }, [cat, sort]);
+  }, [cat, sort, priceRange, activeColor]);
+
+  const hasActiveFilters = priceRange !== 'all' || activeColor !== null;
 
   const cats = [
     { id: 'all', name: lang === 'fr' ? 'Tout' : 'الكل', nameAr: 'الكل' },
     ...WC_CATEGORIES,
+  ];
+
+  const priceRanges = [
+    { id: 'all',     fr: 'Tous prix',     ar: 'كل الأسعار' },
+    { id: '0-200',   fr: '< 200 MAD',     ar: '< 200 درهم' },
+    { id: '200-400', fr: '200 – 400 MAD', ar: '200 – 400 درهم' },
+    { id: '400+',    fr: '400+ MAD',      ar: '400+ درهم' },
   ];
 
   return (
@@ -272,13 +295,14 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
           </div>
           <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ padding: '8px 14px', border: '1.5px solid var(--ink)', borderRadius: 999, background: 'var(--paper)', fontFamily: 'inherit', fontSize: 13 }}>
             <option value="featured">{lang === 'fr' ? 'Sélection' : 'مميز'}</option>
+            <option value="new">{lang === 'fr' ? 'Nouveautés' : 'الجديد'}</option>
             <option value="price-asc">{lang === 'fr' ? 'Prix croissant' : 'السعر ↗'}</option>
             <option value="price-desc">{lang === 'fr' ? 'Prix décroissant' : 'السعر ↘'}</option>
           </select>
         </div>
 
         {/* Category filters */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
           {cats.map((c) => (
             <button key={c.id} onClick={() => setCat(c.id)} style={{
               padding: '9px 18px', borderRadius: 999,
@@ -292,11 +316,68 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
           ))}
         </div>
 
-        <div className="g3 reveal-stagger">
-          {filtered.map((p, i) => (
-            <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
-          ))}
+        {/* Refinement filters: price + color */}
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center', marginBottom: 32, paddingBottom: 16, borderBottom: '1px dashed rgba(15,14,13,0.15)' }}>
+          {/* Price */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>
+              {lang === 'fr' ? 'Prix' : 'السعر'}
+            </span>
+            {priceRanges.map((r) => (
+              <button key={r.id} onClick={() => setPriceRange(r.id)} style={{
+                padding: '6px 12px', borderRadius: 999,
+                border: '1px solid ' + (priceRange === r.id ? 'var(--ink)' : 'rgba(15,14,13,0.2)'),
+                background: priceRange === r.id ? 'var(--ink)' : 'transparent',
+                color: priceRange === r.id ? 'var(--paper)' : 'var(--ink)',
+                fontSize: 12, cursor: 'pointer', transition: 'all 0.2s',
+              }}>{lang === 'fr' ? r.fr : r.ar}</button>
+            ))}
+          </div>
+
+          {/* Color */}
+          {allColors.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>
+                {lang === 'fr' ? 'Couleur' : 'اللون'}
+              </span>
+              {allColors.map((c) => (
+                <button key={c} onClick={() => setActiveColor(activeColor === c ? null : c)}
+                  title={c}
+                  style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: c,
+                    border: '1.5px solid ' + (activeColor === c ? 'var(--ink)' : 'rgba(15,14,13,0.2)'),
+                    boxShadow: activeColor === c ? '0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink)' : 'none',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }} />
+              ))}
+            </div>
+          )}
+
+          {/* Reset */}
+          {hasActiveFilters && (
+            <button onClick={() => { setPriceRange('all'); setActiveColor(null); }} className="mono" style={{
+              fontSize: 11, opacity: 0.7, cursor: 'pointer',
+              background: 'transparent', border: 'none',
+              borderBottom: '1px solid currentColor', padding: '0 0 2px',
+            }}>
+              ✕ {lang === 'fr' ? 'Effacer les filtres' : 'مسح الفلاتر'}
+            </button>
+          )}
         </div>
+
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', opacity: 0.5 }}>
+            <p className="mono" style={{ fontSize: 13, marginBottom: 6 }}>○</p>
+            <p>{lang === 'fr' ? 'Aucun article ne correspond à ces filtres.' : 'لا توجد قطع تطابق الفلاتر.'}</p>
+          </div>
+        ) : (
+          <div className="g3 reveal-stagger">
+            {filtered.map((p, i) => (
+              <PCard key={p.id} product={p} lang={lang} onClick={onProduct} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -359,10 +440,11 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
           <div className="reveal" style={{ transitionDelay: '0.15s' }}>
             {product.tag === 'new'  && <span className="sticker">NOUVEAU ✦</span>}
             {product.tag === 'sale' && <span className="sticker sticker-clay">SOLDE −{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
-            <h1 className="display" style={{ fontSize: 'clamp(32px, 4vw, 52px)', lineHeight: 1, marginTop: 12, marginBottom: 10, letterSpacing: '-0.02em' }}>{name}</h1>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, fontSize: 13 }}>
-              <span style={{ color: 'var(--clay)' }}>★★★★★</span>
-              <span style={{ opacity: 0.5 }}>4.9 · 124 {lang === 'fr' ? 'avis' : 'تقييم'}</span>
+            <h1 className="display" style={{ fontSize: 'clamp(32px, 4vw, 52px)', lineHeight: 1, marginTop: 12, marginBottom: 12, letterSpacing: '-0.02em' }}>{name}</h1>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, fontSize: 11, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.55 }}>
+              <span>✦ {lang === 'fr' ? 'Made in Maroc' : 'صنع في المغرب'}</span>
+              <span style={{ opacity: 0.4 }}>·</span>
+              <span>{lang === 'fr' ? 'Production limitée' : 'إنتاج محدود'}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'baseline', marginBottom: 24, fontFamily: 'JetBrains Mono, monospace' }}>
               <span style={{ fontSize: 28, fontWeight: 600 }}>{product.price} MAD</span>

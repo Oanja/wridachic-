@@ -384,4 +384,92 @@ const WaFloat2 = ({ lang }) => (
   </a>
 );
 
-Object.assign(window, { Logo2, Ic, Marquee, Nav2, Ph2, PCard, Footer2, WaFloat2, TINTS });
+// ──── NEWSLETTER POPUP ────
+// Shown to first-time visitors after 10s. Stores dismissal/subscription in localStorage.
+const NewsletterPopup = ({ lang }) => {
+  const [open, setOpen] = uS(false);
+  const [email, setEmail] = uS('');
+  const [busy, setBusy] = uS(false);
+  const [done, setDone] = uS(false);
+
+  uE(() => {
+    if (localStorage.getItem('wc2-newsletter-seen')) return;
+    const t = setTimeout(() => setOpen(true), 10000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const close = () => {
+    localStorage.setItem('wc2-newsletter-seen', '1');
+    setOpen(false);
+  };
+
+  const submit = async (e) => {
+    e?.preventDefault();
+    if (!email.trim() || busy) return;
+    setBusy(true);
+    try {
+      // Try to save to Supabase if a `newsletter_subscribers` table exists
+      if (window._sb) {
+        await window._sb.from('newsletter_subscribers').insert({ email: email.trim() }).then(() => {});
+      }
+    } catch (e) { /* table may not exist — fail silently */ }
+    localStorage.setItem('wc2-newsletter-seen', '1');
+    localStorage.setItem('wc2-newsletter-email', email.trim());
+    setDone(true);
+    setBusy(false);
+    setTimeout(() => setOpen(false), 2400);
+  };
+
+  if (!open) return null;
+
+  return React.createElement('div', {
+    onClick: close,
+    style: { position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, animation: 'fIn 0.3s ease' },
+  },
+    React.createElement('div', {
+      onClick: (e) => e.stopPropagation(),
+      style: { background: 'var(--paper)', padding: 36, borderRadius: 22, width: '100%', maxWidth: 420, position: 'relative', textAlign: 'center', boxShadow: '0 30px 80px rgba(15,14,13,0.35)' },
+    },
+      React.createElement('button', {
+        onClick: close,
+        style: { position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', border: 'none', cursor: 'pointer', fontSize: 14 },
+      }, '✕'),
+      React.createElement('div', { className: 'mono', style: { fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 } },
+        lang === 'fr' ? '✦ Bienvenue ✦' : '✦ مرحبا ✦'
+      ),
+      React.createElement('h2', { className: 'display', style: { fontSize: 30, lineHeight: 1.1, marginBottom: 12, letterSpacing: '-0.02em' } },
+        lang === 'fr' ? <>−10% sur ta <em>première</em> commande</> : <>−10% على <em>طلبك</em> الأول</>
+      ),
+      React.createElement('p', { style: { fontSize: 14, opacity: 0.7, marginBottom: 22, lineHeight: 1.5 } },
+        lang === 'fr'
+          ? "Inscris-toi à notre newsletter et reçois ton code promo par e-mail."
+          : 'سجلي في النشرة البريدية واستلمي كود الخصم على إيميلك.'
+      ),
+      done
+        ? React.createElement('div', { style: { padding: '14px 0', color: 'var(--clay)', fontSize: 14, fontWeight: 500 } },
+            lang === 'fr' ? '✓ Merci ! Vérifie ta boîte mail.' : '✓ شكراً! شوفي بريدك.'
+          )
+        : React.createElement('form', { onSubmit: submit },
+            React.createElement('input', {
+              className: 'input2',
+              type: 'email',
+              required: true,
+              placeholder: lang === 'fr' ? 'Ton e-mail…' : 'بريدك الإلكتروني…',
+              value: email,
+              onChange: (e) => setEmail(e.target.value),
+              style: { marginBottom: 12, textAlign: 'center' },
+            }),
+            React.createElement('button', {
+              type: 'submit', className: 'btn2 btn2-dark',
+              disabled: busy,
+              style: { width: '100%', opacity: busy ? 0.5 : 1 },
+            }, busy ? '…' : (lang === 'fr' ? "Recevoir mon code −10% →" : 'استلمي كود −10% ←'))
+          ),
+      React.createElement('p', { className: 'mono', style: { fontSize: 10, opacity: 0.5, marginTop: 14, textTransform: 'uppercase', letterSpacing: '0.08em' } },
+        lang === 'fr' ? 'Pas de spam. Désinscription en 1 clic.' : 'بدون سبام. إلغاء الاشتراك بضغطة.'
+      )
+    )
+  );
+};
+
+Object.assign(window, { Logo2, Ic, Marquee, Nav2, Ph2, PCard, Footer2, WaFloat2, NewsletterPopup, TINTS });
