@@ -458,15 +458,15 @@ const NewsletterPopup = ({ lang }) => {
       React.createElement('div', { className: 'mono', style: { fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 } },
         lang === 'fr' ? '✦ Offre fidélité ✦' : '✦ عرض خاص ✦'
       ),
-      React.createElement('h2', { className: 'display', style: { fontSize: 28, lineHeight: 1.15, marginBottom: 12, letterSpacing: '-0.02em' } },
+      React.createElement('h2', { className: 'display', style: { fontSize: 26, lineHeight: 1.2, marginBottom: 12, letterSpacing: '-0.02em' } },
         lang === 'fr'
-          ? <>Achète <em>2 articles</em> → reçois un code <em>−10%</em></>
-          : <>اشتري <em>قطعتين</em> واحصلي على كود <em>−10%</em></>
+          ? <>Achète <em>2 articles</em> et plus → <em>−10%</em> direct + un code cadeau</>
+          : <>اشتري <em>قطعتين</em> فأكثر → <em>−10%</em> مباشرة + كود هدية</>
       ),
       React.createElement('p', { style: { fontSize: 14, opacity: 0.7, marginBottom: 20, lineHeight: 1.55 } },
         lang === 'fr'
-          ? "Le code cadeau s'affiche à la fin de ta commande. Laisse ton e-mail ou ton numéro pour recevoir nos prochaines offres."
-          : 'كود الهدية كيبان فآخر طلبك. خلي إيميلك أو رقمك باش توصلوك العروض الجاية.'
+          ? "Le prix se réduit automatiquement de 10% dans ton panier, et tu reçois un code cadeau pour ta prochaine commande. Laisse ton e-mail ou ton numéro pour recevoir nos prochaines offres."
+          : 'الثمن كينقص تلقائيا بـ10٪ ف السلة، وفنفس الوقت كتوصلك كود هدية لطلبيتك القادمة. خلي إيميلك أو رقمك باش توصلوك العروض الجاية.'
       ),
       done
         ? React.createElement('div', { style: { padding: '18px 0', color: 'var(--clay)', fontSize: 14, fontWeight: 500, lineHeight: 1.6 } },

@@ -722,6 +722,11 @@ const computeDiscount = (subtotal, coupon) => {
   if (coupon.type === 'fixed')   return Math.min(subtotal, Number(coupon.value) || 0);
   return 0;
 };
+// 2+ items in cart → instant -10% on the order (stacked with manual coupon).
+const AUTO_DISCOUNT_THRESHOLD = 2;
+const AUTO_DISCOUNT_PCT = 10;
+const computeAutoDiscount = (subtotal, itemsCount) =>
+  itemsCount >= AUTO_DISCOUNT_THRESHOLD ? Math.round(subtotal * (AUTO_DISCOUNT_PCT / 100)) : 0;
 
 // ======== CART ========
 const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue, user }) => {
@@ -731,10 +736,13 @@ const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue, 
   const [couponMsg, setCouponMsg] = u2S('');
   const [couponBusy, setCouponBusy] = u2S(false);
 
-  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const discount = computeDiscount(subtotal, coupon);
-  const delivery = (subtotal - discount) > 500 ? 0 : 35;
-  const total    = Math.max(0, subtotal - discount) + delivery;
+  const subtotal     = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const itemsCount   = cart.reduce((s, i) => s + i.qty, 0);
+  const autoDiscount = computeAutoDiscount(subtotal, itemsCount);
+  const discount     = computeDiscount(subtotal, coupon);
+  const totalDiscount = autoDiscount + discount;
+  const delivery     = (subtotal - totalDiscount) > 500 ? 0 : 35;
+  const total        = Math.max(0, subtotal - totalDiscount) + delivery;
 
   const applyCoupon = async () => {
     const code = codeInput.trim().toUpperCase();
@@ -814,23 +822,31 @@ const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue, 
 
           <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 28, borderRadius: 20, height: 'fit-content' }}>
             <div className="display" style={{ fontSize: 26, marginBottom: 20 }}>{lang === 'fr' ? 'Récapitulatif' : 'ملخص الطلب'}</div>
-            {[
-              [t.cart.subtotal, `${subtotal} MAD`],
-              [t.cart.delivery, delivery === 0 ? (lang === 'fr' ? 'Offerte ✦' : 'مجاني ✦') : `${delivery} MAD`],
-            ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14 }}>
-                <span style={{ opacity: 0.65 }}>{k}</span><span className="mono">{v}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14 }}>
+              <span style={{ opacity: 0.65 }}>{t.cart.subtotal}</span>
+              <span className="mono">{subtotal} MAD</span>
+            </div>
+            {autoDiscount > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14, color: 'var(--lime)' }}>
+                <span style={{ opacity: 0.9 }}>
+                  ✦ {lang === 'fr' ? `Remise 2+ articles (−${AUTO_DISCOUNT_PCT}%)` : `خصم قطعتين فأكثر (−${AUTO_DISCOUNT_PCT}٪)`}
+                </span>
+                <span className="mono">−{autoDiscount} MAD</span>
               </div>
-            ))}
+            )}
             {coupon && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14, color: 'var(--clay)' }}>
                 <span style={{ opacity: 0.85 }}>
-                  {lang === 'fr' ? 'Remise' : 'الخصم'} <span className="mono" style={{ fontSize: 10, opacity: 0.7 }}>({coupon.code})</span>
+                  {lang === 'fr' ? 'Code' : 'كود'} <span className="mono" style={{ fontSize: 10, opacity: 0.7 }}>({coupon.code})</span>
                   <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 10, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
                 </span>
                 <span className="mono">−{discount} MAD</span>
               </div>
             )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14 }}>
+              <span style={{ opacity: 0.65 }}>{t.cart.delivery}</span>
+              <span className="mono">{delivery === 0 ? (lang === 'fr' ? 'Offerte ✦' : 'مجاني ✦') : `${delivery} MAD`}</span>
+            </div>
             {subtotal < 500 && (
               <div className="mono" style={{ fontSize: 11, color: 'var(--lime)', paddingTop: 4 }}>
                 + {500 - subtotal} MAD → {lang === 'fr' ? 'livraison offerte' : 'توصيل مجاني'}
@@ -888,13 +904,49 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
   // Honeypot: bots fill any input they see; this one is hidden from humans via CSS.
   // Timing: real users take >3s to fill the form; bots submit in milliseconds.
   const [hp, setHp] = u2S('');
-  const startedAt = React.useRef(Date.now());
-  const coupon    = readCoupon();
-  const subtotal  = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const discount  = computeDiscount(subtotal, coupon);
-  const delivery  = (subtotal - discount) > 500 ? 0 : 35;
-  const total     = Math.max(0, subtotal - discount) + delivery;
-  const itemsCount = cart.reduce((s, i) => s + i.qty, 0);
+  const startedAt    = React.useRef(Date.now());
+  // Coupon state lives in sessionStorage so it survives cart -> checkout. We mirror it
+  // in component state to allow apply/remove from inside the checkout aside.
+  const [coupon, setCoupon] = u2S(readCoupon());
+  const [codeInput, setCodeInput] = u2S('');
+  const [couponMsg, setCouponMsg] = u2S('');
+  const [couponBusy, setCouponBusy] = u2S(false);
+  const subtotal     = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const itemsCount   = cart.reduce((s, i) => s + i.qty, 0);
+  const autoDiscount = computeAutoDiscount(subtotal, itemsCount);
+  const discount     = computeDiscount(subtotal, coupon);
+  const totalDiscount = autoDiscount + discount;
+  const delivery     = (subtotal - totalDiscount) > 500 ? 0 : 35;
+  const total        = Math.max(0, subtotal - totalDiscount) + delivery;
+
+  const applyCoupon = async () => {
+    const code = codeInput.trim().toUpperCase();
+    if (!code || couponBusy) return;
+    setCouponBusy(true); setCouponMsg('');
+    try {
+      const { data, error } = await window._sb.rpc('validate_coupon', { p_code: code, p_user_id: user?.id || null });
+      if (error) throw error;
+      if (!data?.valid) {
+        const reasons = lang === 'fr' ? {
+          not_found: 'Code introuvable', inactive: 'Code désactivé', expired: 'Code expiré',
+          already_used: 'Code déjà utilisé', not_for_you: 'Code réservé à un autre client',
+        } : {
+          not_found: 'الكود غير موجود', inactive: 'الكود معطل', expired: 'انتهت صلاحية الكود',
+          already_used: 'الكود مستعمل من قبل', not_for_you: 'هاد الكود ماشي ديالك',
+        };
+        setCouponMsg('✕ ' + (reasons[data?.reason] || (lang === 'fr' ? 'Code invalide' : 'كود غير صحيح')));
+      } else {
+        const c = { code, type: data.type, value: Number(data.value) };
+        setCoupon(c); writeCoupon(c);
+        setCouponMsg('✓ ' + (lang === 'fr' ? 'Code appliqué' : 'تم تطبيق الكود'));
+        setCodeInput('');
+      }
+    } catch (e) {
+      setCouponMsg('✕ ' + (lang === 'fr' ? 'Erreur, réessaie' : 'خطأ، عاودي المحاولة'));
+    }
+    setCouponBusy(false);
+  };
+  const removeCoupon = () => { setCoupon(null); writeCoupon(null); setCouponMsg(''); };
 
   const placeOrder = async () => {
     setSaving(true);
@@ -924,6 +976,7 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
         subtotal, delivery, total, items: itemsData, lang,
       };
       if (user) payload.user_id = user.id;
+      if (autoDiscount > 0) payload.auto_discount = autoDiscount;
       if (coupon) { payload.coupon_code = coupon.code; payload.discount = discount; }
       await window._sb.from('orders').insert(payload);
 
@@ -1094,19 +1147,53 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
               </div>
             ))}
             <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginTop: 8 }}>
-              {[['subtotal', subtotal], ['delivery', delivery]].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
-                  <span style={{ opacity: 0.5 }}>{k}</span>
-                  <span>{k === 'delivery' && v === 0 ? 'free' : `${v} MAD`}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
+                <span style={{ opacity: 0.5 }}>subtotal</span>
+                <span>{subtotal} MAD</span>
+              </div>
+              {autoDiscount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--lime)' }} className="mono">
+                  <span style={{ opacity: 0.9 }}>2+ articles (−{AUTO_DISCOUNT_PCT}%)</span>
+                  <span>−{autoDiscount} MAD</span>
                 </div>
-              ))}
+              )}
               {coupon && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--clay)' }} className="mono">
-                  <span style={{ opacity: 0.85 }}>code ({coupon.code})</span>
+                  <span style={{ opacity: 0.85 }}>
+                    code ({coupon.code})
+                    <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 9, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
+                  </span>
                   <span>−{discount} MAD</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid var(--line)', marginTop: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
+                <span style={{ opacity: 0.5 }}>delivery</span>
+                <span>{delivery === 0 ? 'free' : `${delivery} MAD`}</span>
+              </div>
+
+              {/* Coupon input — also available here in the finalize step */}
+              {!coupon && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed var(--line)' }}>
+                  <div className="mono" style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    {lang === 'fr' ? 'Code promo' : 'كود الخصم'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      value={codeInput}
+                      onChange={(e) => setCodeInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                      placeholder={lang === 'fr' ? 'EX: GIFT-A8K3' : 'مثال: GIFT-A8K3'}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 999, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
+                    />
+                    <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '7px 12px', borderRadius: 999, background: 'var(--ink)', color: 'var(--paper)', fontSize: 11, fontWeight: 600, opacity: (couponBusy || !codeInput.trim()) ? 0.5 : 1 }}>
+                      {couponBusy ? '…' : 'OK'}
+                    </button>
+                  </div>
+                  {couponMsg && <div className="mono" style={{ fontSize: 10, marginTop: 5, color: couponMsg.startsWith('✓') ? '#4CAF50' : 'var(--clay)' }}>{couponMsg}</div>}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid var(--line)', marginTop: 12 }}>
                 <span className="display" style={{ fontSize: 20 }}>total</span>
                 <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
               </div>
