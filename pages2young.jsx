@@ -30,7 +30,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 
               <p className="hero-sub reveal" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36, transitionDelay: '0.2s' }}>
                 {lang === 'fr'
-                  ? 'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en 2–5 jours.'
+                  ? 'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en environ 1 semaine.'
                   : 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.'}
               </p>
 
@@ -47,8 +47,8 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
               <div className="hero-stats reveal-stagger" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
                 {[
                   { n: '🇲🇦', l: lang === 'fr' ? 'Made in Maroc' : 'صنع في المغرب' },
-                  { n: '48h',  l: lang === 'fr' ? 'Livraison' : 'توصيل' },
                   { n: 'COD',  l: lang === 'fr' ? 'Paiement livraison' : 'الدفع عند التوصيل' },
+                  { n: '7j',   l: lang === 'fr' ? 'Livraison' : 'توصيل' },
                 ].map((s, i) => (
                   <div key={i} className="hero-stat" style={{ flex: 1, paddingRight: i < 2 ? 24 : 0, paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid rgba(15,14,13,0.12)' : 'none' }}>
                     <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
@@ -391,8 +391,55 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
   const [qty, setQty] = u2S(1);
   const [main, setMain] = u2S(0);
   const [added, setAdded] = u2S(false);
+  const [openSection, setOpenSection] = u2S('composition'); // composition | entretien | details | livraison | null
+  const [sizeGuideOpen, setSizeGuideOpen] = u2S(false);
   const name = lang === 'fr' ? product.name : product.nameAr;
   const related = WC_PRODUCTS.filter(p => p.cat === product.cat && p.id !== product.id).slice(0, 4);
+
+  // Dynamic SEO for product page (title, meta description, Schema.org Product)
+  u2E(() => {
+    const prevTitle = document.title;
+    const prevDesc = (document.querySelector('meta[name="description"]') || {}).content;
+    document.title = `${product.name} — ${product.price} MAD · wridachic`;
+    const descMeta = document.querySelector('meta[name="description"]');
+    const productDesc = product.description || (lang === 'fr'
+      ? `${product.name} — ${product.price} MAD. Mode féminine marocaine, livraison partout au Maroc, paiement à la livraison.`
+      : `${product.nameAr || product.name} — ${product.price} درهم. موضة نسائية مغربية، توصيل في كل المغرب.`);
+    if (descMeta) descMeta.content = productDesc.slice(0, 160);
+
+    // Schema.org Product JSON-LD
+    const ldId = 'product-jsonld';
+    let ld = document.getElementById(ldId);
+    if (!ld) {
+      ld = document.createElement('script');
+      ld.id = ldId;
+      ld.type = 'application/ld+json';
+      document.head.appendChild(ld);
+    }
+    const imgs = (product.imgFiles || []).map(f => f.startsWith('http') ? f : `https://wridachic.com/${f}`);
+    ld.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: productDesc,
+      sku: product.id,
+      image: imgs.length ? imgs : undefined,
+      brand: { '@type': 'Brand', name: 'wridachic' },
+      offers: {
+        '@type': 'Offer',
+        price: product.price,
+        priceCurrency: 'MAD',
+        availability: 'https://schema.org/InStock',
+        url: `https://wridachic.com/#product/${product.slug || product.id}`,
+      },
+    });
+
+    return () => {
+      document.title = prevTitle;
+      if (descMeta && prevDesc) descMeta.content = prevDesc;
+      if (ld && ld.parentNode) ld.parentNode.removeChild(ld);
+    };
+  }, [product.id, lang]);
 
   return (
     <div className="page2" style={{ padding: '32px 0 80px' }}>
@@ -470,7 +517,7 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{t.product.size}</span>
-                <a style={{ fontSize: 12, borderBottom: '1px solid var(--ink)', cursor: 'pointer' }}>{t.product.sizeGuide}</a>
+                <a onClick={() => setSizeGuideOpen(true)} style={{ fontSize: 12, borderBottom: '1px solid var(--ink)', cursor: 'pointer' }}>{t.product.sizeGuide}</a>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {['XS','S','M','L','XL','XXL'].map(s => (
@@ -496,7 +543,7 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
             </button>
 
             {/* Badges */}
-            <div className="pdetail-badges" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            <div className="pdetail-badges" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 32 }}>
               {[
                 { ic: 'truck',   l: t.product.delivery },
                 { ic: 'shield',  l: t.product.cod },
@@ -507,6 +554,67 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
                   <div style={{ marginTop: 6, lineHeight: 1.4 }}>{it.l}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Accordion : description structurée */}
+            <div style={{ borderTop: '1px solid var(--line)' }}>
+              {[
+                {
+                  id: 'composition',
+                  fr: 'Composition & matière',
+                  ar: 'التركيبة والقماش',
+                  content: product.composition || (lang === 'fr'
+                    ? 'Tissu noble travaillé avec soin. Composition détaillée bientôt — contactez-nous via WhatsApp pour plus d\'infos.'
+                    : 'قماش راقي مشغول بعناية. التركيبة المفصلة قريباً — تواصلي معنا عبر واتساب للمزيد.'),
+                },
+                {
+                  id: 'entretien',
+                  fr: 'Entretien & lavage',
+                  ar: 'العناية والغسيل',
+                  content: product.entretien || (lang === 'fr'
+                    ? 'Lavage à la main à l\'eau froide recommandé. Pas de sèche-linge, séchage à plat à l\'ombre. Repassage à basse température si nécessaire.'
+                    : 'يُنصح بالغسيل اليدوي بالماء البارد. تجنبي مجفف الملابس، النشر مسطحاً في الظل. الكي على درجة منخفضة عند الحاجة.'),
+                },
+                {
+                  id: 'details',
+                  fr: 'Détails & coupe',
+                  ar: 'التفاصيل والقصة',
+                  content: product.details || (lang === 'fr'
+                    ? 'Coupe pensée pour la femme marocaine, longueur ample, finitions soignées. Mannequin : 1m70, porte taille M.'
+                    : 'قصّة مصممة للمرأة المغربية، طول فضفاض، تشطيب متقن. الموديل: 1.70م، تلبس مقاس M.'),
+                },
+                {
+                  id: 'livraison',
+                  fr: 'Livraison & retours',
+                  ar: 'التوصيل والإرجاع',
+                  content: lang === 'fr'
+                    ? 'Livraison partout au Maroc en environ 1 semaine après confirmation. Paiement à la livraison disponible. Retours acceptés sous 14 jours, articles intacts avec étiquette.'
+                    : 'التوصيل في كل المغرب في حوالي أسبوع بعد التأكيد. الدفع عند التوصيل متاح. الإرجاع مقبول خلال 14 يوماً، القطع سليمة مع البطاقة.',
+                },
+              ].map((sec) => {
+                const isOpen = openSection === sec.id;
+                return (
+                  <div key={sec.id} style={{ borderBottom: '1px solid var(--line)' }}>
+                    <button
+                      onClick={() => setOpenSection(isOpen ? null : sec.id)}
+                      style={{
+                        width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '16px 0', background: 'transparent', border: 'none',
+                        fontFamily: 'inherit', fontSize: 13, color: 'var(--ink)',
+                        textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer',
+                      }}
+                    >
+                      <span>{lang === 'fr' ? sec.fr : sec.ar}</span>
+                      <span style={{ fontSize: 18, transition: 'transform 0.2s', transform: isOpen ? 'rotate(45deg)' : 'rotate(0)' }}>+</span>
+                    </button>
+                    {isOpen && (
+                      <p style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.75, paddingBottom: 16, paddingRight: 28, whiteSpace: 'pre-line' }}>
+                        {sec.content}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -525,6 +633,57 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
           </section>
         )}
       </div>
+
+      {/* Size guide modal */}
+      {sizeGuideOpen && (
+        <div onClick={() => setSizeGuideOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, animation: 'fIn 0.25s ease' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', padding: 32, borderRadius: 22, width: '100%', maxWidth: 540, position: 'relative', boxShadow: '0 30px 80px rgba(15,14,13,0.35)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button onClick={() => setSizeGuideOpen(false)} style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', border: 'none', cursor: 'pointer', fontSize: 14 }}>✕</button>
+            <div className="mono" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
+              ✦ {lang === 'fr' ? 'Mensurations' : 'القياسات'} ✦
+            </div>
+            <h2 className="display" style={{ fontSize: 28, marginBottom: 18, letterSpacing: '-0.02em' }}>
+              {lang === 'fr' ? 'Guide des tailles' : 'دليل المقاسات'}
+            </h2>
+            <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 18, lineHeight: 1.6 }}>
+              {lang === 'fr'
+                ? 'Mesures en centimètres. En cas de doute entre deux tailles, choisis la plus grande pour un confort optimal.'
+                : 'المقاسات بالسنتيمتر. في حال التردد بين مقاسين، اختاري الأكبر لراحة أفضل.'}
+            </p>
+            <div style={{ overflowX: 'auto', marginBottom: 14 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>
+                <thead>
+                  <tr style={{ background: 'var(--paper-2)' }}>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Taille' : 'المقاس'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Poitrine' : 'الصدر'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Taille' : 'الخصر'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Hanches' : 'الأرداف'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['XS', '80–84',  '60–64',  '86–90'],
+                    ['S',  '84–88',  '64–68',  '90–94'],
+                    ['M',  '88–92',  '68–72',  '94–98'],
+                    ['L',  '92–98',  '72–78',  '98–104'],
+                    ['XL', '98–104', '78–84',  '104–110'],
+                    ['XXL','104–110','84–90',  '110–116'],
+                  ].map((row) => (
+                    <tr key={row[0]} style={{ borderTop: '1px solid var(--line)' }}>
+                      {row.map((v, i) => (
+                        <td key={i} style={{ padding: 10, fontWeight: i === 0 ? 600 : 400 }}>{v}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              {lang === 'fr' ? '✦ Toutes les coupes sont amples & confortables' : '✦ جميع القصّات فضفاضة ومريحة'}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

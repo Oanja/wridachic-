@@ -90,6 +90,8 @@ function App() {
           colors: p.colors || [], img: p.img,
           imgFiles: p.img_files || [],
           description: p.description, descriptionAr: p.description_ar,
+          composition: p.composition, entretien: p.entretien,
+          details: p.details, mannequin: p.mannequin,
         }));
         const sameAsCache = WC_PRODUCTS.length === transformed.length
           && transformed.every((p, i) => WC_PRODUCTS[i]
