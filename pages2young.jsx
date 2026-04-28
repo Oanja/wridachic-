@@ -763,7 +763,7 @@ const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue }
               <span className="mono" style={{ fontSize: 22, fontWeight: 600 }}>{total} MAD</span>
             </div>
             <button className="btn2 btn2-clay" style={{ width: '100%', marginTop: 20 }} onClick={onCheckout}>{t.cart.checkout} →</button>
-            <a className="btn2 btn2-wa" href="https://wa.me/212600000000" target="_blank" style={{ width: '100%', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <a className="btn2 btn2-wa" href="https://wa.me/212772086545" target="_blank" style={{ width: '100%', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Ic n="wa" s={14} /> WhatsApp
             </a>
           </aside>

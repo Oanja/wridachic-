@@ -76,7 +76,7 @@ const Nav2 = ({ lang, setLang, cartCount, onNav, current, user, onAuth, onLogout
     { id: 'shop',     label: t.nav.shop },
     { id: 'prayer',   label: t.nav.prayer },
     { id: 'new',      label: t.nav.new },
-    { id: 'lookbook', label: t.nav.lookbook },
+    // { id: 'lookbook', label: t.nav.lookbook }, // hidden until lookbook is ready — re-enable here when bringing it back
     { id: 'about',    label: t.nav.about },
   ];
   return (
@@ -385,7 +385,7 @@ const Footer2 = ({ lang, onNav, onSignup }) => {
 };
 
 const WaFloat2 = ({ lang }) => (
-  <a className="wafloat2" href="https://wa.me/212600000000" target="_blank" rel="noopener noreferrer">
+  <a className="wafloat2" href="https://wa.me/212772086545" target="_blank" rel="noopener noreferrer">
     <Ic n="wa" s={18} />
     <span className="wa-label">{lang === 'fr' ? 'Commander via WhatsApp' : 'اطلبي عبر واتساب'}</span>
   </a>
