@@ -2592,6 +2592,38 @@ const AdminYoung = () => {
             </div>
           ) : (
             <>
+              <style>{`
+                .ul-row {
+                  display: grid; grid-template-columns: 52px 1fr auto auto; gap: 14px;
+                  align-items: center; background: rgba(250,246,241,0.04);
+                  padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(250,246,241,0.08);
+                }
+                .ul-avatar {
+                  width: 52px; height: 52px; border-radius: 50%;
+                  display: flex; align-items: center; justify-content: center;
+                  font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600;
+                  color: var(--paper); flex-shrink: 0;
+                }
+                .ul-info { min-width: 0; }
+                .ul-name { font-weight: 600; font-size: 14px; color: #FAF6F1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .ul-email { font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.6; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .ul-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.4; margin-top: 4px; }
+                .ul-stat {
+                  text-align: center; padding: 8px 14px; border-radius: 10px;
+                  background: rgba(250,246,241,0.06); border: 1px solid rgba(250,246,241,0.08);
+                  min-width: 78px;
+                }
+                .ul-stat-num { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; line-height: 1; }
+                .ul-stat-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; opacity: 0.55; text-transform: uppercase; letterSpacing: 0.06em; margin-top: 4px; }
+                @media (max-width: 640px) {
+                  .ul-row { grid-template-columns: 44px 1fr; gap: 12px; }
+                  .ul-avatar { width: 44px; height: 44px; font-size: 15px; }
+                  .ul-stats-wrap { grid-column: 1 / -1; display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid rgba(250,246,241,0.08); }
+                  .ul-stat { flex: 1; min-width: 0; }
+                }
+                @media (min-width: 641px) { .ul-stats-wrap { display: contents; } }
+              `}</style>
+
               <div style={{ background: 'rgba(250,246,241,0.05)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                 <span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>
                   ℹ Liste en lecture seule. Pour modifier ou supprimer → Supabase Dashboard
@@ -2600,28 +2632,39 @@ const AdminYoung = () => {
                   → Ouvrir Supabase Auth ↗
                 </a>
               </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {users.map(u => {
-                const stats = userStats(u.id);
-                return (
-                  <div key={u.id} style={{ background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.1)', borderRadius: 14, padding: 16 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{u.full_name || '—'}</div>
-                    <div className="mono" style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{u.email}</div>
-                    <div className="mono" style={{ fontSize: 10, opacity: 0.4, marginTop: 4 }}>
-                      Inscrit le {fmtDate(u.created_at)}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {users.map(u => {
+                  const stats = userStats(u.id);
+                  // Initials for the avatar circle
+                  const seed   = (u.full_name || u.email || '?').trim();
+                  const initials = seed.split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || '?';
+                  // Stable color from user id hash
+                  const colors = ['#C8746B', '#4A90D9', '#7B68EE', '#4CAF50', '#E89B40', '#9C5CA9'];
+                  const hash   = (u.id || u.email || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+                  const color  = colors[hash % colors.length];
+                  return (
+                    <div key={u.id} className="ul-row">
+                      <div className="ul-avatar" style={{ background: color }}>{initials}</div>
+                      <div className="ul-info">
+                        <div className="ul-name">{u.full_name || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>Sans nom</span>}</div>
+                        <div className="ul-email">{u.email}</div>
+                        <div className="ul-date">Inscrit le {fmtDate(u.created_at)}</div>
+                      </div>
+                      <div className="ul-stats-wrap">
+                        <div className="ul-stat">
+                          <div className="ul-stat-num">{stats.count}</div>
+                          <div className="ul-stat-lbl">Cmds</div>
+                        </div>
+                        <div className="ul-stat">
+                          <div className="ul-stat-num" style={{ color: 'var(--clay)' }}>{stats.total}</div>
+                          <div className="ul-stat-lbl">MAD</div>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
-                      <span className="mono" style={{ fontSize: 11 }}>
-                        <span style={{ opacity: 0.5 }}>Commandes :</span> <strong>{stats.count}</strong>
-                      </span>
-                      <span className="mono" style={{ fontSize: 11 }}>
-                        <span style={{ opacity: 0.5 }}>Total :</span> <strong style={{ color: 'var(--clay)' }}>{stats.total} MAD</strong>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
             </>
           )
         )}
