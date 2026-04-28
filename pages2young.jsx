@@ -109,7 +109,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
           <div className="cat-grid reveal-stagger">
             {/* Main — Robes & Ensembles */}
             <div className="cat-main" onClick={() => onNav('shop')}>
-              <img src="assets/3.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <img src="assets/3.jpg" alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
               <div style={{ position: 'absolute', bottom: 24, [lang === 'ar' ? 'right' : 'left']: 24, color: 'var(--paper)', zIndex: 3, textAlign: lang === 'ar' ? 'right' : 'left' }}>
                 <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>ROBES / 01</div>
@@ -125,7 +125,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
             {/* Side — Denim + Prière */}
             <div className="cat-side">
               <div className="cat-small" onClick={() => onNav('shop')}>
-                <img src="assets/4.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src="assets/4.jpg" alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 02</div>
@@ -135,7 +135,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
                 </div>
               </div>
               <div className="cat-small" onClick={() => onNav('prayer')}>
-                <img src="assets/00.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src="assets/00.jpg" alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>PRIÈRE / 03</div>
@@ -184,7 +184,7 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
           <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 40, alignItems: 'center' }}>
             <div style={{ position: 'relative' }} className="reveal">
               <div style={{ aspectRatio: '4/5', borderRadius: 24, overflow: 'hidden' }}>
-                <img src="assets/00.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src="assets/00.jpg" alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
               <div style={{ position: 'absolute', bottom: 28, right: -16 }}>
                 <span className="sticker sticker-sky" style={{ transform: 'rotate(-4deg)' }}>
@@ -459,7 +459,7 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
                 <div className="pdetail-thumbs" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {product.imgFiles.map((src, i) => (
                     <button key={i} onClick={() => setMain(i)} style={{ padding: 0, border: main === i ? '2px solid var(--ink)' : '1.5px solid var(--line)', borderRadius: 10, aspectRatio: '3/4', overflow: 'hidden' }}>
-                      <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <img src={src} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </button>
                   ))}
                 </div>

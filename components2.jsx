@@ -253,12 +253,14 @@ const PCard = ({ product, lang, onClick, onWish, wished, tint }) => {
             <img
               src={product.imgFiles[0]}
               alt={name}
+              loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.6s ease', opacity: showSecond ? 0 : 1 }}
             />
             {hasTwo && (
               <img
                 src={product.imgFiles[1]}
                 alt={name}
+                loading="lazy"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, transition: 'opacity 0.6s ease', opacity: showSecond ? 1 : 0 }}
               />
             )}
@@ -385,7 +387,7 @@ const WaFloat2 = ({ lang }) => (
 );
 
 // ──── NEWSLETTER POPUP ────
-// Shown to first-time visitors after 10s. Stores dismissal/subscription in localStorage.
+// Shown to first-time visitors once they scroll 50% of the page.
 const NewsletterPopup = ({ lang }) => {
   const [open, setOpen] = uS(false);
   const [email, setEmail] = uS('');
@@ -394,8 +396,16 @@ const NewsletterPopup = ({ lang }) => {
 
   uE(() => {
     if (localStorage.getItem('wc2-newsletter-seen')) return;
-    const t = setTimeout(() => setOpen(true), 10000);
-    return () => clearTimeout(t);
+    const onScroll = () => {
+      const scrolled = window.scrollY + window.innerHeight;
+      const total = document.documentElement.scrollHeight;
+      if (scrolled / total >= 0.5) {
+        setOpen(true);
+        window.removeEventListener('scroll', onScroll);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const close = () => {
