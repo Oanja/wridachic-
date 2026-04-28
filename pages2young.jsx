@@ -706,12 +706,67 @@ const PDetailYoung = ({ lang, product, onBack, onAddToCart, onBuyNow, onProduct,
   );
 };
 
+// ======== COUPON HELPERS ========
+// Stored in sessionStorage so the cart -> checkout flow keeps the applied coupon.
+const COUPON_KEY = 'wc2-coupon';
+const readCoupon = () => {
+  try { return JSON.parse(sessionStorage.getItem(COUPON_KEY) || 'null'); } catch { return null; }
+};
+const writeCoupon = (c) => {
+  if (c) sessionStorage.setItem(COUPON_KEY, JSON.stringify(c));
+  else   sessionStorage.removeItem(COUPON_KEY);
+};
+const computeDiscount = (subtotal, coupon) => {
+  if (!coupon) return 0;
+  if (coupon.type === 'percent') return Math.round(subtotal * (coupon.value / 100));
+  if (coupon.type === 'fixed')   return Math.min(subtotal, Number(coupon.value) || 0);
+  return 0;
+};
+
 // ======== CART ========
-const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue }) => {
+const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue, user }) => {
   const t = WC_TR[lang];
+  const [coupon, setCoupon] = u2S(readCoupon());
+  const [codeInput, setCodeInput] = u2S('');
+  const [couponMsg, setCouponMsg] = u2S('');
+  const [couponBusy, setCouponBusy] = u2S(false);
+
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const delivery  = subtotal > 500 ? 0 : 35;
-  const total     = subtotal + delivery;
+  const discount = computeDiscount(subtotal, coupon);
+  const delivery = (subtotal - discount) > 500 ? 0 : 35;
+  const total    = Math.max(0, subtotal - discount) + delivery;
+
+  const applyCoupon = async () => {
+    const code = codeInput.trim().toUpperCase();
+    if (!code || couponBusy) return;
+    setCouponBusy(true); setCouponMsg('');
+    try {
+      const { data, error } = await window._sb.rpc('validate_coupon', {
+        p_code: code, p_user_id: user?.id || null,
+      });
+      if (error) throw error;
+      if (!data?.valid) {
+        const reasons = lang === 'fr' ? {
+          not_found: 'Code introuvable', inactive: 'Code désactivé', expired: 'Code expiré',
+          already_used: 'Code déjà utilisé', not_for_you: 'Code réservé à un autre client',
+        } : {
+          not_found: 'الكود غير موجود', inactive: 'الكود معطل', expired: 'انتهت صلاحية الكود',
+          already_used: 'الكود مستعمل من قبل', not_for_you: 'هاد الكود ماشي ديالك',
+        };
+        setCouponMsg('✕ ' + (reasons[data?.reason] || (lang === 'fr' ? 'Code invalide' : 'كود غير صحيح')));
+      } else {
+        const c = { code, type: data.type, value: Number(data.value) };
+        setCoupon(c); writeCoupon(c);
+        setCouponMsg('✓ ' + (lang === 'fr' ? 'Code appliqué' : 'تم تطبيق الكود'));
+        setCodeInput('');
+      }
+    } catch (e) {
+      setCouponMsg('✕ ' + (lang === 'fr' ? 'Erreur, réessaie' : 'خطأ، عاودي المحاولة'));
+    }
+    setCouponBusy(false);
+  };
+
+  const removeCoupon = () => { setCoupon(null); writeCoupon(null); setCouponMsg(''); };
 
   if (cart.length === 0) return (
     <div className="page2" style={{ padding: '100px 28px', textAlign: 'center' }}>
@@ -767,11 +822,43 @@ const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue }
                 <span style={{ opacity: 0.65 }}>{k}</span><span className="mono">{v}</span>
               </div>
             ))}
+            {coupon && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14, color: 'var(--clay)' }}>
+                <span style={{ opacity: 0.85 }}>
+                  {lang === 'fr' ? 'Remise' : 'الخصم'} <span className="mono" style={{ fontSize: 10, opacity: 0.7 }}>({coupon.code})</span>
+                  <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 10, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
+                </span>
+                <span className="mono">−{discount} MAD</span>
+              </div>
+            )}
             {subtotal < 500 && (
               <div className="mono" style={{ fontSize: 11, color: 'var(--lime)', paddingTop: 4 }}>
                 + {500 - subtotal} MAD → {lang === 'fr' ? 'livraison offerte' : 'توصيل مجاني'}
               </div>
             )}
+
+            {/* Coupon input */}
+            {!coupon && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(250,246,241,0.12)' }}>
+                <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {lang === 'fr' ? 'Code promo' : 'كود الخصم'}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                    placeholder={lang === 'fr' ? 'EX: GIFT-A8K3' : 'مثال: GIFT-A8K3'}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: 999, border: '1px solid rgba(250,246,241,0.2)', background: 'rgba(250,246,241,0.06)', color: 'var(--paper)', fontSize: 13, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
+                  />
+                  <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '8px 14px', borderRadius: 999, background: 'var(--paper)', color: 'var(--ink)', fontSize: 12, fontWeight: 600, opacity: (couponBusy || !codeInput.trim()) ? 0.5 : 1 }}>
+                    {couponBusy ? '…' : (lang === 'fr' ? 'OK' : 'تطبيق')}
+                  </button>
+                </div>
+                {couponMsg && <div className="mono" style={{ fontSize: 11, marginTop: 6, opacity: 0.85, color: couponMsg.startsWith('✓') ? 'var(--lime)' : 'var(--clay)' }}>{couponMsg}</div>}
+              </div>
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0 0', borderTop: '1px solid rgba(250,246,241,0.18)', marginTop: 12 }}>
               <span className="display" style={{ fontSize: 22 }}>{t.cart.total}</span>
               <span className="mono" style={{ fontSize: 22, fontWeight: 600 }}>{total} MAD</span>
@@ -795,14 +882,19 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
   const [form, setForm] = u2S({ fullName: '', phone: '', email: '', address: '', city: 'Casablanca' });
   const [saving, setSaving] = u2S(false);
   const [orderNum, setOrderNum] = u2S('');
+  const [giftCode, setGiftCode] = u2S('');
+  const [giftCopied, setGiftCopied] = u2S(false);
   // ── Spam protection ──
   // Honeypot: bots fill any input they see; this one is hidden from humans via CSS.
   // Timing: real users take >3s to fill the form; bots submit in milliseconds.
   const [hp, setHp] = u2S('');
   const startedAt = React.useRef(Date.now());
-  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const delivery  = subtotal > 500 ? 0 : 35;
-  const total     = subtotal + delivery;
+  const coupon    = readCoupon();
+  const subtotal  = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount  = computeDiscount(subtotal, coupon);
+  const delivery  = (subtotal - discount) > 500 ? 0 : 35;
+  const total     = Math.max(0, subtotal - discount) + delivery;
+  const itemsCount = cart.reduce((s, i) => s + i.qty, 0);
 
   const placeOrder = async () => {
     setSaving(true);
@@ -832,10 +924,29 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
         subtotal, delivery, total, items: itemsData, lang,
       };
       if (user) payload.user_id = user.id;
+      if (coupon) { payload.coupon_code = coupon.code; payload.discount = discount; }
       await window._sb.from('orders').insert(payload);
+
+      // Mark coupon used (single_use only — RPC handles the type check)
+      if (coupon) {
+        try { await window._sb.rpc('consume_coupon', { p_code: coupon.code, p_phone: form.phone, p_order: num }); } catch (e) {}
+        writeCoupon(null);
+      }
+
+      // Reward: 2+ items in the order → issue a single-use gift coupon (-10%)
+      if (itemsCount >= 2) {
+        try {
+          const { data } = await window._sb.rpc('issue_gift_coupon');
+          if (data) setGiftCode(data);
+        } catch (e) { /* table missing or RPC failed — non-blocking */ }
+      }
     } catch(e) { console.error('Supabase:', e); }
     setSaving(false);
     setStep(4);
+  };
+
+  const copyGift = async () => {
+    try { await navigator.clipboard.writeText(giftCode); setGiftCopied(true); setTimeout(() => setGiftCopied(false), 1800); } catch (e) {}
   };
 
   if (step === 4) return (
@@ -848,6 +959,30 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
         <div className="display" style={{ fontSize: 26, marginTop: 4 }}>{orderNum}</div>
         <div className="mono" style={{ fontSize: 13, marginTop: 8, opacity: 0.7 }}>{total} MAD · {payment === 'cod' ? t.checkout.cod : t.checkout.cib}</div>
       </div>
+
+      {giftCode && (
+        <div style={{ background: 'linear-gradient(135deg, var(--clay), #e89888)', color: '#fff', padding: 24, borderRadius: 18, maxWidth: 420, margin: '0 auto 28px', boxShadow: '0 12px 32px rgba(196,116,107,0.25)' }}>
+          <div style={{ fontSize: 32, marginBottom: 4 }}>🎁</div>
+          <div className="display" style={{ fontSize: 22, lineHeight: 1.2, marginBottom: 6 }}>
+            {lang === 'fr' ? 'Ton code cadeau −10%' : 'كود الهدية ديالك −10%'}
+          </div>
+          <div style={{ fontSize: 13, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
+            {lang === 'fr'
+              ? 'Merci pour ta confiance ! Garde ce code pour ta prochaine commande.'
+              : 'شكراً على ثقتك! احتفظي بهاد الكود لطلبيتك القادمة.'}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.18)', padding: '10px 14px', borderRadius: 12 }}>
+            <span className="mono" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.06em' }}>{giftCode}</span>
+            <button onClick={copyGift} style={{ padding: '6px 12px', borderRadius: 999, background: '#fff', color: 'var(--clay)', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+              {giftCopied ? (lang === 'fr' ? '✓ Copié' : '✓ تنسخ') : (lang === 'fr' ? '📋 Copier' : '📋 نسخ')}
+            </button>
+          </div>
+          <div className="mono" style={{ fontSize: 10, opacity: 0.7, marginTop: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {lang === 'fr' ? 'Valable 90 jours · usage unique' : 'صالح 90 يوم · مرة واحدة'}
+          </div>
+        </div>
+      )}
+
       <button className="btn2 btn2-dark btn2-lg" onClick={onSuccess}>← {lang === 'fr' ? 'Retour boutique' : 'العودة للمتجر'}</button>
     </div>
   );
@@ -965,6 +1100,12 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
                   <span>{k === 'delivery' && v === 0 ? 'free' : `${v} MAD`}</span>
                 </div>
               ))}
+              {coupon && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--clay)' }} className="mono">
+                  <span style={{ opacity: 0.85 }}>code ({coupon.code})</span>
+                  <span>−{discount} MAD</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid var(--line)', marginTop: 8 }}>
                 <span className="display" style={{ fontSize: 20 }}>total</span>
                 <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
@@ -1550,6 +1691,207 @@ const ProductEditor = ({ product, nextSortOrder, totalProducts, onClose, onSaved
   );
 };
 
+// ─────────────────────────────────────────────
+// Admin: Coupons manager (CRUD + toggle active)
+// ─────────────────────────────────────────────
+const AdminCoupons = () => {
+  const [list, setList]     = u2S([]);
+  const [loading, setLoading] = u2S(false);
+  const [editing, setEditing] = u2S(null); // null | 'new' | code
+  const [toast, setToast]   = u2S('');
+  const showToast = (m) => { setToast(m); setTimeout(() => setToast(''), 2400); };
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await window._sb.from('coupons').select('*').order('created_at', { ascending: false });
+    if (error) showToast('⚠ ' + error.message);
+    else setList(data || []);
+    setLoading(false);
+  };
+
+  u2E(() => { load(); }, []);
+
+  const toggleActive = async (c) => {
+    const { error } = await window._sb.from('coupons').update({ active: !c.active }).eq('code', c.code);
+    if (error) return showToast('⚠ ' + error.message);
+    setList(prev => prev.map(x => x.code === c.code ? { ...x, active: !x.active } : x));
+    showToast(c.active ? '✓ Désactivé' : '✓ Activé');
+  };
+
+  const remove = async (c) => {
+    if (!confirm(`Supprimer le coupon "${c.code}" ?`)) return;
+    const { error } = await window._sb.from('coupons').delete().eq('code', c.code);
+    if (error) return showToast('⚠ ' + error.message);
+    setList(prev => prev.filter(x => x.code !== c.code));
+    showToast('✓ Supprimé');
+  };
+
+  if (editing) {
+    return (
+      <CouponEditor
+        coupon={editing === 'new' ? null : list.find(c => c.code === editing)}
+        onClose={() => setEditing(null)}
+        onSaved={() => { setEditing(null); load(); showToast('✓ Enregistré'); }}
+      />
+    );
+  }
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+
+  return (
+    <div>
+      {toast && <div className="mono" style={{ position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', background: '#0F0E0D', color: '#fff', borderRadius: 999, fontSize: 12, zIndex: 200 }}>{toast}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
+        <div className="mono" style={{ fontSize: 11, opacity: 0.6 }}>{list.length} coupon{list.length > 1 ? 's' : ''}</div>
+        <button onClick={() => setEditing('new')} className="btn2 btn2-clay" style={{ fontSize: 13, padding: '10px 18px' }}>+ Nouveau coupon</button>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Chargement…</div>
+      ) : list.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Aucun coupon. Clique "+ Nouveau coupon" pour commencer.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {list.map(c => {
+            const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
+            const status = !c.active ? { label: 'INACTIF', color: '#999' }
+                         : isExpired ? { label: 'EXPIRÉ', color: '#C62828' }
+                         : c.usage_type === 'single_use' && c.used ? { label: 'UTILISÉ', color: '#888' }
+                         : { label: 'ACTIF', color: '#4CAF50' };
+            return (
+              <div key={c.code} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderLeft: `4px solid ${status.color}`, borderRadius: 12, padding: '16px 18px', display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.2fr auto', gap: 16, alignItems: 'center' }}>
+                <div>
+                  <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--clay)', letterSpacing: '0.04em' }}>{c.code}</div>
+                  <div className="mono" style={{ fontSize: 9, marginTop: 4, padding: '2px 8px', borderRadius: 999, background: status.color + '22', color: status.color, display: 'inline-block', fontWeight: 600 }}>{status.label}</div>
+                  {c.note && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 6 }}>{c.note}</div>}
+                </div>
+                <div className="mono" style={{ fontSize: 12 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>
+                    {c.type === 'percent' ? `−${c.value}%` : `−${c.value} MAD`}
+                  </div>
+                  <div style={{ opacity: 0.55, fontSize: 10, marginTop: 2 }}>{c.usage_type === 'single_use' ? 'Mrr wahda' : 'Réutilisable'}</div>
+                </div>
+                <div className="mono" style={{ fontSize: 11, opacity: 0.7, lineHeight: 1.6 }}>
+                  <div>Expire: {fmtDate(c.expires_at)}</div>
+                  {c.used && <div style={{ color: 'var(--clay)' }}>Utilisé: {c.used_by || '—'}</div>}
+                  {c.assigned_to_user_id && <div style={{ fontSize: 9, opacity: 0.5 }}>Réservé à un compte</div>}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button onClick={() => setEditing(c.code)} className="pl-btn" style={{ fontSize: 11 }}>Modifier</button>
+                  <button onClick={() => toggleActive(c)} className="pl-btn" style={{ fontSize: 11 }}>{c.active ? 'Désactiver' : 'Activer'}</button>
+                  <button onClick={() => remove(c)} className="pl-btn pl-btn-danger" style={{ fontSize: 11 }}>Supprimer</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CouponEditor = ({ coupon, onClose, onSaved }) => {
+  const isNew = !coupon;
+  const [code, setCode]             = u2S(coupon?.code || '');
+  const [type, setType]             = u2S(coupon?.type || 'percent');
+  const [value, setValue]           = u2S(coupon?.value || 10);
+  const [usageType, setUsageType]   = u2S(coupon?.usage_type || 'reusable');
+  const [expiresAt, setExpiresAt]   = u2S(coupon?.expires_at ? coupon.expires_at.slice(0, 10) : '');
+  const [assignedToUserId, setAssignedToUserId] = u2S(coupon?.assigned_to_user_id || '');
+  const [note, setNote]             = u2S(coupon?.note || '');
+  const [active, setActive]         = u2S(coupon?.active !== false);
+  const [saving, setSaving]         = u2S(false);
+  const [err, setErr]               = u2S('');
+
+  const save = async () => {
+    if (!code.trim() || !value) { setErr('Code et valeur requis'); return; }
+    setErr(''); setSaving(true);
+    const payload = {
+      code: code.trim().toUpperCase(),
+      type, value: Number(value), usage_type: usageType, active, note: note || null,
+      expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      assigned_to_user_id: assignedToUserId.trim() || null,
+    };
+    const res = isNew
+      ? await window._sb.from('coupons').insert(payload)
+      : await window._sb.from('coupons').update(payload).eq('code', coupon.code);
+    setSaving(false);
+    if (res.error) { setErr(res.error.message); return; }
+    onSaved();
+  };
+
+  const Field = ({ label, children }) => (
+    <div style={{ marginBottom: 14 }}>
+      <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+      {children}
+    </div>
+  );
+  const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, background: '#fff' };
+
+  return (
+    <div style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderRadius: 14, padding: 24, maxWidth: 640 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div className="display" style={{ fontSize: 22 }}>{isNew ? 'Nouveau coupon' : `Modifier ${coupon.code}`}</div>
+        <button onClick={onClose} className="pl-btn">← Retour</button>
+      </div>
+
+      <Field label="Code">
+        <input value={code} onChange={(e) => setCode(e.target.value)} disabled={!isNew} style={{ ...inputStyle, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', opacity: isNew ? 1 : 0.6 }} placeholder="EX: SUMMER10" />
+      </Field>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <Field label="Type">
+          <select value={type} onChange={(e) => setType(e.target.value)} style={inputStyle}>
+            <option value="percent">Pourcentage (%)</option>
+            <option value="fixed">Montant fixe (MAD)</option>
+          </select>
+        </Field>
+        <Field label={type === 'percent' ? 'Valeur (%)' : 'Valeur (MAD)'}>
+          <input type="number" value={value} onChange={(e) => setValue(e.target.value)} style={inputStyle} min="1" max={type === 'percent' ? 100 : 99999} />
+        </Field>
+      </div>
+
+      <Field label="Usage">
+        <select value={usageType} onChange={(e) => setUsageType(e.target.value)} style={inputStyle}>
+          <option value="single_use">Single-use (mrra wahda fakat)</option>
+          <option value="reusable">Réutilisable (plusieurs fois)</option>
+        </select>
+      </Field>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <Field label="Date d'expiration (optionnel)">
+          <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} style={inputStyle} />
+        </Field>
+        <Field label="Statut">
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, cursor: 'pointer' }}>
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <span style={{ fontSize: 14 }}>{active ? 'Actif' : 'Inactif'}</span>
+          </label>
+        </Field>
+      </div>
+
+      {usageType === 'reusable' && (
+        <Field label="Réservé au compte (UUID utilisateur — optionnel)">
+          <input value={assignedToUserId} onChange={(e) => setAssignedToUserId(e.target.value)} style={{ ...inputStyle, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }} placeholder="ex: 4f8a-... (laisse vide pour usage public)" />
+        </Field>
+      )}
+
+      <Field label="Note interne (optionnel)">
+        <input value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} placeholder="ex: Influenceuse @sara" />
+      </Field>
+
+      {err && <div className="mono" style={{ color: '#C62828', fontSize: 12, marginBottom: 12 }}>⚠ {err}</div>}
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+        <button onClick={save} disabled={saving} className="btn2 btn2-clay" style={{ flex: 1, opacity: saving ? 0.5 : 1 }}>
+          {saving ? '…' : (isNew ? 'Créer' : 'Enregistrer')}
+        </button>
+        <button onClick={onClose} className="btn2 btn2-outline">Annuler</button>
+      </div>
+    </div>
+  );
+};
+
 const AdminYoung = () => {
   const [email, setEmail] = u2S('');
   const [pwd, setPwd] = u2S('');
@@ -1829,6 +2171,7 @@ const AdminYoung = () => {
           {[
             { id: 'orders',   label: `Commandes (${orders.length})` },
             { id: 'products', label: `Produits` },
+            { id: 'coupons',  label: `Coupons` },
             { id: 'users',    label: `Utilisateurs (${users.length})` },
           ].map(tb => (
             <button key={tb.id} onClick={() => setTab(tb.id)} style={{
@@ -1917,6 +2260,8 @@ const AdminYoung = () => {
         </>)}
 
         {tab === 'products' && <AdminProducts />}
+
+        {tab === 'coupons' && <AdminCoupons />}
 
         {tab === 'users' && (
           users.length === 0 ? (

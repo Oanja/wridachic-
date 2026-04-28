@@ -254,7 +254,7 @@ function App() {
   else if (page === 'home') content = <HomeYoung lang={lang} onNav={goto} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
   else if (page === 'shop' || page === 'new') content = <ShopYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
   else if (page === 'product' && currentProduct) content = <PDetailYoung lang={lang} product={currentProduct} onBack={() => goto('home')} onAddToCart={addToCart} onBuyNow={buyNow} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
-  else if (page === 'cart') content = <CartYoung lang={lang} cart={cart} updateQty={(i, q) => setCart(c => c.map((it, idx) => idx === i ? { ...it, qty: q } : it))} removeItem={(i) => setCart(c => c.filter((_, idx) => idx !== i))} onCheckout={() => setPage('checkout')} onContinue={() => goto('shop')} />;
+  else if (page === 'cart') content = <CartYoung lang={lang} cart={cart} user={user} updateQty={(i, q) => setCart(c => c.map((it, idx) => idx === i ? { ...it, qty: q } : it))} removeItem={(i) => setCart(c => c.filter((_, idx) => idx !== i))} onCheckout={() => setPage('checkout')} onContinue={() => goto('shop')} />;
   else if (page === 'checkout') content = <CheckoutYoung lang={lang} cart={cart} user={user} onSuccess={() => { setCart([]); goto('home'); }} />;
   else if (page === 'prayer') content = <PrayerYoung lang={lang} onProduct={openProduct} wishlist={wishlist} toggleWish={toggleWish} />;
   else if (page === 'about') content = <AboutYoung lang={lang} />;

@@ -393,9 +393,11 @@ const WaFloat2 = ({ lang }) => (
 
 // ──── NEWSLETTER POPUP ────
 // Shown to first-time visitors once they scroll 50% of the page.
+// Announces the "buy 2 articles → -10% gift coupon" offer + collects email/phone for future drops.
 const NewsletterPopup = ({ lang }) => {
   const [open, setOpen] = uS(false);
   const [email, setEmail] = uS('');
+  const [phone, setPhone] = uS('');
   const [busy, setBusy] = uS(false);
   const [done, setDone] = uS(false);
 
@@ -420,19 +422,23 @@ const NewsletterPopup = ({ lang }) => {
 
   const submit = async (e) => {
     e?.preventDefault();
-    if (!email.trim() || busy) return;
+    const e2 = email.trim(), p2 = phone.trim();
+    if ((!e2 && !p2) || busy) return;
     setBusy(true);
     try {
-      // Try to save to Supabase if a `newsletter_subscribers` table exists
       if (window._sb) {
-        await window._sb.from('newsletter_subscribers').insert({ email: email.trim() }).then(() => {});
+        const row = {};
+        if (e2) row.email = e2;
+        if (p2) row.phone = p2;
+        await window._sb.from('newsletter_subscribers').insert(row).then(() => {});
       }
-    } catch (e) { /* table may not exist — fail silently */ }
+    } catch (e) { /* fail silently */ }
     localStorage.setItem('wc2-newsletter-seen', '1');
-    localStorage.setItem('wc2-newsletter-email', email.trim());
+    if (e2) localStorage.setItem('wc2-newsletter-email', e2);
+    if (p2) localStorage.setItem('wc2-newsletter-phone', p2);
     setDone(true);
     setBusy(false);
-    setTimeout(() => setOpen(false), 2400);
+    setTimeout(() => setOpen(false), 3200);
   };
 
   if (!open) return null;
@@ -443,42 +449,51 @@ const NewsletterPopup = ({ lang }) => {
   },
     React.createElement('div', {
       onClick: (e) => e.stopPropagation(),
-      style: { background: 'var(--paper)', padding: 36, borderRadius: 22, width: '100%', maxWidth: 420, position: 'relative', textAlign: 'center', boxShadow: '0 30px 80px rgba(15,14,13,0.35)' },
+      style: { background: 'var(--paper)', padding: 36, borderRadius: 22, width: '100%', maxWidth: 440, position: 'relative', textAlign: 'center', boxShadow: '0 30px 80px rgba(15,14,13,0.35)' },
     },
       React.createElement('button', {
         onClick: close,
         style: { position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', border: 'none', cursor: 'pointer', fontSize: 14 },
       }, '✕'),
       React.createElement('div', { className: 'mono', style: { fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 } },
-        lang === 'fr' ? '✦ Bienvenue ✦' : '✦ مرحبا ✦'
+        lang === 'fr' ? '✦ Offre fidélité ✦' : '✦ عرض خاص ✦'
       ),
-      React.createElement('h2', { className: 'display', style: { fontSize: 30, lineHeight: 1.1, marginBottom: 12, letterSpacing: '-0.02em' } },
-        lang === 'fr' ? <>−10% sur ta <em>première</em> commande</> : <>−10% على <em>طلبك</em> الأول</>
-      ),
-      React.createElement('p', { style: { fontSize: 14, opacity: 0.7, marginBottom: 22, lineHeight: 1.5 } },
+      React.createElement('h2', { className: 'display', style: { fontSize: 28, lineHeight: 1.15, marginBottom: 12, letterSpacing: '-0.02em' } },
         lang === 'fr'
-          ? "Inscris-toi à notre newsletter et reçois ton code promo par e-mail."
-          : 'سجلي في النشرة البريدية واستلمي كود الخصم على إيميلك.'
+          ? <>Achète <em>2 articles</em> → reçois un code <em>−10%</em></>
+          : <>اشتري <em>قطعتين</em> واحصلي على كود <em>−10%</em></>
+      ),
+      React.createElement('p', { style: { fontSize: 14, opacity: 0.7, marginBottom: 20, lineHeight: 1.55 } },
+        lang === 'fr'
+          ? "Le code cadeau s'affiche à la fin de ta commande. Laisse ton e-mail ou ton numéro pour recevoir nos prochaines offres."
+          : 'كود الهدية كيبان فآخر طلبك. خلي إيميلك أو رقمك باش توصلوك العروض الجاية.'
       ),
       done
-        ? React.createElement('div', { style: { padding: '14px 0', color: 'var(--clay)', fontSize: 14, fontWeight: 500 } },
-            lang === 'fr' ? '✓ Merci ! Vérifie ta boîte mail.' : '✓ شكراً! شوفي بريدك.'
+        ? React.createElement('div', { style: { padding: '18px 0', color: 'var(--clay)', fontSize: 14, fontWeight: 500, lineHeight: 1.6 } },
+            lang === 'fr' ? '✓ Merci ! Tu es dans la liste.' : '✓ شكراً! دخلتي اللائحة.'
           )
         : React.createElement('form', { onSubmit: submit },
             React.createElement('input', {
               className: 'input2',
               type: 'email',
-              required: true,
-              placeholder: lang === 'fr' ? 'Ton e-mail…' : 'بريدك الإلكتروني…',
+              placeholder: lang === 'fr' ? 'Ton e-mail (optionnel)' : 'بريدك الإلكتروني (اختياري)',
               value: email,
               onChange: (e) => setEmail(e.target.value),
+              style: { marginBottom: 8, textAlign: 'center' },
+            }),
+            React.createElement('input', {
+              className: 'input2',
+              type: 'tel',
+              placeholder: lang === 'fr' ? 'Ton numéro (optionnel)' : 'رقم هاتفك (اختياري)',
+              value: phone,
+              onChange: (e) => setPhone(e.target.value),
               style: { marginBottom: 12, textAlign: 'center' },
             }),
             React.createElement('button', {
               type: 'submit', className: 'btn2 btn2-dark',
-              disabled: busy,
+              disabled: busy || (!email.trim() && !phone.trim()),
               style: { width: '100%', opacity: busy ? 0.5 : 1 },
-            }, busy ? '…' : (lang === 'fr' ? "Recevoir mon code −10% →" : 'استلمي كود −10% ←'))
+            }, busy ? '…' : (lang === 'fr' ? "Je m'inscris →" : 'سجلي ←'))
           ),
       React.createElement('p', { className: 'mono', style: { fontSize: 10, opacity: 0.5, marginTop: 14, textTransform: 'uppercase', letterSpacing: '0.08em' } },
         lang === 'fr' ? 'Pas de spam. Désinscription en 1 clic.' : 'بدون سبام. إلغاء الاشتراك بضغطة.'
