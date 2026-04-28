@@ -830,9 +830,11 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .feature-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
   .feature-grid > div:first-child { width: 100%; max-width: 340px; margin: 0 auto; }
 
-  /* Cart page */
+  /* Cart page — on mobile show summary (with coupon input) FIRST so customers
+     don't have to scroll to the bottom to see the discount line / apply a code. */
   .cart-grid { grid-template-columns: 1fr !important; }
-  .cart-grid aside { border-radius: 16px !important; }
+  .cart-grid > div  { order: 2; }
+  .cart-grid > aside { order: 1; border-radius: 16px !important; }
 
   /* Grids — single column for products (only 4 models, big images) */
   .g4 { grid-template-columns: 1fr !important; gap: 20px !important; }

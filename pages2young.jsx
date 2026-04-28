@@ -835,13 +835,20 @@ const CartYoung = ({ lang, cart, updateQty, removeItem, onCheckout, onContinue, 
               </div>
             )}
             {coupon && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14, color: 'var(--clay)' }}>
-                <span style={{ opacity: 0.85 }}>
-                  {lang === 'fr' ? 'Code' : 'كود'} <span className="mono" style={{ fontSize: 10, opacity: 0.7 }}>({coupon.code})</span>
-                  <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 10, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
-                </span>
-                <span className="mono">−{discount} MAD</span>
-              </div>
+              <>
+                {/* Big confirmation banner */}
+                <div style={{ background: 'rgba(76,175,80,0.18)', border: '1px solid rgba(76,175,80,0.45)', borderRadius: 12, padding: '10px 12px', margin: '10px 0 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#7BCF7E' }}>
+                      ✓ {lang === 'fr' ? 'Code appliqué' : 'تم تطبيق الكود'}
+                    </div>
+                    <div className="mono" style={{ fontSize: 11, opacity: 0.85 }}>{coupon.code} · −{discount} MAD</div>
+                  </div>
+                  <button onClick={removeCoupon} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, background: 'rgba(250,246,241,0.1)', border: '1px solid rgba(250,246,241,0.2)', color: 'var(--paper)', cursor: 'pointer' }}>
+                    {lang === 'fr' ? 'Retirer' : 'حذف'}
+                  </button>
+                </div>
+              </>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14 }}>
               <span style={{ opacity: 0.65 }}>{t.cart.delivery}</span>
@@ -987,11 +994,17 @@ const CheckoutYoung = ({ lang, cart, onSuccess, user }) => {
       }
 
       // Reward: 2+ items in the order → issue a single-use gift coupon (-10%)
+      // Pass customer info so admin sees who got each gift code in the dashboard.
       if (itemsCount >= 2) {
         try {
-          const { data } = await window._sb.rpc('issue_gift_coupon');
+          const { data } = await window._sb.rpc('issue_gift_coupon', {
+            p_name:  form.fullName || null,
+            p_phone: form.phone    || null,
+            p_city:  form.city     || null,
+            p_order: num,
+          });
           if (data) setGiftCode(data);
-        } catch (e) { /* table missing or RPC failed — non-blocking */ }
+        } catch (e) { /* RPC failed — non-blocking */ }
       }
     } catch(e) { console.error('Supabase:', e); }
     setSaving(false);
@@ -1846,7 +1859,7 @@ const AdminCoupons = () => {
                          : c.usage_type === 'single_use' && c.used ? { label: 'UTILISÉ', color: '#888' }
                          : { label: 'ACTIF', color: '#4CAF50' };
             return (
-              <div key={c.code} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderLeft: `4px solid ${status.color}`, borderRadius: 12, padding: '16px 18px', display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.2fr auto', gap: 16, alignItems: 'center' }}>
+              <div key={c.code} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderLeft: `4px solid ${status.color}`, borderRadius: 12, padding: '16px 18px', display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.4fr auto', gap: 16, alignItems: 'center' }}>
                 <div>
                   <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--clay)', letterSpacing: '0.04em' }}>{c.code}</div>
                   <div className="mono" style={{ fontSize: 9, marginTop: 4, padding: '2px 8px', borderRadius: 999, background: status.color + '22', color: status.color, display: 'inline-block', fontWeight: 600 }}>{status.label}</div>
@@ -1858,9 +1871,23 @@ const AdminCoupons = () => {
                   </div>
                   <div style={{ opacity: 0.55, fontSize: 10, marginTop: 2 }}>{c.usage_type === 'single_use' ? 'Mrr wahda' : 'Réutilisable'}</div>
                 </div>
-                <div className="mono" style={{ fontSize: 11, opacity: 0.7, lineHeight: 1.6 }}>
+                <div className="mono" style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.6 }}>
+                  {/* Recipient info — only set for auto-issued gift coupons */}
+                  {c.issued_to_name && (
+                    <div style={{ marginBottom: 6, padding: '6px 8px', background: 'rgba(196,116,107,0.08)', borderRadius: 6 }}>
+                      <div style={{ fontSize: 9, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Offert à</div>
+                      <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{c.issued_to_name}</div>
+                      {c.issued_to_phone && (
+                        <a href={`https://wa.me/212${c.issued_to_phone.replace(/^0/, '')}`} target="_blank" rel="noopener" style={{ color: 'var(--clay)', textDecoration: 'underline' }}>
+                          📱 {c.issued_to_phone}
+                        </a>
+                      )}
+                      {c.issued_to_city && <div style={{ fontSize: 10, opacity: 0.6 }}>📍 {c.issued_to_city}</div>}
+                      {c.issued_order && <div style={{ fontSize: 9, opacity: 0.5 }}>Cmd: {c.issued_order}</div>}
+                    </div>
+                  )}
                   <div>Expire: {fmtDate(c.expires_at)}</div>
-                  {c.used && <div style={{ color: 'var(--clay)' }}>Utilisé: {c.used_by || '—'}</div>}
+                  {c.used && <div style={{ color: 'var(--clay)' }}>Utilisé par: {c.used_by || '—'}</div>}
                   {c.assigned_to_user_id && <div style={{ fontSize: 9, opacity: 0.5 }}>Réservé à un compte</div>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1876,6 +1903,156 @@ const AdminCoupons = () => {
     </div>
   );
 };
+
+// ─────────────────────────────────────────────
+// Admin: Newsletter subscribers — outreach tool
+// (no automated bulk send; one-click WhatsApp/email per subscriber with a
+//  message you compose once.)
+// ─────────────────────────────────────────────
+const AdminNewsletter = () => {
+  const [list, setList]     = u2S([]);
+  const [loading, setLoading] = u2S(true);
+  const [message, setMessage] = u2S('');
+  const [filter, setFilter]   = u2S('all'); // all | email | phone
+  const [toast, setToast]     = u2S('');
+  const showToast = (m) => { setToast(m); setTimeout(() => setToast(''), 2200); };
+
+  u2E(() => {
+    (async () => {
+      const { data, error } = await window._sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
+      if (!error) setList(data || []);
+      setLoading(false);
+    })();
+  }, []);
+
+  const filtered = list.filter(s => {
+    if (filter === 'email') return !!s.email;
+    if (filter === 'phone') return !!s.phone;
+    return true;
+  });
+
+  const stats = {
+    total:      list.length,
+    withEmail:  list.filter(s => s.email).length,
+    withPhone:  list.filter(s => s.phone).length,
+  };
+
+  const copyAll = (kind) => {
+    const vals = list.map(s => s[kind]).filter(Boolean);
+    navigator.clipboard.writeText(vals.join('\n')).then(
+      () => showToast(`✓ ${vals.length} ${kind}s copiés`),
+      () => showToast('⚠ Impossible de copier')
+    );
+  };
+
+  const waLink = (phone) => {
+    const cleaned = phone.replace(/\D/g, '').replace(/^0/, '');
+    const intl = cleaned.startsWith('212') ? cleaned : `212${cleaned}`;
+    return `https://wa.me/${intl}${message ? '?text=' + encodeURIComponent(message) : ''}`;
+  };
+  const mailLink = (email) =>
+    `mailto:${email}?subject=${encodeURIComponent('wridachic — nouveauté')}&body=${encodeURIComponent(message)}`;
+
+  return (
+    <div>
+      {toast && <div className="mono" style={{ position: 'fixed', bottom: 24, right: 24, padding: '12px 20px', background: '#0F0E0D', color: '#fff', borderRadius: 999, fontSize: 12, zIndex: 200 }}>{toast}</div>}
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
+        {[
+          ['Total inscrits',  stats.total,     '#0F0E0D'],
+          ['Avec e-mail',     stats.withEmail, '#4A90D9'],
+          ['Avec téléphone',  stats.withPhone, '#4CAF50'],
+        ].map(([l, v, c]) => (
+          <div key={l} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderLeft: `3px solid ${c}`, borderRadius: 12, padding: '14px 18px' }}>
+            <div className="mono" style={{ fontSize: 11, opacity: 0.6 }}>{l}</div>
+            <div className="display" style={{ fontSize: 28, marginTop: 4, fontWeight: 500 }}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Compose box */}
+      <div style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderRadius: 12, padding: 18, marginBottom: 18 }}>
+        <div className="mono" style={{ fontSize: 11, opacity: 0.6, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Message à envoyer
+        </div>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Ex: Salam ! Nouvelle collection dispo cette semaine — −10% sur tout avec le code SPRING. wridachic.com"
+          rows={4}
+          style={{ width: '100%', padding: 12, border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, resize: 'vertical' }}
+        />
+        <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 6 }}>
+          Le message sera pré-rempli quand tu cliques sur 📱 WhatsApp ou ✉ Email à côté de chaque inscrite.
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+          <button onClick={() => copyAll('email')} className="pl-btn" style={{ fontSize: 12 }}>📋 Copier tous les e-mails</button>
+          <button onClick={() => copyAll('phone')} className="pl-btn" style={{ fontSize: 12 }}>📋 Copier tous les téléphones</button>
+        </div>
+      </div>
+
+      {/* Filter pills */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        {[
+          ['all',   `Tous (${stats.total})`],
+          ['email', `E-mail (${stats.withEmail})`],
+          ['phone', `Téléphone (${stats.withPhone})`],
+        ].map(([id, label]) => (
+          <button key={id} onClick={() => setFilter(id)} className="mono" style={{
+            padding: '6px 14px', borderRadius: 999, fontSize: 11,
+            background: filter === id ? '#0F0E0D' : '#fff',
+            color:      filter === id ? '#fff'    : '#0F0E0D',
+            border: '1px solid rgba(15,14,13,0.18)', cursor: 'pointer',
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Chargement…</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Aucune inscrite pour ce filtre.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {filtered.map(s => (
+            <div key={s.id || s.email || s.phone} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderRadius: 10, padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'center' }}>
+              <div style={{ minWidth: 0 }}>
+                {s.email && <div style={{ fontSize: 13, fontWeight: 500 }}>{s.email}</div>}
+                {s.phone && <div className="mono" style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>📱 {s.phone}</div>}
+                <div className="mono" style={{ fontSize: 9, opacity: 0.45, marginTop: 4 }}>
+                  {s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : ''}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {s.phone && (
+                  <a href={waLink(s.phone)} target="_blank" rel="noopener" className="pl-btn" style={{ fontSize: 11, background: '#25D366', color: '#fff', borderColor: '#25D366', textDecoration: 'none' }}>
+                    📱 WhatsApp
+                  </a>
+                )}
+                {s.email && (
+                  <a href={mailLink(s.email)} className="pl-btn" style={{ fontSize: 11, textDecoration: 'none' }}>
+                    ✉ Email
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// CRITICAL: defined OUTSIDE CouponEditor. Defining inline (inside the parent
+// component) recreates the component on every keystroke and React unmounts the
+// input, which kills focus after each character. Keep this at module scope.
+const CouponField = ({ label, children }) => (
+  <div style={{ marginBottom: 14 }}>
+    <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+    {children}
+  </div>
+);
 
 const CouponEditor = ({ coupon, onClose, onSaved }) => {
   const isNew = !coupon;
@@ -1907,12 +2084,6 @@ const CouponEditor = ({ coupon, onClose, onSaved }) => {
     onSaved();
   };
 
-  const Field = ({ label, children }) => (
-    <div style={{ marginBottom: 14 }}>
-      <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-      {children}
-    </div>
-  );
   const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, background: '#fff' };
 
   return (
@@ -1922,50 +2093,50 @@ const CouponEditor = ({ coupon, onClose, onSaved }) => {
         <button onClick={onClose} className="pl-btn">← Retour</button>
       </div>
 
-      <Field label="Code">
+      <CouponField label="Code">
         <input value={code} onChange={(e) => setCode(e.target.value)} disabled={!isNew} style={{ ...inputStyle, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', opacity: isNew ? 1 : 0.6 }} placeholder="EX: SUMMER10" />
-      </Field>
+      </CouponField>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        <Field label="Type">
+        <CouponField label="Type">
           <select value={type} onChange={(e) => setType(e.target.value)} style={inputStyle}>
             <option value="percent">Pourcentage (%)</option>
             <option value="fixed">Montant fixe (MAD)</option>
           </select>
-        </Field>
-        <Field label={type === 'percent' ? 'Valeur (%)' : 'Valeur (MAD)'}>
+        </CouponField>
+        <CouponField label={type === 'percent' ? 'Valeur (%)' : 'Valeur (MAD)'}>
           <input type="number" value={value} onChange={(e) => setValue(e.target.value)} style={inputStyle} min="1" max={type === 'percent' ? 100 : 99999} />
-        </Field>
+        </CouponField>
       </div>
 
-      <Field label="Usage">
+      <CouponField label="Usage">
         <select value={usageType} onChange={(e) => setUsageType(e.target.value)} style={inputStyle}>
           <option value="single_use">Single-use (mrra wahda fakat)</option>
           <option value="reusable">Réutilisable (plusieurs fois)</option>
         </select>
-      </Field>
+      </CouponField>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        <Field label="Date d'expiration (optionnel)">
+        <CouponField label="Date d'expiration (optionnel)">
           <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} style={inputStyle} />
-        </Field>
-        <Field label="Statut">
+        </CouponField>
+        <CouponField label="Statut">
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 10, cursor: 'pointer' }}>
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
             <span style={{ fontSize: 14 }}>{active ? 'Actif' : 'Inactif'}</span>
           </label>
-        </Field>
+        </CouponField>
       </div>
 
       {usageType === 'reusable' && (
-        <Field label="Réservé au compte (UUID utilisateur — optionnel)">
+        <CouponField label="Réservé au compte (UUID utilisateur — optionnel)">
           <input value={assignedToUserId} onChange={(e) => setAssignedToUserId(e.target.value)} style={{ ...inputStyle, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }} placeholder="ex: 4f8a-... (laisse vide pour usage public)" />
-        </Field>
+        </CouponField>
       )}
 
-      <Field label="Note interne (optionnel)">
+      <CouponField label="Note interne (optionnel)">
         <input value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} placeholder="ex: Influenceuse @sara" />
-      </Field>
+      </CouponField>
 
       {err && <div className="mono" style={{ color: '#C62828', fontSize: 12, marginBottom: 12 }}>⚠ {err}</div>}
 
@@ -2256,10 +2427,11 @@ const AdminYoung = () => {
         {/* TABS */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid rgba(15,14,13,0.1)', flexWrap: 'wrap' }}>
           {[
-            { id: 'orders',   label: `Commandes (${orders.length})` },
-            { id: 'products', label: `Produits` },
-            { id: 'coupons',  label: `Coupons` },
-            { id: 'users',    label: `Utilisateurs (${users.length})` },
+            { id: 'orders',     label: `Commandes (${orders.length})` },
+            { id: 'products',   label: `Produits` },
+            { id: 'coupons',    label: `Coupons` },
+            { id: 'newsletter', label: `Newsletter` },
+            { id: 'users',      label: `Utilisateurs (${users.length})` },
           ].map(tb => (
             <button key={tb.id} onClick={() => setTab(tb.id)} style={{
               padding: '12px 20px', fontSize: 14, marginBottom: -1, cursor: 'pointer',
@@ -2349,6 +2521,8 @@ const AdminYoung = () => {
         {tab === 'products' && <AdminProducts />}
 
         {tab === 'coupons' && <AdminCoupons />}
+
+        {tab === 'newsletter' && <AdminNewsletter />}
 
         {tab === 'users' && (
           users.length === 0 ? (
