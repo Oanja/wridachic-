@@ -1,10 +1,15 @@
 // Young/modern components for wridachic
 const { useState: uS, useEffect: uE, useMemo: uM, useRef: uR } = React;
 
-/* Logo — invert=true makes it white (for dark backgrounds) */
-const Logo2 = ({ size = 38, invert = false }) => (
+/* Logo — invert=true makes it white (for dark backgrounds).
+   variant: 'full' (default, footer) | 'menu' (compact mark for nav). */
+const LOGO_SRC = {
+  full: 'assets/wridachicNlogo.svg',
+  menu: 'assets/wridachicNlogo 2.svg',
+};
+const Logo2 = ({ size = 38, invert = false, variant = 'full' }) => (
   <img
-    src="assets/wridachicNlogo.svg"
+    src={LOGO_SRC[variant] || LOGO_SRC.full}
     alt="wridachic"
     style={{
       height: size,
@@ -80,7 +85,7 @@ const Nav2 = ({ lang, setLang, cartCount, onNav, current, user, onAuth, onLogout
       <nav className="nav2">
         <div className="nav2-inner">
           <div className="nav2-logo" onClick={() => { onNav('home'); setMenuOpen(false); }}>
-            <Logo2 size={72} />
+            <Logo2 size={72} variant="menu" />
           </div>
 
           {/* Desktop links */}

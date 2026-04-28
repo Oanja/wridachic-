@@ -239,6 +239,8 @@ const HomeYoung = ({ lang, onNav, onProduct, wishlist, toggleWish }) => {
 };
 
 // ======== SHOP ========
+// Toggle to true once the catalog has enough variety to justify price + color refinement.
+const SHOW_REFINEMENT_FILTERS = false;
 const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
   const t = WC_TR[lang];
   const [cat, setCat] = u2S(initialCat || 'all');
@@ -316,7 +318,8 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
           ))}
         </div>
 
-        {/* Refinement filters: price + color */}
+        {/* Refinement filters: price + color — hidden until catalog grows. Flip SHOW_REFINEMENT_FILTERS to true to re-enable. */}
+        {SHOW_REFINEMENT_FILTERS && (
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center', marginBottom: 32, paddingBottom: 16, borderBottom: '1px dashed rgba(15,14,13,0.15)' }}>
           {/* Price */}
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -365,6 +368,7 @@ const ShopYoung = ({ lang, onProduct, wishlist, toggleWish, initialCat }) => {
             </button>
           )}
         </div>
+        )}
 
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', opacity: 0.5 }}>
@@ -1112,16 +1116,16 @@ const LookbookYoung = ({ lang }) => (
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gridAutoRows: '180px', gap: 12 }}>
         {[
-          { c: 'span 3', r: 'span 2', t: 'clay'  },
-          { c: 'span 3', r: 'span 2', t: 'lime'  },
-          { c: 'span 2', r: 'span 2', t: 'rose'  },
-          { c: 'span 2', r: 'span 3', t: 'ink'   },
-          { c: 'span 2', r: 'span 2', t: 'sky'   },
-          { c: 'span 4', r: 'span 2', t: 'mint'  },
-          { c: 'span 2', r: 'span 2', t: 'clay'  },
+          { c: 'span 3', r: 'span 2', img: 'assets/3.jpg'  },
+          { c: 'span 3', r: 'span 2', img: 'assets/1.jpg'  },
+          { c: 'span 2', r: 'span 2', img: 'assets/00.jpg' },
+          { c: 'span 2', r: 'span 3', img: 'assets/4.jpg'  },
+          { c: 'span 2', r: 'span 2', img: 'assets/11.jpg' },
+          { c: 'span 4', r: 'span 2', img: 'assets/33.jpg' },
+          { c: 'span 2', r: 'span 2', img: 'assets/2.jpg'  },
         ].map((l, i) => (
           <div key={i} style={{ gridColumn: l.c, gridRow: l.r, borderRadius: 16, overflow: 'hidden' }}>
-            <Ph2 tint={l.t} rose={i % 3 === 0} aspect="none" />
+            <img src={l.img} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
         ))}
       </div>
