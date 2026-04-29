@@ -1846,6 +1846,24 @@ const AdminCoupons = () => {
         <button onClick={() => setEditing('new')} className="btn2 btn2-clay" style={{ fontSize: 13, padding: '10px 18px' }}>+ Nouveau coupon</button>
       </div>
 
+      <style>{`
+        .cp-row {
+          display: grid; grid-template-columns: 1.2fr 1fr 1.4fr auto;
+          gap: 16px; align-items: center;
+          background: #fff; border: 1px solid rgba(15,14,13,0.08);
+          border-radius: 12px; padding: 16px 18px;
+        }
+        .cp-actions { display: flex; flex-direction: column; gap: 6px; }
+        @media (max-width: 720px) {
+          .cp-row { grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; }
+          .cp-info     { grid-column: 1 / -1; }
+          .cp-value    { grid-column: 1; }
+          .cp-meta     { grid-column: 2; text-align: right; }
+          .cp-actions  { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid rgba(15,14,13,0.08); }
+          .cp-actions button { flex: 1; min-width: 88px; }
+        }
+      `}</style>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, opacity: 0.4 }} className="mono">Chargement…</div>
       ) : list.length === 0 ? (
@@ -1859,22 +1877,22 @@ const AdminCoupons = () => {
                          : c.usage_type === 'single_use' && c.used ? { label: 'UTILISÉ', color: '#888' }
                          : { label: 'ACTIF', color: '#4CAF50' };
             return (
-              <div key={c.code} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.08)', borderLeft: `4px solid ${status.color}`, borderRadius: 12, padding: '16px 18px', display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.4fr auto', gap: 16, alignItems: 'center' }}>
-                <div>
+              <div key={c.code} className="cp-row" style={{ borderLeft: `4px solid ${status.color}` }}>
+                <div className="cp-info">
                   <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--clay)', letterSpacing: '0.04em' }}>{c.code}</div>
                   <div className="mono" style={{ fontSize: 9, marginTop: 4, padding: '2px 8px', borderRadius: 999, background: status.color + '22', color: status.color, display: 'inline-block', fontWeight: 600 }}>{status.label}</div>
                   {c.note && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 6 }}>{c.note}</div>}
                 </div>
-                <div className="mono" style={{ fontSize: 12 }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>
+                <div className="cp-value mono" style={{ fontSize: 12 }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)' }}>
                     {c.type === 'percent' ? `−${c.value}%` : `−${c.value} MAD`}
                   </div>
                   <div style={{ opacity: 0.55, fontSize: 10, marginTop: 2 }}>{c.usage_type === 'single_use' ? 'Mrr wahda' : 'Réutilisable'}</div>
                 </div>
-                <div className="mono" style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.6 }}>
+                <div className="cp-meta mono" style={{ fontSize: 11, opacity: 0.75, lineHeight: 1.6 }}>
                   {/* Recipient info — only set for auto-issued gift coupons */}
                   {c.issued_to_name && (
-                    <div style={{ marginBottom: 6, padding: '6px 8px', background: 'rgba(196,116,107,0.08)', borderRadius: 6 }}>
+                    <div style={{ marginBottom: 6, padding: '6px 8px', background: 'rgba(196,116,107,0.08)', borderRadius: 6, textAlign: 'left' }}>
                       <div style={{ fontSize: 9, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Offert à</div>
                       <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{c.issued_to_name}</div>
                       {c.issued_to_phone && (
@@ -1890,7 +1908,7 @@ const AdminCoupons = () => {
                   {c.used && <div style={{ color: 'var(--clay)' }}>Utilisé par: {c.used_by || '—'}</div>}
                   {c.assigned_to_user_id && <div style={{ fontSize: 9, opacity: 0.5 }}>Réservé à un compte</div>}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div className="cp-actions">
                   <button onClick={() => setEditing(c.code)} className="pl-btn" style={{ fontSize: 11 }}>Modifier</button>
                   <button onClick={() => toggleActive(c)} className="pl-btn" style={{ fontSize: 11 }}>{c.active ? 'Désactiver' : 'Activer'}</button>
                   <button onClick={() => remove(c)} className="pl-btn pl-btn-danger" style={{ fontSize: 11 }}>Supprimer</button>
