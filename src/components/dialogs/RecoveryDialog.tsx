@@ -16,9 +16,31 @@ export function RecoveryDialog() {
 
   useEffect(() => {
     const sb = getSupabaseBrowser();
+
+    // Listen for the recovery event (fired after exchangeCodeForSession succeeds
+    // OR when a stored recovery session is restored).
     const { data: sub } = sb.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setOpen(true);
     });
+
+    // Supabase PKCE recovery links land on the site with ?code=...
+    // The code is single-use and the verifier lives in the browser that requested
+    // the reset — so opening the link in a different browser shows nothing unless
+    // we explicitly exchange the code for a (recovery) session here. That exchange
+    // fires PASSWORD_RECOVERY above, which opens the dialog.
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      if (code) {
+        sb.auth.exchangeCodeForSession(code).then(({ error }) => {
+          if (error) console.warn('[recovery] exchangeCodeForSession failed:', error.message);
+          // Strip the (now-used) code so a refresh doesn't retry it.
+          url.searchParams.delete('code');
+          window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+        });
+      }
+    }
+
     return () => sub.subscription.unsubscribe();
   }, []);
 
