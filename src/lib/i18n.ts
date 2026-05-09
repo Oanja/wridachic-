@@ -1,0 +1,108 @@
+import type { Lang } from './types';
+
+export const TR = {
+  fr: {
+    announce: [
+      'Livraison gratuite dès 500 MAD — partout au Maroc',
+      'Paiement à la livraison disponible',
+      'Nouvelle collection — tenues de prière & mode féminine',
+      'Retours acceptés sous 14 jours',
+    ],
+    nav: { shop: 'Boutique', prayer: 'Prière', new: 'Nouveautés', lookbook: 'Lookbook', about: 'À propos' },
+    hero: {
+      eyebrow: 'La mode féminine marocaine',
+      title: 'Le style à portée\nde toutes',
+      sub: 'Tenues de prière, robes & essentiels — dès 149 MAD, livré partout au Maroc.',
+      cta1: 'Découvrir la collection', cta2: 'Espace Prière',
+    },
+    sections: {
+      categoriesEyebrow: 'Nos univers', categoriesTitle: 'Toute la femme marocaine',
+      categoriesSub: 'De la tenue de prière aux essentiels du quotidien.',
+      bestEyebrow: 'Les coups de cœur', bestTitle: 'Best-sellers',
+      bestSub: 'Ce que portent nos clientes cette saison.',
+      newEyebrow: 'Cette semaine', newTitle: 'Nouveautés',
+      newSub: 'Fraîchement arrivées dans la boutique.',
+    },
+    product: {
+      add: 'Ajouter au panier', buyWa: 'Commander via WhatsApp', wishlist: 'Favoris',
+      size: 'Taille', color: 'Couleur', desc: 'Description', sizeGuide: 'Guide des tailles',
+      delivery: 'Livraison ~1 semaine partout au Maroc', cod: 'Paiement à la livraison (COD)',
+      return: 'Retours acceptés sous 14 jours',
+    },
+    cart: {
+      title: 'Mon panier', empty: 'Votre panier est vide', continue: 'Continuer mes achats',
+      subtotal: 'Sous-total', delivery: 'Livraison', total: 'Total', checkout: 'Passer commande',
+      qty: 'Qté', remove: 'Retirer',
+    },
+    checkout: {
+      title: 'Finaliser la commande', shipping: 'Livraison', payment: 'Paiement', review: 'Confirmation',
+      fullName: 'Nom complet', phone: 'Téléphone', email: 'E-mail', address: 'Adresse complète', city: 'Ville',
+      cod: 'Paiement à la livraison', codDesc: 'Payez en espèces à la réception — aucun risque',
+      cib: 'Carte bancaire (CIH / CMI)', cibDesc: 'Paiement 100% sécurisé en ligne',
+      place: 'Confirmer ma commande', success: 'Commande confirmée !',
+      successDesc: 'Notre équipe vous contactera sous 24h pour confirmer la livraison.',
+    },
+    footer: {
+      tagline: 'Vêtements féminins pensés au Maroc. Mode, élégance et accessibilité pour chaque femme.',
+      shop: 'Boutique', help: 'Aide & Contact', about: 'La marque', follow: 'Suivez-nous',
+      contact: 'Nous écrire', faq: 'Questions fréquentes', delivery: 'Livraison & délais',
+      returns: 'Politique de retour', sizes: 'Guide des tailles', story: 'Notre histoire',
+      stores: 'Points de vente', sustainability: 'Notre engagement', press: 'Presse',
+      rights: '© 2026 wridachic.com — Tous droits réservés',
+    },
+  },
+  ar: {
+    announce: [
+      'توصيل مجاني من 500 درهم — في كل أنحاء المغرب',
+      'الدفع عند التسليم متاح',
+      'مجموعة جديدة — ملابس الصلاة والأزياء النسائية',
+      'الإرجاع مقبول خلال 14 يوماً',
+    ],
+    nav: { shop: 'المتجر', prayer: 'الصلاة', new: 'جديد', lookbook: 'لوكبوك', about: 'عنا' },
+    hero: {
+      eyebrow: 'الأزياء النسائية المغربية', title: 'الأناقة في متناول\nالجميع',
+      sub: 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.',
+      cta1: 'اكتشفي المجموعة', cta2: 'ملابس الصلاة',
+    },
+    sections: {
+      categoriesEyebrow: 'عوالمنا', categoriesTitle: 'لكل امرأة مغربية',
+      categoriesSub: 'من ملابس الصلاة إلى أزياء الحياة اليومية.',
+      bestEyebrow: 'الأكثر مبيعاً', bestTitle: 'الأكثر طلباً',
+      bestSub: 'ما ترتديه زبوناتنا هذا الموسم.',
+      newEyebrow: 'هذا الأسبوع', newTitle: 'جديدنا', newSub: 'وصل حديثاً إلى المتجر.',
+    },
+    product: {
+      add: 'أضيفي إلى السلة', buyWa: 'اطلبي عبر واتساب', wishlist: 'المفضلة',
+      size: 'المقاس', color: 'اللون', desc: 'الوصف', sizeGuide: 'دليل المقاسات',
+      delivery: 'التوصيل في حوالي أسبوع، في كل المغرب', cod: 'الدفع عند التسليم',
+      return: 'الإرجاع مقبول خلال 14 يوماً',
+    },
+    cart: {
+      title: 'سلتي', empty: 'سلتك فارغة', continue: 'متابعة التسوق',
+      subtotal: 'المجموع الفرعي', delivery: 'التوصيل', total: 'المجموع', checkout: 'إتمام الطلب',
+      qty: 'الكمية', remove: 'حذف',
+    },
+    checkout: {
+      title: 'إتمام الطلب', shipping: 'التوصيل', payment: 'الدفع', review: 'التأكيد',
+      fullName: 'الاسم الكامل', phone: 'رقم الهاتف', email: 'البريد الإلكتروني', address: 'العنوان الكامل', city: 'المدينة',
+      cod: 'الدفع عند التسليم', codDesc: 'ادفعي نقداً عند الاستلام — بدون مخاطر',
+      cib: 'البطاقة البنكية', cibDesc: 'دفع آمن 100% عبر الإنترنت',
+      place: 'تأكيد طلبي', success: 'تم تأكيد طلبك !',
+      successDesc: 'سيتصل بك فريقنا خلال 24 ساعة لتأكيد التوصيل.',
+    },
+    footer: {
+      tagline: 'ملابس نسائية مصممة في المغرب. أناقة، جمال وأسعار في متناول الجميع.',
+      shop: 'المتجر', help: 'مساعدة وتواصل', about: 'العلامة', follow: 'تابعينا',
+      contact: 'اكتبي لنا', faq: 'أسئلة شائعة', delivery: 'التوصيل والمواعيد',
+      returns: 'سياسة الإرجاع', sizes: 'دليل المقاسات', story: 'قصتنا',
+      stores: 'نقاط البيع', sustainability: 'التزامنا', press: 'الصحافة',
+      rights: '© 2026 wridachic.com — كل الحقوق محفوظة',
+    },
+  },
+} as const;
+
+export type Translations = typeof TR['fr'];
+
+export function t(lang: Lang): Translations {
+  return TR[lang] as unknown as Translations;
+}

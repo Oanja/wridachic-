@@ -1,0 +1,104 @@
+'use client';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { Icon } from './Icon';
+import { Placeholder } from './Placeholder';
+import { TINTS } from '@/lib/data';
+import { TR } from '@/lib/i18n';
+import type { Lang, Product } from '@/lib/types';
+
+interface PCardProps {
+  product: Product;
+  lang: Lang;
+  onWish: (id: string) => void;
+  wished: boolean;
+  tint?: string;
+  priority?: boolean;
+}
+
+export function PCard({ product, lang, onWish, wished, tint, priority = false }: PCardProps) {
+  const t = TR[lang];
+  const name = lang === 'ar' ? product.nameAr : product.name;
+  const [hovered, setHovered] = useState(false);
+  const [autoIdx, setAutoIdx] = useState(0);
+  const hasTwo = product.imgFiles.length > 1;
+
+  useEffect(() => {
+    if (!hasTwo) return;
+    const id = setInterval(() => setAutoIdx((i) => (i + 1) % 2), 2800);
+    return () => clearInterval(id);
+  }, [hasTwo]);
+
+  const showSecond = hasTwo && (hovered || autoIdx === 1);
+  const fallbackTint = tint ?? TINTS[parseInt(product.id.replace(/\D/g, '') || '0') % TINTS.length];
+
+  return (
+    <Link href={`/product/${product.slug}`} className="pcard" style={{ display: 'block', color: 'inherit' }}>
+      <div
+        className="pcard-img"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {product.imgFiles.length > 0 ? (
+          <>
+            <Image
+              src={product.imgFiles[0]}
+              alt={name}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+              priority={priority}
+              style={{ objectFit: 'cover', transition: 'opacity 0.6s ease', opacity: showSecond ? 0 : 1 }}
+            />
+            {hasTwo && (
+              <Image
+                src={product.imgFiles[1]}
+                alt={name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                style={{ objectFit: 'cover', transition: 'opacity 0.6s ease', opacity: showSecond ? 1 : 0 }}
+              />
+            )}
+          </>
+        ) : (
+          <Placeholder tint={fallbackTint} rose />
+        )}
+
+        {product.tag === 'new' && (
+          <span className="pcard-tag new">{lang === 'ar' ? 'جديد ✦' : 'Nouveau ✦'}</span>
+        )}
+        {product.tag === 'sale' && product.oldPrice && (
+          <span className="pcard-tag sale">
+            {lang === 'ar'
+              ? `خصم −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+              : `−${Math.round((1 - product.price / product.oldPrice) * 100)}%`}
+          </span>
+        )}
+
+        <button
+          type="button"
+          className={`pcard-wish ${wished ? 'on' : ''}`}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onWish(product.id); }}
+          aria-label={t.product.wishlist}
+        >
+          <Icon n="heart" s={14} />
+        </button>
+        <div className="pcard-quick">+ {t.product.add}</div>
+      </div>
+
+      <div>
+        <div className="pcard-name">{name}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+          <div className="pcard-colors">
+            {product.colors.map((c, i) => <span key={i} style={{ background: c }} />)}
+          </div>
+          <div className="pcard-price">
+            {product.oldPrice && <span className="old">{product.oldPrice}</span>}
+            {product.price} <span style={{ fontSize: 10, opacity: 0.5 }}>MAD</span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
