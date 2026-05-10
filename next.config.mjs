@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  compress: true,
+  // compress is handled by Vercel's edge — enabling Node-side gzip duplicates work.
 
   images: {
     formats: ['image/avif', 'image/webp'],

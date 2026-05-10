@@ -100,7 +100,11 @@ img { max-width: 100%; display: block; }
   padding: 8px 0; font-size: 12px; letter-spacing: 0.04em;
   font-family: 'JetBrains Mono', monospace; border-bottom: 1px solid var(--ink);
 }
-.marquee-track { display: flex; animation: slide 30s linear infinite; white-space: nowrap; will-change: transform; }
+/* width:max-content makes the track exactly as wide as its content, so
+   translateX(-50%) lands precisely on the start of the duplicated half. Without
+   it the percentage is computed against the viewport width and the loop snaps
+   back visibly. */
+.marquee-track { display: flex; width: max-content; animation: slide 30s linear infinite; white-space: nowrap; will-change: transform; }
 .marquee-half { display: flex; gap: 40px; padding-right: 40px; flex-shrink: 0; }
 .marquee-track span::before { content: '◈ '; color: var(--lime); }
 @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -222,6 +226,27 @@ body.ar .marquee-track { animation-direction: reverse; }
 .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; position: relative; align-items: center; }
 .hero-text { padding-right: 8px; }
 body.ar .hero-text { padding-right: 0; padding-left: 8px; }
+
+/* Hero stats — use logical inline-start border so the divider lands between
+   columns in BOTH LTR and RTL (border-left would orphan to the wrong side
+   when flex reverses for RTL). */
+.hero-stat {
+  flex: 1;
+  padding: 0 24px;
+}
+.hero-stat + .hero-stat {
+  border-inline-start: 1px solid rgba(15,14,13,0.12);
+}
+.hero-stat:first-child { padding-inline-start: 0; }
+.hero-stat:last-child { padding-inline-end: 0; }
+
+/* Arabic: zero out letter-spacing/uppercase on labels — both break cursive
+   letter shaping and make words look fragmented (e.g. "صنع في المغرب"). */
+body.ar .hero-stat .stat-label {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
 @media (min-width: 769px) {
   body.ar .hero-small { left: auto !important; right: -40px !important; }
   body.ar .hero-big { right: auto !important; left: 0 !important; }
@@ -341,12 +366,28 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .hero-collage { display: none; }
   .hero-eyebrow { display: none !important; }
 
-  .hero-stats { gap: 0 !important; margin-top: 24px !important; padding-top: 20px !important; flex-wrap: nowrap !important; }
-  .hero-stat { flex: 1; min-width: 0; padding-left: 12px !important; padding-right: 12px !important; }
-  .hero-stat:first-child { padding-left: 0 !important; }
-  .hero-stat:last-child { padding-right: 0 !important; }
+  .hero-stats { gap: 0 !important; margin-top: 24px !important; padding-top: 20px !important; flex-wrap: nowrap !important; align-items: flex-start !important; }
+  /* Center content on mobile so labels stay clear of the column dividers. */
+  .hero-stat {
+    flex: 1;
+    min-width: 0;
+    padding: 0 10px !important;
+    text-align: center !important;
+  }
+  .hero-stat:first-child { padding-inline-start: 0 !important; }
+  .hero-stat:last-child { padding-inline-end: 0 !important; }
   .hero-stat .stat-num { font-size: 22px !important; margin-bottom: 4px !important; }
-  .hero-stat .stat-label { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 8px !important; letter-spacing: 0.06em !important; }
+  /* Allow wrap on 2 lines instead of clipping with ellipsis — labels stay readable. */
+  .hero-stat .stat-label {
+    display: block;
+    font-size: 8.5px !important;
+    letter-spacing: 0.05em !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: keep-all;
+  }
 
   .cat-grid { grid-template-columns: 1fr; height: auto; }
   .cat-main { height: 280px; }
@@ -430,18 +471,18 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .adm-order-customer { grid-column: 1; padding-top: 8px; border-top: 1px dashed rgba(15,14,13,0.08); }
 }
 
-.reveal { opacity: 0; transform: translateY(34px); transition: opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1), transform 0.95s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
-.reveal-stagger > * { opacity: 0; transform: translateY(28px); transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal-stagger > * { opacity: 0; transform: translateY(20px); transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 .reveal-stagger.is-visible > * { opacity: 1; transform: translateY(0); }
 .reveal-stagger.is-visible > *:nth-child(1) { transition-delay: 0.00s; }
-.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 0.08s; }
-.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 0.16s; }
-.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 0.22s; }
-.reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 0.28s; }
-.reveal-stagger.is-visible > *:nth-child(6) { transition-delay: 0.34s; }
-.reveal-stagger.is-visible > *:nth-child(n+7) { transition-delay: 0.4s; }
-.reveal-img { opacity: 0; transform: scale(1.04); transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1), transform 1.4s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 0.05s; }
+.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 0.10s; }
+.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 0.14s; }
+.reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 0.18s; }
+.reveal-stagger.is-visible > *:nth-child(6) { transition-delay: 0.22s; }
+.reveal-stagger.is-visible > *:nth-child(n+7) { transition-delay: 0.26s; }
+.reveal-img { opacity: 0; transform: scale(1.02); transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
 .reveal-img.is-visible { opacity: 1; transform: scale(1); }
 @media (prefers-reduced-motion: reduce) {
   .reveal, .reveal-stagger > *, .reveal-img { opacity: 1 !important; transform: none !important; transition: none !important; }

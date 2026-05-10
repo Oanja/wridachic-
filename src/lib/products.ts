@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { getSupabaseServer } from './supabase/server';
 import { FALLBACK_PRODUCTS } from './data';
 import type { Product } from './types';
@@ -50,7 +51,10 @@ function transform(row: SupabaseProductRow): Product {
   };
 }
 
-export async function getAllProducts(): Promise<Product[]> {
+// Wrapped in React.cache so multiple calls within the same render
+// (e.g. getProductBySlug + page.tsx both calling getAllProducts) hit
+// Supabase only once per request.
+export const getAllProducts = cache(async (): Promise<Product[]> => {
   try {
     const sb = await getSupabaseServer();
     const { data, error } = await sb
@@ -63,7 +67,7 @@ export async function getAllProducts(): Promise<Product[]> {
   } catch {
     return FALLBACK_PRODUCTS;
   }
-}
+});
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const all = await getAllProducts();

@@ -29,7 +29,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 {lang === 'fr' ? (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 ) : (
-                  <>أناقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغربية</em><br />أصيلة.</>
+                  <>أنــــاقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغــــربية</em><br />أصــــيلة.</>
                 )}
               </h1>
 
@@ -54,7 +54,7 @@ export function HomePage({ products }: { products: Product[] }) {
                   { n: 'COD',  l: lang === 'fr' ? 'Paiement livraison' : 'الدفع عند التوصيل' },
                   { n: '7j',   l: lang === 'fr' ? 'Livraison' : 'توصيل' },
                 ].map((s, i) => (
-                  <div key={i} className="hero-stat" style={{ flex: 1, paddingRight: i < 2 ? 24 : 0, paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid rgba(15,14,13,0.12)' : 'none' }}>
+                  <div key={i} className="hero-stat">
                     <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
                     <span className="mono stat-label" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.55 }}>{s.l}</span>
                   </div>
@@ -70,7 +70,7 @@ export function HomePage({ products }: { products: Product[] }) {
               </div>
 
               <div className="blob hero-small" style={{ position: 'absolute', top: '54%', left: -30, width: '50%', aspectRatio: '4/5', borderRadius: 22, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 18px 40px -10px rgba(15,14,13,0.28)', border: '6px solid var(--paper)', zIndex: 2 }}>
-                <Image src="/assets/1.jpg" alt="" fill sizes="25vw" style={{ objectFit: 'cover' }} />
+                <Image src="/assets/1.jpg" alt="" fill priority sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
               </div>
 
               <div className="blob hero-sticker" style={{ position: 'absolute', bottom: 40, right: -8, animationDelay: '-6s', zIndex: 3 }}>
@@ -85,7 +85,7 @@ export function HomePage({ products }: { products: Product[] }) {
 
       {/* PROMISE TICKER */}
       <section style={{ background: 'var(--ink)', color: 'var(--paper)', padding: '13px 0', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
+        <div style={{ display: 'flex', width: 'max-content', animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
           {[0, 1].map((k) => (
             <div key={k} style={{ display: 'flex', gap: 56, paddingRight: 56, flexShrink: 0 }}>
               <span>✦ {lang === 'fr' ? 'Tissus naturels & mousseline' : 'أقمشة طبيعية وشيفون'}</span>
@@ -166,9 +166,9 @@ export function HomePage({ products }: { products: Product[] }) {
 
       {/* BIG TICKER */}
       <section className="big-ticker-section" style={{ padding: '40px 0', overflow: 'hidden', borderTop: '1px solid var(--ink)', borderBottom: '1px solid var(--ink)' }}>
-        <div className="big-ticker-text" style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'slide 55s linear infinite', fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif', fontSize: 'clamp(48px, 7vw, 96px)', lineHeight: 1, letterSpacing: '-0.04em' }}>
+        <div className="big-ticker-text" style={{ display: 'flex', width: 'max-content', whiteSpace: 'nowrap', animation: 'slide 55s linear infinite', fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif', fontSize: 'clamp(48px, 7vw, 96px)', lineHeight: 1, letterSpacing: '-0.04em' }}>
           {[0, 1].map((k) => (
-            <span key={k} style={{ paddingRight: 56 }}>
+            <span key={k} style={{ paddingRight: 56, flexShrink: 0 }}>
               wrida<em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>chic</em>
               {' '}✦{' '}{lang === 'fr' ? 'marocaine & fière' : 'مغربية وفخورة'}
               {' '}✦{' '}

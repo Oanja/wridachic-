@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Space_Grotesk, JetBrains_Mono, IBM_Plex_Sans_Arabic } from 'next/font/google';
 import { AppProvider } from '@/store/AppContext';
 import { LayoutShell } from '@/components/layout/LayoutShell';
 import './globals.css';
-
-const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', variable: '--font-fraunces', weight: ['300', '400', '500', '600'] });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-grotesk', weight: ['300', '400', '500', '600', '700'] });
-const jetBrainsMono = JetBrains_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-mono', weight: ['400', '500'] });
-const ibmArabic = IBM_Plex_Sans_Arabic({ subsets: ['arabic'], display: 'swap', variable: '--font-arabic', weight: ['300', '400', '500', '600', '700'] });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wridachic.com';
 
@@ -71,7 +65,7 @@ const ORG_JSONLD = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" dir="ltr" className={`${fraunces.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable} ${ibmArabic.variable}`}>
+    <html lang="fr" dir="ltr">
       <head>
         <script
           type="application/ld+json"
