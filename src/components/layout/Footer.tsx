@@ -22,10 +22,10 @@ export function Footer() {
         <div className="f2-hero">
           <div>
             <h2>
-              {lang === 'fr' ? <>Rejoins l&apos;<em>univers</em>.</> : <>انضمي إلى <em>عالمنا</em>.</>}
+              {lang !== 'ar' ? <>Rejoins l&apos;<em>univers</em>.</> : <>انضمي إلى <em>عالمنا</em>.</>}
             </h2>
             <p style={{ fontSize: 15, opacity: 0.75, marginTop: 16, maxWidth: '100%' }}>
-              {lang === 'fr'
+              {lang !== 'ar'
                 ? "Reçois nos nouveautés, lookbooks & coups de cœur chaque semaine — l'élégance marocaine dans ta boîte mail."
                 : 'استقبلي جديدنا، اللوكبوك ومختاراتنا كل أسبوع — أناقة مغربية مباشرة في بريدك.'}
             </p>
@@ -33,18 +33,18 @@ export function Footer() {
               <input
                 type="email" value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder={lang === 'fr' ? 'Ton e-mail…' : 'بريدك الإلكتروني…'}
+                placeholder={lang !== 'ar' ? 'Ton e-mail…' : 'بريدك الإلكتروني…'}
               />
-              <button type="submit">{lang === 'fr' ? "Je m'inscris →" : 'اشتركي →'}</button>
+              <button type="submit">{lang !== 'ar' ? "Je m'inscris →" : 'اشتركي →'}</button>
             </form>
           </div>
           <div className="f2-stickers">
             <span className="sticker">100% Maroc 🇲🇦</span>
             <span className="sticker sticker-rose" style={{ transform: 'rotate(3deg)' }}>
-              {lang === 'fr' ? 'Livraison gratuite 500+ MAD' : 'توصيل مجاني 500+ درهم'}
+              {lang !== 'ar' ? 'Livraison gratuite 500+ MAD' : 'توصيل مجاني 500+ درهم'}
             </span>
             <span className="sticker sticker-sky" style={{ transform: 'rotate(-1deg)' }}>
-              {lang === 'fr' ? 'COD disponible ✓' : 'دفع عند الاستلام ✓'}
+              {lang !== 'ar' ? 'COD disponible ✓' : 'دفع عند الاستلام ✓'}
             </span>
           </div>
         </div>

@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const products = await getAllProducts();
-  return <ShopPage products={products} filterNew title={{ fr: 'Nouveautés.', ar: 'الجديد.' }} />;
+  return <ShopPage products={products} filterNew title={{ fr: 'Nouveautés.', en: 'New arrivals.', ar: 'الجديد.' }} />;
 }

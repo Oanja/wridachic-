@@ -55,7 +55,7 @@ export function AuthDialog() {
       router.push('/account');
     } else {
       const userName = (u.user_metadata as { full_name?: string })?.full_name || u.email?.split('@')[0];
-      showToast({ msg: lang === 'fr' ? `✓ Bon retour, ${userName} !` : `✓ مرحبا بعودتك، ${userName}!`, type: 'ok' });
+      showToast({ msg: lang !== 'ar' ? `✓ Bon retour, ${userName} !` : `✓ مرحبا بعودتك، ${userName}!`, type: 'ok' });
     }
   };
 
@@ -65,7 +65,7 @@ export function AuthDialog() {
     setErr(''); setInfo(''); setBusy(true);
     try {
       if (mode === 'signup') {
-        if (pwd.length < 6) throw new Error(lang === 'fr' ? '6 caractères minimum' : '6 أحرف على الأقل');
+        if (pwd.length < 6) throw new Error(lang !== 'ar' ? '6 caractères minimum' : '6 أحرف على الأقل');
         const { data, error } = await sb.auth.signUp({
           email, password: pwd,
           options: { data: { full_name: name }, emailRedirectTo: redirectTo },
@@ -74,7 +74,7 @@ export function AuthDialog() {
 
         const identities = (data.user as { identities?: unknown[] } | null)?.identities;
         if (data.user && Array.isArray(identities) && identities.length === 0) {
-          throw new Error(lang === 'fr'
+          throw new Error(lang !== 'ar'
             ? 'Cet e-mail est déjà utilisé. Connecte-toi ou clique sur « Mot de passe oublié ».'
             : 'هاد الإيميل مسجل من قبل. سجلي الدخول أو اضغطي « نسيت كلمة السر ».');
         }
@@ -83,7 +83,7 @@ export function AuthDialog() {
           setOtpType('signup');
           setMode('otp');
           setResendIn(RESEND_COOLDOWN_SEC);
-          setInfo(lang === 'fr' ? '✉ Code à 6 chiffres envoyé par email' : '✉ تم إرسال رمز من 6 أرقام للإيميل');
+          setInfo(lang !== 'ar' ? '✉ Code à 6 chiffres envoyé par email' : '✉ تم إرسال رمز من 6 أرقام للإيميل');
         } else if (data.user && data.session) {
           onSuccess(data.user, { welcome: true });
         }
@@ -95,7 +95,7 @@ export function AuthDialog() {
             setOtpType('signup');
             setMode('otp');
             setResendIn(RESEND_COOLDOWN_SEC);
-            setInfo(lang === 'fr' ? '⚠ Compte non confirmé. Code renvoyé par email.' : '⚠ الحساب غير مؤكد. تم إرسال رمز جديد.');
+            setInfo(lang !== 'ar' ? '⚠ Compte non confirmé. Code renvoyé par email.' : '⚠ الحساب غير مؤكد. تم إرسال رمز جديد.');
           } else throw error;
         } else if (data.user) {
           onSuccess(data.user);
@@ -126,7 +126,7 @@ export function AuthDialog() {
         setOtpType('recovery');
         setMode('otp');
         setResendIn(RESEND_COOLDOWN_SEC);
-        setInfo(lang === 'fr'
+        setInfo(lang !== 'ar'
           ? '✉ Code à 6 chiffres envoyé par email'
           : '✉ تم إرسال رمز من 6 أرقام للإيميل');
       }
@@ -145,7 +145,7 @@ export function AuthDialog() {
     if (error) {
       setErr(error.message);
     } else {
-      setInfo(lang === 'fr' ? '✓ Code renvoyé !' : '✓ تم إعادة الإرسال!');
+      setInfo(lang !== 'ar' ? '✓ Code renvoyé !' : '✓ تم إعادة الإرسال!');
       setResendIn(RESEND_COOLDOWN_SEC);
     }
     setBusy(false);
@@ -153,23 +153,23 @@ export function AuthDialog() {
 
   // OTP view shows different copy for signup vs recovery.
   const otpTitle = otpType === 'recovery'
-    ? { fr: 'Code de réinitialisation', ar: 'رمز إعادة التعيين' }
-    : { fr: 'Confirmation', ar: 'تأكيد' };
+    ? { fr: 'Code de réinitialisation', en: 'Reset code', ar: 'رمز إعادة التعيين' }
+    : { fr: 'Confirmation', en: 'Confirmation', ar: 'تأكيد' };
   const otpSubtitle = otpType === 'recovery'
-    ? { fr: 'Entre le code reçu par email', ar: 'أدخلي الرمز من الإيميل' }
-    : { fr: 'Entre le code reçu par email', ar: 'أدخلي الرمز من الإيميل' };
+    ? { fr: 'Entre le code reçu par email', en: 'Enter the code you received by email', ar: 'أدخلي الرمز من الإيميل' }
+    : { fr: 'Entre le code reçu par email', en: 'Enter the code you received by email', ar: 'أدخلي الرمز من الإيميل' };
 
-  const titles: Record<Mode, { fr: string; ar: string }> = {
-    login:  { fr: 'Connexion',           ar: 'تسجيل الدخول' },
-    signup: { fr: 'Créer un compte',     ar: 'إنشاء حساب' },
+  const titles: Record<Mode, { fr: string; en: string; ar: string }> = {
+    login:  { fr: 'Connexion',           en: 'Sign in',           ar: 'تسجيل الدخول' },
+    signup: { fr: 'Créer un compte',     en: 'Create an account', ar: 'إنشاء حساب' },
     otp:    otpTitle,
-    reset:  { fr: 'Mot de passe oublié', ar: 'نسيت كلمة السر' },
+    reset:  { fr: 'Mot de passe oublié', en: 'Forgot password',   ar: 'نسيت كلمة السر' },
   };
-  const subtitles: Record<Mode, { fr: string; ar: string }> = {
-    login:  { fr: 'Retrouve tes favoris',         ar: 'استرجعي مفضلاتك' },
-    signup: { fr: 'Sauvegarde tes favoris',       ar: 'احفظي مفضلاتك' },
+  const subtitles: Record<Mode, { fr: string; en: string; ar: string }> = {
+    login:  { fr: 'Retrouve tes favoris',         en: 'Find your wishlist again',         ar: 'استرجعي مفضلاتك' },
+    signup: { fr: 'Sauvegarde tes favoris',       en: 'Save your wishlist',                ar: 'احفظي مفضلاتك' },
     otp:    otpSubtitle,
-    reset:  { fr: 'On t\'envoie un code à 6 chiffres', ar: 'سنرسل لك رمزًا من 6 أرقام' },
+    reset:  { fr: 'On t\'envoie un code à 6 chiffres', en: 'We\'ll send you a 6-digit code', ar: 'سنرسل لك رمزًا من 6 أرقام' },
   };
 
   return (
@@ -186,19 +186,19 @@ export function AuthDialog() {
 
         {mode === 'signup' && (
           <>
-            <input className="input2" placeholder={lang === 'fr' ? 'Nom complet' : 'الاسم الكامل'} value={name} onChange={(e) => setName(e.target.value)} style={{ marginBottom: 10 }} />
-            <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
-            <input className="input2" type="password" placeholder={lang === 'fr' ? 'Mot de passe (6+ caractères)' : 'كلمة السر (6+ أحرف)'} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
+            <input className="input2" placeholder={lang !== 'ar' ? 'Nom complet' : 'الاسم الكامل'} value={name} onChange={(e) => setName(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="email" placeholder={lang !== 'ar' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="password" placeholder={lang !== 'ar' ? 'Mot de passe (6+ caractères)' : 'كلمة السر (6+ أحرف)'} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
           </>
         )}
 
         {mode === 'login' && (
           <>
-            <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
-            <input className="input2" type="password" placeholder={lang === 'fr' ? 'Mot de passe' : 'كلمة السر'} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 6 }} />
+            <input className="input2" type="email" placeholder={lang !== 'ar' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="password" placeholder={lang !== 'ar' ? 'Mot de passe' : 'كلمة السر'} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 6 }} />
             <p style={{ textAlign: 'right', fontSize: 12, marginBottom: 10 }}>
               <a onClick={() => { setMode('reset'); setErr(''); setInfo(''); }} style={{ opacity: 0.6, cursor: 'pointer', borderBottom: '1px solid currentColor' }}>
-                {lang === 'fr' ? 'Mot de passe oublié ?' : 'نسيت كلمة السر؟'}
+                {lang !== 'ar' ? 'Mot de passe oublié ?' : 'نسيت كلمة السر؟'}
               </a>
             </p>
           </>
@@ -207,19 +207,19 @@ export function AuthDialog() {
         {mode === 'otp' && (
           <>
             <p style={{ fontSize: 13, opacity: 0.7, textAlign: 'center', marginBottom: 14 }}>
-              {lang === 'fr' ? 'Email envoyé à ' : 'تم الإرسال إلى '}<strong>{email}</strong>
+              {lang !== 'ar' ? 'Email envoyé à ' : 'تم الإرسال إلى '}<strong>{email}</strong>
             </p>
             <input className="input2" type="text" inputMode="numeric" maxLength={6} placeholder="••••••" value={otp} onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10, textAlign: 'center', fontSize: 22, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '8px' }} />
             <p style={{ textAlign: 'center', fontSize: 12, marginBottom: 10 }}>
               {resendIn > 0 ? (
                 <span style={{ opacity: 0.5 }}>
-                  {lang === 'fr'
+                  {lang !== 'ar'
                     ? `Renvoyer le code dans ${resendIn}s`
                     : `إعادة الإرسال بعد ${resendIn}ث`}
                 </span>
               ) : (
                 <a onClick={resendCode} style={{ opacity: busy ? 0.4 : 0.7, cursor: busy ? 'not-allowed' : 'pointer', borderBottom: '1px solid currentColor' }}>
-                  {lang === 'fr' ? 'Renvoyer le code' : 'إعادة إرسال الرمز'}
+                  {lang !== 'ar' ? 'Renvoyer le code' : 'إعادة إرسال الرمز'}
                 </a>
               )}
             </p>
@@ -227,7 +227,7 @@ export function AuthDialog() {
         )}
 
         {mode === 'reset' && (
-          <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
+          <input className="input2" type="email" placeholder={lang !== 'ar' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
         )}
 
         {info && <p style={{ color: 'green', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>{info}</p>}
@@ -235,33 +235,33 @@ export function AuthDialog() {
 
         <button className="btn2 btn2-dark" style={{ width: '100%', opacity: busy ? 0.5 : 1 }} disabled={busy} onClick={submit}>
           {busy ? '...' : (
-            mode === 'login'  ? (lang === 'fr' ? 'Se connecter →' : 'دخول ←') :
-            mode === 'signup' ? (lang === 'fr' ? 'Créer le compte →' : 'إنشاء ←') :
-            mode === 'otp'    ? (lang === 'fr' ? 'Confirmer →' : 'تأكيد ←') :
-                                (lang === 'fr' ? 'Envoyer le code →' : 'إرسال الرمز ←')
+            mode === 'login'  ? (lang !== 'ar' ? 'Se connecter →' : 'دخول ←') :
+            mode === 'signup' ? (lang !== 'ar' ? 'Créer le compte →' : 'إنشاء ←') :
+            mode === 'otp'    ? (lang !== 'ar' ? 'Confirmer →' : 'تأكيد ←') :
+                                (lang !== 'ar' ? 'Envoyer le code →' : 'إرسال الرمز ←')
           )}
         </button>
 
         {mode === 'login' && (
           <p style={{ textAlign: 'center', fontSize: 13, marginTop: 16, opacity: 0.7 }}>
-            {lang === 'fr' ? 'Pas de compte ? ' : 'ما عندكش حساب؟ '}
+            {lang !== 'ar' ? 'Pas de compte ? ' : 'ما عندكش حساب؟ '}
             <a onClick={() => { setMode('signup'); setErr(''); setInfo(''); }} style={{ borderBottom: '1px solid currentColor', cursor: 'pointer' }}>
-              {lang === 'fr' ? "S'inscrire" : 'سجلي'}
+              {lang !== 'ar' ? "S'inscrire" : 'سجلي'}
             </a>
           </p>
         )}
         {mode === 'signup' && (
           <p style={{ textAlign: 'center', fontSize: 13, marginTop: 16, opacity: 0.7 }}>
-            {lang === 'fr' ? 'Déjà inscrite ? ' : 'عندك حساب؟ '}
+            {lang !== 'ar' ? 'Déjà inscrite ? ' : 'عندك حساب؟ '}
             <a onClick={() => { setMode('login'); setErr(''); setInfo(''); }} style={{ borderBottom: '1px solid currentColor', cursor: 'pointer' }}>
-              {lang === 'fr' ? 'Connexion' : 'دخول'}
+              {lang !== 'ar' ? 'Connexion' : 'دخول'}
             </a>
           </p>
         )}
         {(mode === 'otp' || mode === 'reset') && (
           <p style={{ textAlign: 'center', fontSize: 13, marginTop: 16, opacity: 0.7 }}>
             <a onClick={() => { setMode('login'); setErr(''); setInfo(''); setOtp(''); }} style={{ borderBottom: '1px solid currentColor', cursor: 'pointer' }}>
-              ← {lang === 'fr' ? 'Retour à la connexion' : 'الرجوع لتسجيل الدخول'}
+              ← {lang !== 'ar' ? 'Retour à la connexion' : 'الرجوع لتسجيل الدخول'}
             </a>
           </p>
         )}

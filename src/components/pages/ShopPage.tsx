@@ -9,7 +9,7 @@ import type { Product } from '@/lib/types';
 interface ShopPageProps {
   products: Product[];
   initialCat?: string;
-  title?: { fr: string; ar: string };
+  title?: { fr: string; en: string; ar: string };
   filterNew?: boolean;
 }
 
@@ -28,25 +28,25 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
   }, [products, cat, sort, filterNew]);
 
   const cats = [
-    { id: 'all', name: lang === 'fr' ? 'Tout' : 'الكل', nameAr: 'الكل' },
+    { id: 'all', name: lang !== 'ar' ? 'Tout' : 'الكل', nameAr: 'الكل' },
     ...CATEGORIES,
   ];
 
   const heading = title
     ? title[lang]
-    : lang === 'fr' ? 'La boutique.' : 'المتجر.';
+    : lang !== 'ar' ? 'La boutique.' : 'المتجر.';
 
   return (
     <div className="page2" style={{ padding: '40px 0 80px' }}>
       <div className="wrap">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap', borderBottom: '1px solid var(--ink)', paddingBottom: 16, marginBottom: 28 }}>
           <div style={{ minWidth: 0 }}>
-            <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'boutique' : 'المتجر'} /</span>
+            <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang !== 'ar' ? 'boutique' : 'المتجر'} /</span>
             <h1 className="display" style={{ fontSize: 'clamp(44px, 7vw, 72px)', lineHeight: 1, letterSpacing: '-0.03em' }}>
               {heading}
             </h1>
             <span className="mono" style={{ fontSize: 12, opacity: 0.5, display: 'inline-block', marginTop: 10 }}>
-              {filtered.length} {lang === 'fr' ? 'articles' : 'قطعة'}
+              {filtered.length} {lang !== 'ar' ? 'articles' : 'قطعة'}
             </span>
           </div>
           <select
@@ -54,10 +54,10 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
             onChange={(e) => setSort(e.target.value as typeof sort)}
             style={{ padding: '8px 14px', border: '1.5px solid var(--ink)', borderRadius: 999, background: 'var(--paper)', fontFamily: 'inherit', fontSize: 13 }}
           >
-            <option value="featured">{lang === 'fr' ? 'Sélection' : 'مميز'}</option>
-            <option value="new">{lang === 'fr' ? 'Nouveautés' : 'الجديد'}</option>
-            <option value="price-asc">{lang === 'fr' ? 'Prix croissant' : 'السعر ↗'}</option>
-            <option value="price-desc">{lang === 'fr' ? 'Prix décroissant' : 'السعر ↘'}</option>
+            <option value="featured">{lang !== 'ar' ? 'Sélection' : 'مميز'}</option>
+            <option value="new">{lang !== 'ar' ? 'Nouveautés' : 'الجديد'}</option>
+            <option value="price-asc">{lang !== 'ar' ? 'Prix croissant' : 'السعر ↗'}</option>
+            <option value="price-desc">{lang !== 'ar' ? 'Prix décroissant' : 'السعر ↘'}</option>
           </select>
         </div>
 
@@ -73,7 +73,7 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
                 fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
               }}
             >
-              {lang === 'fr' ? c.name : c.nameAr}
+              {lang !== 'ar' ? c.name : c.nameAr}
             </button>
           ))}
         </div>
@@ -81,7 +81,7 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', opacity: 0.5 }}>
             <p className="mono" style={{ fontSize: 13, marginBottom: 6 }}>○</p>
-            <p>{lang === 'fr' ? 'Aucun article ne correspond à ces filtres.' : 'لا توجد قطع تطابق الفلاتر.'}</p>
+            <p>{lang !== 'ar' ? 'Aucun article ne correspond à ces filtres.' : 'لا توجد قطع تطابق الفلاتر.'}</p>
           </div>
         ) : (
           <div className="g3 reveal-stagger">

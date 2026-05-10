@@ -61,10 +61,26 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
   const [authPrefill, setAuthPrefill] = useState<{ email: string; mode: 'login' | 'signup' }>({ email: '', mode: 'login' });
   const [toast, setToast] = useState<Toast | null>(null);
 
-  // Hydrate persisted state on mount
+  // Hydrate persisted state on mount.
+  // Lang precedence: explicit user choice (localStorage) → browser preference
+  // (navigator.language / languages) → server-rendered default.
   useEffect(() => {
-    const savedLang = (typeof window !== 'undefined' ? localStorage.getItem('wc2-lang') : null) as Lang | null;
-    if (savedLang === 'fr' || savedLang === 'ar') setLangState(savedLang);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wc2-lang') as Lang | null;
+      if (saved === 'fr' || saved === 'ar' || saved === 'en') {
+        setLangState(saved);
+      } else {
+        // First visit: pick from browser. ar* → ar, en* → en, else → fr.
+        const candidates: string[] = [
+          ...(navigator.languages ?? []),
+          navigator.language,
+        ].filter(Boolean);
+        const detected = candidates
+          .map((l) => l.toLowerCase().split('-')[0])
+          .find((l) => l === 'fr' || l === 'ar' || l === 'en') as Lang | undefined;
+        if (detected) setLangState(detected);
+      }
+    }
     setCart(safeRead<CartItem[]>('wc2-cart', []));
     setWishlist(safeRead<string[]>('wc2-wishlist', []));
   }, []);
@@ -153,7 +169,7 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
     const sb = getSupabaseBrowser();
     await sb.auth.signOut();
     setUser(null);
-    setToast({ msg: lang === 'fr' ? '✓ Tu es déconnectée. À bientôt !' : '✓ تم تسجيل الخروج. إلى اللقاء!', type: 'ok' });
+    setToast({ msg: lang !== 'ar' ? '✓ Tu es déconnectée. À bientôt !' : '✓ تم تسجيل الخروج. إلى اللقاء!', type: 'ok' });
   }, [lang]);
 
   const showToast = useCallback((t: Toast) => setToast(t), []);

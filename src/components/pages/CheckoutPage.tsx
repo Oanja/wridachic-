@@ -52,18 +52,18 @@ export function CheckoutPage() {
       const { data, error } = await sb.rpc('validate_coupon', { p_code: code, p_user_id: user?.id ?? null });
       if (error) throw error;
       if (!data?.valid) {
-        const reasons: Record<string, string> = lang === 'fr'
+        const reasons: Record<string, string> = lang !== 'ar'
           ? { not_found: 'Code introuvable', inactive: 'Code désactivé', expired: 'Code expiré', already_used: 'Code déjà utilisé', not_for_you: 'Code réservé à un autre client' }
           : { not_found: 'الكود غير موجود', inactive: 'الكود معطل', expired: 'انتهت صلاحية الكود', already_used: 'الكود مستعمل من قبل', not_for_you: 'هاد الكود ماشي ديالك' };
-        setCouponMsg('✕ ' + (reasons[data?.reason] ?? (lang === 'fr' ? 'Code invalide' : 'كود غير صحيح')));
+        setCouponMsg('✕ ' + (reasons[data?.reason] ?? (lang !== 'ar' ? 'Code invalide' : 'كود غير صحيح')));
       } else {
         const c: Coupon = { code, type: data.type, value: Number(data.value) };
         setCoupon(c); writeCoupon(c);
-        setCouponMsg('✓ ' + (lang === 'fr' ? 'Code appliqué' : 'تم تطبيق الكود'));
+        setCouponMsg('✓ ' + (lang !== 'ar' ? 'Code appliqué' : 'تم تطبيق الكود'));
         setCodeInput('');
       }
     } catch {
-      setCouponMsg('✕ ' + (lang === 'fr' ? 'Erreur, réessaie' : 'خطأ، عاودي المحاولة'));
+      setCouponMsg('✕ ' + (lang !== 'ar' ? 'Erreur, réessaie' : 'خطأ، عاودي المحاولة'));
     }
     setCouponBusy(false);
   };
@@ -130,7 +130,7 @@ export function CheckoutPage() {
         <h1 className="display" style={{ fontSize: 'clamp(48px, 7vw, 72px)', marginTop: 20, letterSpacing: '-0.03em' }}>{t.checkout.success}</h1>
         <p style={{ opacity: 0.65, marginTop: 12, maxWidth: 480, margin: '12px auto 28px' }}>{t.checkout.successDesc}</p>
         <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, maxWidth: 380, margin: '0 auto 28px', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-          <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang === 'fr' ? 'Numéro de commande' : 'رقم الطلب'}</div>
+          <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang !== 'ar' ? 'Numéro de commande' : 'رقم الطلب'}</div>
           <div className="display" style={{ fontSize: 26, marginTop: 4 }}>{orderNum}</div>
           <div className="mono" style={{ fontSize: 13, marginTop: 8, opacity: 0.7 }}>{total} MAD · {t.checkout.cod}</div>
         </div>
@@ -139,26 +139,26 @@ export function CheckoutPage() {
           <div style={{ background: 'linear-gradient(135deg, var(--clay), #e89888)', color: '#fff', padding: 24, borderRadius: 18, maxWidth: 420, margin: '0 auto 28px', boxShadow: '0 12px 32px rgba(196,116,107,0.25)' }}>
             <div style={{ fontSize: 32, marginBottom: 4 }}>🎁</div>
             <div className="display" style={{ fontSize: 22, lineHeight: 1.2, marginBottom: 6 }}>
-              {lang === 'fr' ? 'Ton code cadeau −10%' : 'كود الهدية ديالك −10%'}
+              {lang !== 'ar' ? 'Ton code cadeau −10%' : 'كود الهدية ديالك −10%'}
             </div>
             <div style={{ fontSize: 13, opacity: 0.85, marginBottom: 14, lineHeight: 1.5 }}>
-              {lang === 'fr'
+              {lang !== 'ar'
                 ? 'Merci pour ta confiance ! Garde ce code pour ta prochaine commande.'
                 : 'شكراً على ثقتك! احتفظي بهاد الكود لطلبيتك القادمة.'}
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.18)', padding: '10px 14px', borderRadius: 12 }}>
               <span className="mono" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.06em' }}>{giftCode}</span>
               <button onClick={copyGift} style={{ padding: '6px 12px', borderRadius: 999, background: '#fff', color: 'var(--clay)', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                {giftCopied ? (lang === 'fr' ? '✓ Copié' : '✓ تنسخ') : (lang === 'fr' ? '📋 Copier' : '📋 نسخ')}
+                {giftCopied ? (lang !== 'ar' ? '✓ Copié' : '✓ تنسخ') : (lang !== 'ar' ? '📋 Copier' : '📋 نسخ')}
               </button>
             </div>
             <div className="mono" style={{ fontSize: 10, opacity: 0.7, marginTop: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {lang === 'fr' ? 'Valable 90 jours · usage unique' : 'صالح 90 يوم · مرة واحدة'}
+              {lang !== 'ar' ? 'Valable 90 jours · usage unique' : 'صالح 90 يوم · مرة واحدة'}
             </div>
           </div>
         )}
 
-        <button className="btn2 btn2-dark btn2-lg" onClick={finishOrder}>← {lang === 'fr' ? 'Retour boutique' : 'العودة للمتجر'}</button>
+        <button className="btn2 btn2-dark btn2-lg" onClick={finishOrder}>← {lang !== 'ar' ? 'Retour boutique' : 'العودة للمتجر'}</button>
       </div>
     );
   }
@@ -226,7 +226,7 @@ export function CheckoutPage() {
                 </div>
                 {!valid && (form.fullName || form.phone || form.address) && (
                   <p className="mono" style={{ fontSize: 11, color: 'var(--clay)', marginTop: 12 }}>
-                    {lang === 'fr' ? '⚠ Remplis tous les champs obligatoires (téléphone valide).' : '⚠ كملي جميع الحقول الإجبارية (رقم هاتف صحيح).'}
+                    {lang !== 'ar' ? '⚠ Remplis tous les champs obligatoires (téléphone valide).' : '⚠ كملي جميع الحقول الإجبارية (رقم هاتف صحيح).'}
                   </p>
                 )}
                 <button
@@ -234,7 +234,7 @@ export function CheckoutPage() {
                   style={{ marginTop: 16, opacity: valid ? 1 : 0.4, cursor: valid ? 'pointer' : 'not-allowed' }}
                   disabled={!valid}
                   onClick={() => valid && setStep(3)}
-                >{lang === 'fr' ? 'Continuer' : 'متابعة'} →</button>
+                >{lang !== 'ar' ? 'Continuer' : 'متابعة'} →</button>
               </div>
             )}
             {step === 3 && (
@@ -246,11 +246,11 @@ export function CheckoutPage() {
                   <div style={{ opacity: 0.6, fontSize: 13 }}>{form.address || '—'}, {form.city} · {form.phone || '—'}</div>
                 </div>
                 <div style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14, marginBottom: 10 }}>
-                  <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{lang === 'fr' ? 'Paiement' : 'الدفع'}</div>
+                  <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{lang !== 'ar' ? 'Paiement' : 'الدفع'}</div>
                   <div>{t.checkout.cod}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                  <button className="btn2 btn2-outline" onClick={() => setStep(1)}>← {lang === 'fr' ? 'Retour' : 'رجوع'}</button>
+                  <button className="btn2 btn2-outline" onClick={() => setStep(1)}>← {lang !== 'ar' ? 'Retour' : 'رجوع'}</button>
                   <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={placeOrder} disabled={saving}>
                     {saving ? '...' : t.checkout.place + ' ✨'}
                   </button>
@@ -260,14 +260,14 @@ export function CheckoutPage() {
           </div>
 
           <aside style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
-            <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {lang === 'fr' ? 'articles' : 'قطعة'}</div>
+            <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {lang !== 'ar' ? 'articles' : 'قطعة'}</div>
             {cart.map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13 }}>
                 <div style={{ width: 44, aspectRatio: '3/4', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
                   <Placeholder tint={TINTS[i % TINTS.length]} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 500 }}>{lang === 'fr' ? item.name : item.nameAr}</div>
+                  <div style={{ fontWeight: 500 }}>{lang !== 'ar' ? item.name : item.nameAr}</div>
                   <div className="mono" style={{ fontSize: 10, opacity: 0.5 }}>{item.size} · x{item.qty}</div>
                 </div>
                 <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty}</div>
@@ -301,14 +301,14 @@ export function CheckoutPage() {
               {!coupon && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed var(--line)' }}>
                   <div className="mono" style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {lang === 'fr' ? 'Code promo' : 'كود الخصم'}
+                    {lang !== 'ar' ? 'Code promo' : 'كود الخصم'}
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input
                       value={codeInput}
                       onChange={(e) => setCodeInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                      placeholder={lang === 'fr' ? 'EX: GIFT-A8K3' : 'مثال: GIFT-A8K3'}
+                      placeholder={lang !== 'ar' ? 'EX: GIFT-A8K3' : 'مثال: GIFT-A8K3'}
                       style={{ flex: 1, padding: '7px 10px', borderRadius: 999, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
                     />
                     <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '7px 12px', borderRadius: 999, background: 'var(--ink)', color: 'var(--paper)', fontSize: 11, fontWeight: 600, opacity: couponBusy || !codeInput.trim() ? 0.5 : 1 }}>

@@ -51,6 +51,56 @@ export const TR = {
       rights: '© 2026 wridachic.com — Tous droits réservés',
     },
   },
+  en: {
+    announce: [
+      'Free shipping from 500 MAD — anywhere in Morocco',
+      'Cash on delivery available',
+      'New collection — prayer outfits & women\'s fashion',
+      'Returns accepted within 14 days',
+    ],
+    nav: { shop: 'Shop', prayer: 'Prayer', new: 'New', lookbook: 'Lookbook', about: 'About' },
+    hero: {
+      eyebrow: 'Moroccan women\'s fashion',
+      title: 'Style within reach\nof every woman',
+      sub: 'Prayer outfits, dresses & essentials — from 149 MAD, delivered all over Morocco.',
+      cta1: 'Discover the collection', cta2: 'Prayer space',
+    },
+    sections: {
+      categoriesEyebrow: 'Our universes', categoriesTitle: 'For every Moroccan woman',
+      categoriesSub: 'From prayer outfits to everyday essentials.',
+      bestEyebrow: 'Customer favourites', bestTitle: 'Best-sellers',
+      bestSub: 'What our clients are wearing this season.',
+      newEyebrow: 'This week', newTitle: 'New arrivals',
+      newSub: 'Freshly arrived in store.',
+    },
+    product: {
+      add: 'Add to cart', buyWa: 'Order via WhatsApp', wishlist: 'Wishlist',
+      size: 'Size', color: 'Colour', desc: 'Description', sizeGuide: 'Size guide',
+      delivery: 'Delivery ~1 week anywhere in Morocco', cod: 'Cash on delivery (COD)',
+      return: 'Returns accepted within 14 days',
+    },
+    cart: {
+      title: 'My cart', empty: 'Your cart is empty', continue: 'Continue shopping',
+      subtotal: 'Subtotal', delivery: 'Delivery', total: 'Total', checkout: 'Checkout',
+      qty: 'Qty', remove: 'Remove',
+    },
+    checkout: {
+      title: 'Complete your order', shipping: 'Shipping', payment: 'Payment', review: 'Review',
+      fullName: 'Full name', phone: 'Phone', email: 'E-mail', address: 'Full address', city: 'City',
+      cod: 'Cash on delivery', codDesc: 'Pay in cash on arrival — no risk',
+      cib: 'Credit card (CIH / CMI)', cibDesc: '100% secure online payment',
+      place: 'Confirm my order', success: 'Order confirmed!',
+      successDesc: 'Our team will contact you within 24h to confirm delivery.',
+    },
+    footer: {
+      tagline: 'Women\'s clothing designed in Morocco. Fashion, elegance and affordability for every woman.',
+      shop: 'Shop', help: 'Help & Contact', about: 'The brand', follow: 'Follow us',
+      contact: 'Contact us', faq: 'FAQ', delivery: 'Delivery & timing',
+      returns: 'Return policy', sizes: 'Size guide', story: 'Our story',
+      stores: 'Stores', sustainability: 'Our commitment', press: 'Press',
+      rights: '© 2026 wridachic.com — All rights reserved',
+    },
+  },
   ar: {
     announce: [
       'توصيل مجاني من 500 درهم — في كل أنحاء المغرب',

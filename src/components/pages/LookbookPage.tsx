@@ -21,10 +21,10 @@ export function LookbookPage() {
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <span className="chip"><span className="chip-dot" /> SS26</span>
           <h1 className="display" style={{ fontSize: 'clamp(64px, 10vw, 96px)', lineHeight: 0.9, letterSpacing: '-0.04em', marginTop: 16 }}>
-            {lang === 'fr' ? <>the <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>book</em>.</> : 'اللوكبوك'}
+            {lang !== 'ar' ? <>the <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>book</em>.</> : 'اللوكبوك'}
           </h1>
           <p style={{ opacity: 0.6, marginTop: 10 }}>
-            {lang === 'fr' ? 'Printemps / Été 26 — médina, rooftop, souk' : 'ربيع / صيف 26 — مدينة، أسطح، سوق'}
+            {lang !== 'ar' ? 'Printemps / Été 26 — médina, rooftop, souk' : 'ربيع / صيف 26 — مدينة، أسطح، سوق'}
           </p>
         </div>
 

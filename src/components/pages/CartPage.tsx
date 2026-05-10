@@ -42,19 +42,19 @@ export function CartPage() {
       const { data, error } = await sb.rpc('validate_coupon', { p_code: code, p_user_id: user?.id ?? null });
       if (error) throw error;
       if (!data?.valid) {
-        const reasons: Record<string, string> = lang === 'fr'
+        const reasons: Record<string, string> = lang !== 'ar'
           ? { not_found: 'Code introuvable', inactive: 'Code désactivé', expired: 'Code expiré', already_used: 'Code déjà utilisé', not_for_you: 'Code réservé à un autre client' }
           : { not_found: 'الكود غير موجود', inactive: 'الكود معطل', expired: 'انتهت صلاحية الكود', already_used: 'الكود مستعمل من قبل', not_for_you: 'هاد الكود ماشي ديالك' };
-        setCouponMsg('✕ ' + (reasons[data?.reason] ?? (lang === 'fr' ? 'Code invalide' : 'كود غير صحيح')));
+        setCouponMsg('✕ ' + (reasons[data?.reason] ?? (lang !== 'ar' ? 'Code invalide' : 'كود غير صحيح')));
       } else {
         const c: Coupon = { code, type: data.type, value: Number(data.value) };
         setCoupon(c);
         writeCoupon(c);
-        setCouponMsg('✓ ' + (lang === 'fr' ? 'Code appliqué' : 'تم تطبيق الكود'));
+        setCouponMsg('✓ ' + (lang !== 'ar' ? 'Code appliqué' : 'تم تطبيق الكود'));
         setCodeInput('');
       }
     } catch {
-      setCouponMsg('✕ ' + (lang === 'fr' ? 'Erreur, réessaie' : 'خطأ، عاودي المحاولة'));
+      setCouponMsg('✕ ' + (lang !== 'ar' ? 'Erreur, réessaie' : 'خطأ، عاودي المحاولة'));
     }
     setCouponBusy(false);
   };
@@ -66,7 +66,7 @@ export function CartPage() {
       <div className="page2" style={{ padding: '100px 28px', textAlign: 'center' }}>
         <div style={{ fontSize: 72 }}>🛍️</div>
         <h1 className="display" style={{ fontSize: 56, marginTop: 20 }}>{t.cart.empty}</h1>
-        <p style={{ opacity: 0.55, margin: '12px 0 28px' }}>{lang === 'fr' ? 'Découvre nos collections ↓' : 'اكتشفي مجموعاتنا ↓'}</p>
+        <p style={{ opacity: 0.55, margin: '12px 0 28px' }}>{lang !== 'ar' ? 'Découvre nos collections ↓' : 'اكتشفي مجموعاتنا ↓'}</p>
         <Link className="btn2 btn2-dark btn2-lg" href="/shop">{t.cart.continue} <Icon n="arr" s={14} /></Link>
       </div>
     );
@@ -86,7 +86,7 @@ export function CartPage() {
                   <Placeholder tint={TINTS[i % TINTS.length]} />
                 </div>
                 <div>
-                  <div className="display" style={{ fontSize: 20 }}>{lang === 'fr' ? item.name : item.nameAr}</div>
+                  <div className="display" style={{ fontSize: 20 }}>{lang !== 'ar' ? item.name : item.nameAr}</div>
                   <div className="mono" style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
                     {item.size} · <span style={{ display: 'inline-block', width: 10, height: 10, background: item.color, borderRadius: '50%', verticalAlign: 'middle' }} />
                   </div>
@@ -108,7 +108,7 @@ export function CartPage() {
           </div>
 
           <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 28, borderRadius: 20, height: 'fit-content' }}>
-            <div className="display" style={{ fontSize: 26, marginBottom: 20 }}>{lang === 'fr' ? 'Récapitulatif' : 'ملخص الطلب'}</div>
+            <div className="display" style={{ fontSize: 26, marginBottom: 20 }}>{lang !== 'ar' ? 'Récapitulatif' : 'ملخص الطلب'}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14 }}>
               <span style={{ opacity: 0.65 }}>{t.cart.subtotal}</span>
               <span className="mono">{subtotal} MAD</span>
@@ -116,7 +116,7 @@ export function CartPage() {
             {autoDiscount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14, color: 'var(--lime)' }}>
                 <span style={{ opacity: 0.9 }}>
-                  ✦ {lang === 'fr' ? `Remise 2+ articles (−${AUTO_DISCOUNT_PCT}%)` : `خصم قطعتين فأكثر (−${AUTO_DISCOUNT_PCT}٪)`}
+                  ✦ {lang !== 'ar' ? `Remise 2+ articles (−${AUTO_DISCOUNT_PCT}%)` : `خصم قطعتين فأكثر (−${AUTO_DISCOUNT_PCT}٪)`}
                 </span>
                 <span className="mono">−{autoDiscount} MAD</span>
               </div>
@@ -125,40 +125,40 @@ export function CartPage() {
               <div style={{ background: 'rgba(76,175,80,0.18)', border: '1px solid rgba(76,175,80,0.45)', borderRadius: 12, padding: '10px 12px', margin: '10px 0 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#7BCF7E' }}>
-                    ✓ {lang === 'fr' ? 'Code appliqué' : 'تم تطبيق الكود'}
+                    ✓ {lang !== 'ar' ? 'Code appliqué' : 'تم تطبيق الكود'}
                   </div>
                   <div className="mono" style={{ fontSize: 11, opacity: 0.85 }}>{coupon.code} · −{discount} MAD</div>
                 </div>
                 <button onClick={removeCoupon} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, background: 'rgba(250,246,241,0.1)', border: '1px solid rgba(250,246,241,0.2)', color: 'var(--paper)', cursor: 'pointer' }}>
-                  {lang === 'fr' ? 'Retirer' : 'حذف'}
+                  {lang !== 'ar' ? 'Retirer' : 'حذف'}
                 </button>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 14 }}>
               <span style={{ opacity: 0.65 }}>{t.cart.delivery}</span>
-              <span className="mono">{delivery === 0 ? (lang === 'fr' ? 'Offerte ✦' : 'مجاني ✦') : `${delivery} MAD`}</span>
+              <span className="mono">{delivery === 0 ? (lang !== 'ar' ? 'Offerte ✦' : 'مجاني ✦') : `${delivery} MAD`}</span>
             </div>
             {subtotal < 500 && (
               <div className="mono" style={{ fontSize: 11, color: 'var(--lime)', paddingTop: 4 }}>
-                + {500 - subtotal} MAD → {lang === 'fr' ? 'livraison offerte' : 'توصيل مجاني'}
+                + {500 - subtotal} MAD → {lang !== 'ar' ? 'livraison offerte' : 'توصيل مجاني'}
               </div>
             )}
 
             {!coupon && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(250,246,241,0.12)' }}>
                 <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {lang === 'fr' ? 'Code promo' : 'كود الخصم'}
+                  {lang !== 'ar' ? 'Code promo' : 'كود الخصم'}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <input
                     value={codeInput}
                     onChange={(e) => setCodeInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                    placeholder={lang === 'fr' ? 'EX: GIFT-A8K3' : 'مثال: GIFT-A8K3'}
+                    placeholder={lang !== 'ar' ? 'EX: GIFT-A8K3' : 'مثال: GIFT-A8K3'}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: 999, border: '1px solid rgba(250,246,241,0.2)', background: 'rgba(250,246,241,0.06)', color: 'var(--paper)', fontSize: 13, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
                   />
                   <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '8px 14px', borderRadius: 999, background: 'var(--paper)', color: 'var(--ink)', fontSize: 12, fontWeight: 600, opacity: couponBusy || !codeInput.trim() ? 0.5 : 1 }}>
-                    {couponBusy ? '…' : (lang === 'fr' ? 'OK' : 'تطبيق')}
+                    {couponBusy ? '…' : (lang !== 'ar' ? 'OK' : 'تطبيق')}
                   </button>
                 </div>
                 {couponMsg && <div className="mono" style={{ fontSize: 11, marginTop: 6, opacity: 0.85, color: couponMsg.startsWith('✓') ? 'var(--lime)' : 'var(--clay)' }}>{couponMsg}</div>}

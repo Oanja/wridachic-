@@ -57,12 +57,13 @@ export function Nav() {
           <div className="nav2-actions">
             <div className="nav2-lang">
               <button className={lang === 'fr' ? 'active' : ''} onClick={() => setLang('fr')}>FR</button>
+              <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'ar' ? 'active' : ''} onClick={() => setLang('ar')}>ع</button>
             </div>
             <button className="nav2-search-btn" title="Recherche" aria-label="Recherche"><Icon n="search" /></button>
             <div ref={userRef} style={{ position: 'relative' }}>
               <button
-                title={user ? (lang === 'fr' ? 'Mon compte' : 'حسابي') : (lang === 'fr' ? 'Connexion' : 'دخول')}
+                title={user ? (lang !== 'ar' ? 'Mon compte' : 'حسابي') : (lang !== 'ar' ? 'Connexion' : 'دخول')}
                 onClick={() => (user ? setUserOpen((o) => !o) : openAuth())}
                 style={user ? { background: 'var(--ink)', color: 'var(--paper)' } : {}}
                 aria-label="Account"
@@ -86,9 +87,9 @@ export function Nav() {
                     </div>
                   </div>
                   {[
-                    { label: lang === 'fr' ? 'Mon profil' : 'ملفي الشخصي', tab: 'profile' },
-                    { label: lang === 'fr' ? 'Mes commandes' : 'طلباتي', tab: 'orders' },
-                    { label: lang === 'fr' ? 'Mes favoris' : 'مفضلاتي', tab: 'wishlist' },
+                    { label: lang !== 'ar' ? 'Mon profil' : 'ملفي الشخصي', tab: 'profile' },
+                    { label: lang !== 'ar' ? 'Mes commandes' : 'طلباتي', tab: 'orders' },
+                    { label: lang !== 'ar' ? 'Mes favoris' : 'مفضلاتي', tab: 'wishlist' },
                   ].map((it, i) => (
                     <a
                       key={i}
@@ -109,7 +110,7 @@ export function Nav() {
                     onClick={async () => { setUserOpen(false); await logout(); router.push('/'); }}
                     style={{ display: 'block', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: 'var(--clay)', cursor: 'pointer', borderTop: '1px solid var(--line)', marginTop: 4 }}
                   >
-                    ↗ {lang === 'fr' ? 'Déconnexion' : 'تسجيل خروج'}
+                    ↗ {lang !== 'ar' ? 'Déconnexion' : 'تسجيل خروج'}
                   </a>
                 </div>
               )}
@@ -139,7 +140,7 @@ export function Nav() {
               </Link>
             ))}
             <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid var(--line)', display: 'flex', gap: 8 }}>
-              {[{ id: 'fr' as const, label: 'Français' }, { id: 'ar' as const, label: 'العربية' }].map((l) => (
+              {[{ id: 'fr' as const, label: 'Français' }, { id: 'en' as const, label: 'English' }, { id: 'ar' as const, label: 'العربية' }].map((l) => (
                 <button
                   key={l.id} onClick={() => setLang(l.id)}
                   style={{

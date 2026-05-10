@@ -58,7 +58,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
     setMain((next + imgCount) % imgCount);
   };
 
-  const name = lang === 'fr' ? product.name : product.nameAr;
+  const name = lang !== 'ar' ? product.name : product.nameAr;
   const cat = CATEGORIES.find((c) => c.id === product.cat);
 
   const handleAdd = () => {
@@ -76,8 +76,8 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
     <div className="page2" style={{ padding: '32px 0 80px' }}>
       <div className="wrap">
         <div className="mono" style={{ fontSize: 11, opacity: 0.5, marginBottom: 24 }}>
-          <Link href="/shop" style={{ cursor: 'pointer' }}>/ {lang === 'fr' ? 'boutique' : 'المتجر'}</Link>
-          {' / '}{cat ? (lang === 'fr' ? cat.name : cat.nameAr) : ''}
+          <Link href="/shop" style={{ cursor: 'pointer' }}>/ {lang !== 'ar' ? 'boutique' : 'المتجر'}</Link>
+          {' / '}{cat ? (lang !== 'ar' ? cat.name : cat.nameAr) : ''}
           {' / '}{name}
         </div>
 
@@ -128,31 +128,31 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
           </div>
 
           <div className="reveal" style={{ transitionDelay: '0.15s' }}>
-            {product.tag === 'new' && <span className="sticker">{lang === 'fr' ? 'NOUVEAU ✦' : 'جديد ✦'}</span>}
+            {product.tag === 'new' && <span className="sticker">{lang !== 'ar' ? 'NOUVEAU ✦' : 'جديد ✦'}</span>}
             {product.tag === 'best' && (
               <span className="sticker" style={{ background: 'var(--lime)' }}>
-                {lang === 'fr' ? 'BEST-SELLER ✦' : 'الأكثر مبيعاً ✦'}
+                {lang !== 'ar' ? 'BEST-SELLER ✦' : 'الأكثر مبيعاً ✦'}
               </span>
             )}
             {product.tag === 'sale' && (
               <span className="sticker sticker-clay">
                 {product.oldPrice
-                  ? `${lang === 'fr' ? 'SOLDE' : 'تخفيض'} −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
-                  : (lang === 'fr' ? 'PROMO ✦' : 'تخفيض ✦')}
+                  ? `${lang !== 'ar' ? 'SOLDE' : 'تخفيض'} −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+                  : (lang !== 'ar' ? 'PROMO ✦' : 'تخفيض ✦')}
               </span>
             )}
             <h1 className="display" style={{ fontSize: 'clamp(32px, 4vw, 52px)', lineHeight: 1, marginTop: 12, marginBottom: 12, letterSpacing: '-0.02em' }}>{name}</h1>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, fontSize: 11, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.55 }}>
-              <span>✦ {lang === 'fr' ? 'Made in Maroc' : 'صنع في المغرب'}</span>
+              <span>✦ {lang !== 'ar' ? 'Made in Maroc' : 'صنع في المغرب'}</span>
               <span style={{ opacity: 0.4 }}>·</span>
-              <span>{lang === 'fr' ? 'Production limitée' : 'إنتاج محدود'}</span>
+              <span>{lang !== 'ar' ? 'Production limitée' : 'إنتاج محدود'}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'baseline', marginBottom: 24, fontFamily: 'JetBrains Mono, monospace' }}>
               <span style={{ fontSize: 28, fontWeight: 600 }}>{product.price} MAD</span>
               {product.oldPrice && <span style={{ fontSize: 16, opacity: 0.4, textDecoration: 'line-through' }}>{product.oldPrice} MAD</span>}
             </div>
             <p style={{ fontSize: 14, opacity: 0.7, lineHeight: 1.7, marginBottom: 28 }}>
-              {lang === 'fr'
+              {lang !== 'ar'
                 ? 'Coupe soigneuse, tissu de qualité, finitions artisanales. Une pièce qui traverse les saisons.'
                 : 'قصّة محكمة، قماش عالي الجودة، تشطيب يدوي. قطعة تدوم عبر المواسم.'}
             </p>
@@ -191,23 +191,23 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                 <button onClick={() => setQty(qty + 1)} style={{ padding: '0 14px', height: 48 }}><Icon n="plus" s={12} /></button>
               </div>
               <button className="btn2 btn2-dark" style={{ flex: 1 }} onClick={handleAdd}>
-                {added ? <><Icon n="check" s={14} /> {lang === 'fr' ? 'Ajouté !' : 'تمت!'}</> : `+ ${t.product.add}`}
+                {added ? <><Icon n="check" s={14} /> {lang !== 'ar' ? 'Ajouté !' : 'تمت!'}</> : `+ ${t.product.add}`}
               </button>
               <button className="btn2 btn2-outline" onClick={() => toggleWish(product.id)}><Icon n="heart" s={16} /></button>
             </div>
             <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12 }} onClick={handleBuyNow}>
-              {lang === 'fr' ? 'Commander maintenant →' : 'اطلبي دابا ←'}
+              {lang !== 'ar' ? 'Commander maintenant →' : 'اطلبي دابا ←'}
             </button>
             {(() => {
               const total = product.price * qty;
-              const msg = lang === 'fr'
+              const msg = lang !== 'ar'
                 ? `Bonjour wridachic 👋\n\nJe voudrais commander :\n• ${product.name}\n• Taille : ${size} · Couleur : ${color}\n• Quantité : ${qty}\n• Prix : ${total} MAD`
                 : `السلام، بغيت نطلب:\n• ${product.nameAr || product.name}\n• القياس: ${size} · اللون: ${color}\n• الكمية: ${qty}\n• الثمن: ${total} درهم`;
               const href = `https://wa.me/212772086545?text=${encodeURIComponent(msg)}`;
               return (
                 <div style={{ textAlign: 'center', marginBottom: 24, fontSize: 13 }}>
                   <a href={href} target="_blank" rel="noopener noreferrer" style={{ opacity: 0.7, borderBottom: '1px solid currentColor', paddingBottom: 1, cursor: 'pointer' }}>
-                    {lang === 'fr' ? 'Préfères WhatsApp ? Cliquer ici' : 'تفضلين واتساب؟ اضغطي هنا'}
+                    {lang !== 'ar' ? 'Préfères WhatsApp ? Cliquer ici' : 'تفضلين واتساب؟ اضغطي هنا'}
                   </a>
                 </div>
               );
@@ -229,19 +229,19 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
             <div style={{ borderTop: '1px solid var(--line)' }}>
               {[
                 { id: 'composition', fr: 'Composition & matière', ar: 'التركيبة والقماش',
-                  content: product.composition || (lang === 'fr'
+                  content: product.composition || (lang !== 'ar'
                     ? "Tissu noble travaillé avec soin. Composition détaillée bientôt — contactez-nous via WhatsApp pour plus d'infos."
                     : 'قماش راقي مشغول بعناية. التركيبة المفصلة قريباً — تواصلي معنا عبر واتساب للمزيد.') },
                 { id: 'entretien', fr: 'Entretien & lavage', ar: 'العناية والغسيل',
-                  content: product.entretien || (lang === 'fr'
+                  content: product.entretien || (lang !== 'ar'
                     ? "Lavage à la main à l'eau froide recommandé. Pas de sèche-linge, séchage à plat à l'ombre. Repassage à basse température si nécessaire."
                     : 'يُنصح بالغسيل اليدوي بالماء البارد. تجنبي مجفف الملابس، النشر مسطحاً في الظل. الكي على درجة منخفضة عند الحاجة.') },
                 { id: 'details', fr: 'Détails & coupe', ar: 'التفاصيل والقصة',
-                  content: product.details || (lang === 'fr'
+                  content: product.details || (lang !== 'ar'
                     ? 'Coupe pensée pour la femme marocaine, longueur ample, finitions soignées. Mannequin : 1m70, porte taille M.'
                     : 'قصّة مصممة للمرأة المغربية، طول فضفاض، تشطيب متقن. الموديل: 1.70م، تلبس مقاس M.') },
                 { id: 'livraison', fr: 'Livraison & retours', ar: 'التوصيل والإرجاع',
-                  content: lang === 'fr'
+                  content: lang !== 'ar'
                     ? 'Livraison partout au Maroc en environ 1 semaine après confirmation. Paiement à la livraison disponible. Retours acceptés sous 14 jours, articles intacts avec étiquette.'
                     : 'التوصيل في كل المغرب في حوالي أسبوع بعد التأكيد. الدفع عند التوصيل متاح. الإرجاع مقبول خلال 14 يوماً، القطع سليمة مع البطاقة.' },
               ].map((sec) => {
@@ -257,7 +257,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                         textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer',
                       }}
                     >
-                      <span>{lang === 'fr' ? sec.fr : sec.ar}</span>
+                      <span>{lang !== 'ar' ? sec.fr : sec.ar}</span>
                       <span style={{ fontSize: 18, transition: 'transform 0.2s', transform: isOpen ? 'rotate(45deg)' : 'rotate(0)' }}>+</span>
                     </button>
                     {isOpen && (
@@ -275,8 +275,8 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
         {related.length > 0 && (
           <section style={{ marginTop: 80 }}>
             <div className="sh2 reveal">
-              <span className="sh2-num mono">/ {lang === 'fr' ? 'vous aimerez aussi' : 'قد يعجبك'}</span>
-              <h2 className="sh2-title">{lang === 'fr' ? 'Dans le même style' : 'في نفس الأسلوب'}</h2>
+              <span className="sh2-num mono">/ {lang !== 'ar' ? 'vous aimerez aussi' : 'قد يعجبك'}</span>
+              <h2 className="sh2-title">{lang !== 'ar' ? 'Dans le même style' : 'في نفس الأسلوب'}</h2>
             </div>
             <div className="g4 reveal-stagger">
               {related.map((p, i) => (
@@ -292,13 +292,13 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
           <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', padding: 32, borderRadius: 22, width: '100%', maxWidth: 540, position: 'relative', boxShadow: '0 30px 80px rgba(15,14,13,0.35)', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={() => setSizeGuideOpen(false)} style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', border: 'none', cursor: 'pointer', fontSize: 14 }}>✕</button>
             <div className="mono" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
-              ✦ {lang === 'fr' ? 'Mensurations' : 'القياسات'} ✦
+              ✦ {lang !== 'ar' ? 'Mensurations' : 'القياسات'} ✦
             </div>
             <h2 className="display" style={{ fontSize: 28, marginBottom: 18, letterSpacing: '-0.02em' }}>
-              {lang === 'fr' ? 'Guide des tailles' : 'دليل المقاسات'}
+              {lang !== 'ar' ? 'Guide des tailles' : 'دليل المقاسات'}
             </h2>
             <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 18, lineHeight: 1.6 }}>
-              {lang === 'fr'
+              {lang !== 'ar'
                 ? 'Mesures en centimètres. En cas de doute entre deux tailles, choisis la plus grande pour un confort optimal.'
                 : 'المقاسات بالسنتيمتر. في حال التردد بين مقاسين، اختاري الأكبر لراحة أفضل.'}
             </p>
@@ -306,10 +306,10 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>
                 <thead>
                   <tr style={{ background: 'var(--paper-2)' }}>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Taille' : 'المقاس'}</th>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Poitrine' : 'الصدر'}</th>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Taille' : 'الخصر'}</th>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang === 'fr' ? 'Hanches' : 'الأرداف'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Taille' : 'المقاس'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Poitrine' : 'الصدر'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Taille' : 'الخصر'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Hanches' : 'الأرداف'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -322,7 +322,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
               </table>
             </div>
             <p className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {lang === 'fr' ? '✦ Toutes les coupes sont amples & confortables' : '✦ جميع القصّات فضفاضة ومريحة'}
+              {lang !== 'ar' ? '✦ Toutes les coupes sont amples & confortables' : '✦ جميع القصّات فضفاضة ومريحة'}
             </p>
           </div>
         </div>

@@ -21,12 +21,12 @@ export function HomePage({ products }: { products: Product[] }) {
           <div className="hero-grid">
             <div className="hero-text">
               <div className="hero-eyebrow reveal" style={{ display: 'flex', gap: 12, marginBottom: 28, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? `Printemps ${year}` : `ربيع ${year}`}</span>
-                <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang === 'fr' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
+                <span className="chip"><span className="chip-dot" /> {lang !== 'ar' ? `Printemps ${year}` : `ربيع ${year}`}</span>
+                <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang !== 'ar' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
               </div>
 
               <h1 className="display hero-title reveal" style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24, transitionDelay: '0.1s' }}>
-                {lang === 'fr' ? (
+                {lang !== 'ar' ? (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 ) : (
                   <>أنــــاقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغــــربية</em><br />أصــــيلة.</>
@@ -34,25 +34,25 @@ export function HomePage({ products }: { products: Product[] }) {
               </h1>
 
               <p className="hero-sub reveal" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36, transitionDelay: '0.2s' }}>
-                {lang === 'fr'
+                {lang !== 'ar'
                   ? 'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en environ 1 semaine.'
                   : 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.'}
               </p>
 
               <div className="reveal" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44, transitionDelay: '0.3s' }}>
                 <Link href="/shop" className="btn2 btn2-dark btn2-lg">
-                  {lang === 'fr' ? 'Découvrir la boutique' : 'اكتشفي المتجر'} <Icon n="arr" s={14} />
+                  {lang !== 'ar' ? 'Découvrir la boutique' : 'اكتشفي المتجر'} <Icon n="arr" s={14} />
                 </Link>
                 <Link href="/prayer" className="btn2 btn2-outline btn2-lg">
-                  {lang === 'fr' ? 'Espace Prière' : 'ملابس الصلاة'}
+                  {lang !== 'ar' ? 'Espace Prière' : 'ملابس الصلاة'}
                 </Link>
               </div>
 
               <div className="hero-stats reveal-stagger" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
                 {[
-                  { n: '🇲🇦', l: lang === 'fr' ? 'Made in Maroc' : 'صنع في المغرب' },
-                  { n: 'COD',  l: lang === 'fr' ? 'Paiement livraison' : 'الدفع عند التوصيل' },
-                  { n: '7j',   l: lang === 'fr' ? 'Livraison' : 'توصيل' },
+                  { n: '🇲🇦', l: lang !== 'ar' ? 'Made in Maroc' : 'صنع في المغرب' },
+                  { n: 'COD',  l: lang !== 'ar' ? 'Paiement livraison' : 'الدفع عند التوصيل' },
+                  { n: '7j',   l: lang !== 'ar' ? 'Livraison' : 'توصيل' },
                 ].map((s, i) => (
                   <div key={i} className="hero-stat">
                     <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
@@ -75,7 +75,7 @@ export function HomePage({ products }: { products: Product[] }) {
 
               <div className="blob hero-sticker" style={{ position: 'absolute', bottom: 40, right: -8, animationDelay: '-6s', zIndex: 3 }}>
                 <span className="sticker sticker-clay" style={{ fontSize: 13, padding: '10px 18px', boxShadow: '0 8px 20px rgba(196,116,107,0.3)' }}>
-                  {lang === 'fr' ? 'COD partout ✓' : 'دفع عند الاستلام ✓'}
+                  {lang !== 'ar' ? 'COD partout ✓' : 'دفع عند الاستلام ✓'}
                 </span>
               </div>
             </div>
@@ -88,11 +88,11 @@ export function HomePage({ products }: { products: Product[] }) {
         <div style={{ display: 'flex', width: 'max-content', animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
           {[0, 1].map((k) => (
             <div key={k} style={{ display: 'flex', gap: 56, paddingRight: 56, flexShrink: 0 }}>
-              <span>✦ {lang === 'fr' ? 'Tissus naturels & mousseline' : 'أقمشة طبيعية وشيفون'}</span>
-              <span style={{ color: 'var(--clay)' }}>✦ {lang === 'fr' ? 'Production limitée' : 'إنتاج محدود'}</span>
-              <span>✦ {lang === 'fr' ? 'Mode pudique & raffinée' : 'موضة محتشمة وراقية'}</span>
-              <span style={{ color: 'var(--clay)' }}>✦ {lang === 'fr' ? 'Finitions artisanales' : 'تشطيب يدوي'}</span>
-              <span>✦ {lang === 'fr' ? 'Pensé au Maroc, pour la femme marocaine' : 'مصمم في المغرب، للمرأة المغربية'}</span>
+              <span>✦ {lang !== 'ar' ? 'Tissus naturels & mousseline' : 'أقمشة طبيعية وشيفون'}</span>
+              <span style={{ color: 'var(--clay)' }}>✦ {lang !== 'ar' ? 'Production limitée' : 'إنتاج محدود'}</span>
+              <span>✦ {lang !== 'ar' ? 'Mode pudique & raffinée' : 'موضة محتشمة وراقية'}</span>
+              <span style={{ color: 'var(--clay)' }}>✦ {lang !== 'ar' ? 'Finitions artisanales' : 'تشطيب يدوي'}</span>
+              <span>✦ {lang !== 'ar' ? 'Pensé au Maroc, pour la femme marocaine' : 'مصمم في المغرب، للمرأة المغربية'}</span>
             </div>
           ))}
         </div>
@@ -102,8 +102,8 @@ export function HomePage({ products }: { products: Product[] }) {
       <section style={{ padding: '80px 28px' }}>
         <div className="wrap">
           <div className="sh2 reveal">
-            <span className="sh2-num mono">01 / {lang === 'fr' ? 'catégories' : 'أقسام'}</span>
-            <h2 className="sh2-title">{lang === 'fr' ? 'Shop by mood' : 'تسوقي حسب المود'}</h2>
+            <span className="sh2-num mono">01 / {lang !== 'ar' ? 'catégories' : 'أقسام'}</span>
+            <h2 className="sh2-title">{lang !== 'ar' ? 'Shop by mood' : 'تسوقي حسب المود'}</h2>
             <Link href="/shop" className="sh2-link">{lang === 'ar' ? '← كل المتجر' : '→ Voir tout'}</Link>
           </div>
 
@@ -114,10 +114,10 @@ export function HomePage({ products }: { products: Product[] }) {
               <div style={{ position: 'absolute', bottom: 24, [lang === 'ar' ? 'right' : 'left']: 24, color: 'var(--paper)', zIndex: 3, textAlign: lang === 'ar' ? 'right' : 'left' }}>
                 <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>ROBES / 01</div>
                 <div className="display cat-title-lg" style={{ fontSize: 'clamp(28px, 4.4vw, 56px)', lineHeight: 1.05, marginTop: 6 }}>
-                  {lang === 'fr' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
+                  {lang !== 'ar' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6, opacity: 0.8 }}>
-                  {lang === 'fr' ? 'Wrap · Mousseline · Lin' : 'راب · شيفون · كتان'}
+                  {lang !== 'ar' ? 'Wrap · Mousseline · Lin' : 'راب · شيفون · كتان'}
                 </div>
               </div>
             </Link>
@@ -129,7 +129,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 02</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {lang === 'fr' ? 'Denim' : 'جينز'}
+                    {lang !== 'ar' ? 'Denim' : 'جينز'}
                   </div>
                 </div>
               </Link>
@@ -139,7 +139,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>PRIÈRE / 03</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {lang === 'fr' ? 'Prière' : 'الصلاة'}
+                    {lang !== 'ar' ? 'Prière' : 'الصلاة'}
                   </div>
                 </div>
               </Link>
@@ -152,9 +152,9 @@ export function HomePage({ products }: { products: Product[] }) {
       <section style={{ padding: '20px 28px 80px' }}>
         <div className="wrap">
           <div className="sh2 reveal">
-            <span className="sh2-num mono">02 / {lang === 'fr' ? 'tendance' : 'الأكثر طلباً'}</span>
-            <h2 className="sh2-title">{lang === 'fr' ? 'Coups de cœur' : 'الأكثر طلباً'}</h2>
-            <Link href="/shop" className="sh2-link">{lang === 'ar' ? '← ' : '→ '}{lang === 'fr' ? 'Voir tout' : 'كل المتجر'}</Link>
+            <span className="sh2-num mono">02 / {lang !== 'ar' ? 'tendance' : 'الأكثر طلباً'}</span>
+            <h2 className="sh2-title">{lang !== 'ar' ? 'Coups de cœur' : 'الأكثر طلباً'}</h2>
+            <Link href="/shop" className="sh2-link">{lang === 'ar' ? '← ' : '→ '}{lang !== 'ar' ? 'Voir tout' : 'كل المتجر'}</Link>
           </div>
           <div className="g3 reveal-stagger">
             {products.slice(0, 6).map((p, i) => (
@@ -170,7 +170,7 @@ export function HomePage({ products }: { products: Product[] }) {
           {[0, 1].map((k) => (
             <span key={k} style={{ paddingRight: 56, flexShrink: 0 }}>
               wrida<em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>chic</em>
-              {' '}✦{' '}{lang === 'fr' ? 'marocaine & fière' : 'مغربية وفخورة'}
+              {' '}✦{' '}{lang !== 'ar' ? 'marocaine & fière' : 'مغربية وفخورة'}
               {' '}✦{' '}
             </span>
           ))}
@@ -187,28 +187,28 @@ export function HomePage({ products }: { products: Product[] }) {
               </div>
               <div style={{ position: 'absolute', bottom: 28, right: -16 }}>
                 <span className="sticker sticker-sky" style={{ transform: 'rotate(-4deg)' }}>
-                  {lang === 'fr' ? 'Élégance & beauté ✦' : 'أناقة وجمال ✦'}
+                  {lang !== 'ar' ? 'Élégance & beauté ✦' : 'أناقة وجمال ✦'}
                 </span>
               </div>
             </div>
             <div className="reveal">
-              <span className="chip"><span className="chip-dot" /> {lang === 'fr' ? 'Espace prière' : 'ملابس الصلاة'}</span>
+              <span className="chip"><span className="chip-dot" /> {lang !== 'ar' ? 'Espace prière' : 'ملابس الصلاة'}</span>
               <h2 className="display" style={{ fontSize: 'clamp(40px, 5vw, 68px)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: '20px 0' }}>
-                {lang === 'fr'
+                {lang !== 'ar'
                   ? <>La prière<br />mérite la<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>beauté.</em></>
                   : <>الصلاة تستحق<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>الأجمل.</em></>}
               </h2>
               <p style={{ fontSize: 15, maxWidth: 420, lineHeight: 1.7, opacity: 0.75, marginBottom: 28 }}>
-                {lang === 'fr'
+                {lang !== 'ar'
                   ? 'Jilbabs, khimars & ensembles de prière pensés pour être confortables, couvrants et élégants. Dès 149 MAD.'
                   : 'جلابيب، خمارات وطقم صلاة مصممة لتكون مريحة، محتشمة وجميلة. ابتداءً من 149 درهم.'}
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Link href="/prayer" className="btn2 btn2-clay btn2-lg">
-                  {lang === 'fr' ? 'Voir la collection' : 'عرض المجموعة'} <Icon n="arr" s={14} />
+                  {lang !== 'ar' ? 'Voir la collection' : 'عرض المجموعة'} <Icon n="arr" s={14} />
                 </Link>
                 <Link href="/shop" className="btn2 btn2-outline btn2-lg">
-                  {lang === 'fr' ? 'Voir la boutique' : 'تصفحي المتجر'}
+                  {lang !== 'ar' ? 'Voir la boutique' : 'تصفحي المتجر'}
                 </Link>
               </div>
             </div>
