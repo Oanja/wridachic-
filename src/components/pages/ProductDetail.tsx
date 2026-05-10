@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Placeholder } from '@/components/ui/Placeholder';
 import { PCard } from '@/components/ui/PCard';
@@ -17,6 +17,9 @@ interface ProductDetailProps {
   related: Product[];
 }
 
+// Minimum horizontal travel (in px) to count as a swipe vs a tap/scroll.
+const SWIPE_THRESHOLD = 40;
+
 export function ProductDetail({ product, related }: ProductDetailProps) {
   const { lang, addToCart, buyNow, wishlist, toggleWish } = useApp();
   const router = useRouter();
@@ -29,6 +32,31 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
   const [added, setAdded] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>('composition');
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+
+  // Touch swipe state — only used on the main image, mostly for mobile.
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const imgCount = product.imgFiles.length;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+    // Ignore if vertical scroll dominated, or if movement was too small.
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dy) > Math.abs(dx)) return;
+    if (imgCount <= 1) return;
+    // Right swipe → previous (in LTR); flip for RTL so the gesture matches reading direction.
+    const next = lang === 'ar'
+      ? (dx < 0 ? main - 1 : main + 1)
+      : (dx < 0 ? main + 1 : main - 1);
+    setMain((next + imgCount) % imgCount);
+  };
 
   const name = lang === 'fr' ? product.name : product.nameAr;
   const cat = CATEGORIES.find((c) => c.id === product.cat);
@@ -67,8 +95,20 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                     </button>
                   ))}
                 </div>
-                <div style={{ aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+                <div
+                  className="pdetail-main-img"
+                  onTouchStart={onTouchStart}
+                  onTouchEnd={onTouchEnd}
+                  style={{ aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden', position: 'relative', touchAction: 'pan-y' }}
+                >
                   <Image src={product.imgFiles[main] ?? product.imgFiles[0]} alt={name} fill priority sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+                  {imgCount > 1 && (
+                    <div className="pdetail-dots" aria-hidden="true">
+                      {product.imgFiles.map((_, i) => (
+                        <span key={i} className={i === main ? 'on' : ''} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -88,9 +128,18 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
           </div>
 
           <div className="reveal" style={{ transitionDelay: '0.15s' }}>
-            {product.tag === 'new' && <span className="sticker">NOUVEAU ✦</span>}
-            {product.tag === 'sale' && product.oldPrice && (
-              <span className="sticker sticker-clay">SOLDE −{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>
+            {product.tag === 'new' && <span className="sticker">{lang === 'fr' ? 'NOUVEAU ✦' : 'جديد ✦'}</span>}
+            {product.tag === 'best' && (
+              <span className="sticker" style={{ background: 'var(--lime)' }}>
+                {lang === 'fr' ? 'BEST-SELLER ✦' : 'الأكثر مبيعاً ✦'}
+              </span>
+            )}
+            {product.tag === 'sale' && (
+              <span className="sticker sticker-clay">
+                {product.oldPrice
+                  ? `${lang === 'fr' ? 'SOLDE' : 'تخفيض'} −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+                  : (lang === 'fr' ? 'PROMO ✦' : 'تخفيض ✦')}
+              </span>
             )}
             <h1 className="display" style={{ fontSize: 'clamp(32px, 4vw, 52px)', lineHeight: 1, marginTop: 12, marginBottom: 12, letterSpacing: '-0.02em' }}>{name}</h1>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, fontSize: 11, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.55 }}>

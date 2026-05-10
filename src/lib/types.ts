@@ -1,6 +1,6 @@
 export type Lang = 'fr' | 'ar';
 
-export type ProductTag = 'new' | 'sale' | undefined;
+export type ProductTag = 'new' | 'sale' | 'best' | undefined;
 
 export interface Product {
   id: string;

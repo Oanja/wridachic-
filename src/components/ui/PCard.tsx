@@ -68,11 +68,16 @@ export function PCard({ product, lang, onWish, wished, tint, priority = false }:
         {product.tag === 'new' && (
           <span className="pcard-tag new">{lang === 'ar' ? 'جديد ✦' : 'Nouveau ✦'}</span>
         )}
-        {product.tag === 'sale' && product.oldPrice && (
+        {product.tag === 'best' && (
+          <span className="pcard-tag best">{lang === 'ar' ? 'الأكثر مبيعاً ✦' : 'Best-seller ✦'}</span>
+        )}
+        {product.tag === 'sale' && (
           <span className="pcard-tag sale">
-            {lang === 'ar'
-              ? `خصم −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
-              : `−${Math.round((1 - product.price / product.oldPrice) * 100)}%`}
+            {product.oldPrice
+              ? (lang === 'ar'
+                  ? `خصم −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+                  : `−${Math.round((1 - product.price / product.oldPrice) * 100)}%`)
+              : (lang === 'ar' ? 'تخفيض ✦' : 'Promo ✦')}
           </span>
         )}
 

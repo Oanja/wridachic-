@@ -37,7 +37,7 @@ function transform(row: SupabaseProductRow): Product {
     nameAr: row.name_ar ?? row.name,
     cat: row.cat,
     price: Number(row.price),
-    tag: (row.tag === 'new' || row.tag === 'sale' ? row.tag : undefined) as Product['tag'],
+    tag: (row.tag === 'new' || row.tag === 'sale' || row.tag === 'best' ? row.tag : undefined) as Product['tag'],
     colors: row.colors ?? [],
     img: row.img,
     imgFiles: (row.img_files ?? []).map(normalizeImg).filter(Boolean),
