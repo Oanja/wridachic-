@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Placeholder } from '@/components/ui/Placeholder';
 import { PCard } from '@/components/ui/PCard';
 import { TINTS } from '@/lib/data';
+import { pick } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import type { Product } from '@/lib/types';
 
@@ -21,38 +22,41 @@ export function HomePage({ products }: { products: Product[] }) {
           <div className="hero-grid">
             <div className="hero-text">
               <div className="hero-eyebrow reveal" style={{ display: 'flex', gap: 12, marginBottom: 28, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="chip"><span className="chip-dot" /> {lang !== 'ar' ? `Printemps ${year}` : `ربيع ${year}`}</span>
-                <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang !== 'ar' ? 'Nouveau chaque semaine' : 'جديد كل أسبوع'}</span>
+                <span className="chip"><span className="chip-dot" /> {pick(lang, `Printemps ${year}`, `Spring ${year}`, `ربيع ${year}`)}</span>
+                <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {pick(lang, 'Nouveau chaque semaine', 'New every week', 'جديد كل أسبوع')}</span>
               </div>
 
               <h1 className="display hero-title reveal" style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24, transitionDelay: '0.1s' }}>
-                {lang !== 'ar' ? (
-                  <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
-                ) : (
+                {lang === 'ar' ? (
                   <>أنــــاقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغــــربية</em><br />أصــــيلة.</>
+                ) : lang === 'en' ? (
+                  <>Authentic <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em><br />elegance.</>
+                ) : (
+                  <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 )}
               </h1>
 
               <p className="hero-sub reveal" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36, transitionDelay: '0.2s' }}>
-                {lang !== 'ar'
-                  ? 'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en environ 1 semaine.'
-                  : 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.'}
+                {pick(lang,
+                  'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en environ 1 semaine.',
+                  'Prayer outfits, dresses & essentials — from 149 MAD, delivered all over Morocco in about a week.',
+                  'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.')}
               </p>
 
               <div className="reveal" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44, transitionDelay: '0.3s' }}>
                 <Link href="/shop" className="btn2 btn2-dark btn2-lg">
-                  {lang !== 'ar' ? 'Découvrir la boutique' : 'اكتشفي المتجر'} <Icon n="arr" s={14} />
+                  {pick(lang, 'Découvrir la boutique', 'Discover the shop', 'اكتشفي المتجر')} <Icon n="arr" s={14} />
                 </Link>
                 <Link href="/prayer" className="btn2 btn2-outline btn2-lg">
-                  {lang !== 'ar' ? 'Espace Prière' : 'ملابس الصلاة'}
+                  {pick(lang, 'Espace Prière', 'Prayer space', 'ملابس الصلاة')}
                 </Link>
               </div>
 
               <div className="hero-stats reveal-stagger" style={{ display: 'flex', gap: 0, alignItems: 'stretch', flexWrap: 'wrap', borderTop: '1px solid rgba(15,14,13,0.12)', paddingTop: 24 }}>
                 {[
-                  { n: '🇲🇦', l: lang !== 'ar' ? 'Made in Maroc' : 'صنع في المغرب' },
-                  { n: 'COD',  l: lang !== 'ar' ? 'Paiement livraison' : 'الدفع عند التوصيل' },
-                  { n: '7j',   l: lang !== 'ar' ? 'Livraison' : 'توصيل' },
+                  { n: '🇲🇦', l: pick(lang, 'Made in Maroc', 'Made in Morocco', 'صنع في المغرب') },
+                  { n: 'COD',  l: pick(lang, 'Paiement livraison', 'Pay on delivery', 'الدفع عند التوصيل') },
+                  { n: '7j',   l: pick(lang, 'Livraison', 'Delivery', 'توصيل') },
                 ].map((s, i) => (
                   <div key={i} className="hero-stat">
                     <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
@@ -75,7 +79,7 @@ export function HomePage({ products }: { products: Product[] }) {
 
               <div className="blob hero-sticker" style={{ position: 'absolute', bottom: 40, right: -8, animationDelay: '-6s', zIndex: 3 }}>
                 <span className="sticker sticker-clay" style={{ fontSize: 13, padding: '10px 18px', boxShadow: '0 8px 20px rgba(196,116,107,0.3)' }}>
-                  {lang !== 'ar' ? 'COD partout ✓' : 'دفع عند الاستلام ✓'}
+                  {pick(lang, 'COD partout ✓', 'COD everywhere ✓', 'دفع عند الاستلام ✓')}
                 </span>
               </div>
             </div>
@@ -88,11 +92,11 @@ export function HomePage({ products }: { products: Product[] }) {
         <div style={{ display: 'flex', width: 'max-content', animation: 'slide 50s linear infinite', whiteSpace: 'nowrap', fontSize: 16, fontFamily: 'ThmanyahSerifDisplay, Fraunces, serif' }}>
           {[0, 1].map((k) => (
             <div key={k} style={{ display: 'flex', gap: 56, paddingRight: 56, flexShrink: 0 }}>
-              <span>✦ {lang !== 'ar' ? 'Tissus naturels & mousseline' : 'أقمشة طبيعية وشيفون'}</span>
-              <span style={{ color: 'var(--clay)' }}>✦ {lang !== 'ar' ? 'Production limitée' : 'إنتاج محدود'}</span>
-              <span>✦ {lang !== 'ar' ? 'Mode pudique & raffinée' : 'موضة محتشمة وراقية'}</span>
-              <span style={{ color: 'var(--clay)' }}>✦ {lang !== 'ar' ? 'Finitions artisanales' : 'تشطيب يدوي'}</span>
-              <span>✦ {lang !== 'ar' ? 'Pensé au Maroc, pour la femme marocaine' : 'مصمم في المغرب، للمرأة المغربية'}</span>
+              <span>✦ {pick(lang, 'Tissus naturels & mousseline', 'Natural fabrics & chiffon', 'أقمشة طبيعية وشيفون')}</span>
+              <span style={{ color: 'var(--clay)' }}>✦ {pick(lang, 'Production limitée', 'Limited production', 'إنتاج محدود')}</span>
+              <span>✦ {pick(lang, 'Mode pudique & raffinée', 'Modest & refined fashion', 'موضة محتشمة وراقية')}</span>
+              <span style={{ color: 'var(--clay)' }}>✦ {pick(lang, 'Finitions artisanales', 'Artisan finishes', 'تشطيب يدوي')}</span>
+              <span>✦ {pick(lang, 'Pensé au Maroc, pour la femme marocaine', 'Designed in Morocco, for the Moroccan woman', 'مصمم في المغرب، للمرأة المغربية')}</span>
             </div>
           ))}
         </div>
@@ -102,9 +106,9 @@ export function HomePage({ products }: { products: Product[] }) {
       <section style={{ padding: '80px 28px' }}>
         <div className="wrap">
           <div className="sh2 reveal">
-            <span className="sh2-num mono">01 / {lang !== 'ar' ? 'catégories' : 'أقسام'}</span>
-            <h2 className="sh2-title">{lang !== 'ar' ? 'Shop by mood' : 'تسوقي حسب المود'}</h2>
-            <Link href="/shop" className="sh2-link">{lang === 'ar' ? '← كل المتجر' : '→ Voir tout'}</Link>
+            <span className="sh2-num mono">01 / {pick(lang, 'catégories', 'categories', 'أقسام')}</span>
+            <h2 className="sh2-title">{pick(lang, 'Shop by mood', 'Shop by mood', 'تسوقي حسب المود')}</h2>
+            <Link href="/shop" className="sh2-link">{pick(lang, '→ Voir tout', '→ See all', '← كل المتجر')}</Link>
           </div>
 
           <div className="cat-grid reveal-stagger">
@@ -112,12 +116,12 @@ export function HomePage({ products }: { products: Product[] }) {
               <Image src="/assets/3.jpg" alt="" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
               <div style={{ position: 'absolute', bottom: 24, [lang === 'ar' ? 'right' : 'left']: 24, color: 'var(--paper)', zIndex: 3, textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>ROBES / 01</div>
+                <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>{pick(lang, 'ROBES', 'DRESSES', 'فساتين')} / 01</div>
                 <div className="display cat-title-lg" style={{ fontSize: 'clamp(28px, 4.4vw, 56px)', lineHeight: 1.05, marginTop: 6 }}>
-                  {lang !== 'ar' ? 'Robes & Ensembles' : 'فساتين وأطقم'}
+                  {pick(lang, 'Robes & Ensembles', 'Dresses & Sets', 'فساتين وأطقم')}
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6, opacity: 0.8 }}>
-                  {lang !== 'ar' ? 'Wrap · Mousseline · Lin' : 'راب · شيفون · كتان'}
+                  {pick(lang, 'Wrap · Mousseline · Lin', 'Wrap · Chiffon · Linen', 'راب · شيفون · كتان')}
                 </div>
               </div>
             </Link>
@@ -129,7 +133,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 02</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {lang !== 'ar' ? 'Denim' : 'جينز'}
+                    {pick(lang, 'Denim', 'Denim', 'جينز')}
                   </div>
                 </div>
               </Link>
@@ -137,9 +141,9 @@ export function HomePage({ products }: { products: Product[] }) {
                 <Image src="/assets/00.jpg" alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>PRIÈRE / 03</div>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'PRIÈRE', 'PRAYER', 'الصلاة')} / 03</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {lang !== 'ar' ? 'Prière' : 'الصلاة'}
+                    {pick(lang, 'Prière', 'Prayer', 'الصلاة')}
                   </div>
                 </div>
               </Link>
@@ -152,9 +156,9 @@ export function HomePage({ products }: { products: Product[] }) {
       <section style={{ padding: '20px 28px 80px' }}>
         <div className="wrap">
           <div className="sh2 reveal">
-            <span className="sh2-num mono">02 / {lang !== 'ar' ? 'tendance' : 'الأكثر طلباً'}</span>
-            <h2 className="sh2-title">{lang !== 'ar' ? 'Coups de cœur' : 'الأكثر طلباً'}</h2>
-            <Link href="/shop" className="sh2-link">{lang === 'ar' ? '← ' : '→ '}{lang !== 'ar' ? 'Voir tout' : 'كل المتجر'}</Link>
+            <span className="sh2-num mono">02 / {pick(lang, 'tendance', 'trending', 'الأكثر طلباً')}</span>
+            <h2 className="sh2-title">{pick(lang, 'Coups de cœur', 'Customer favourites', 'الأكثر طلباً')}</h2>
+            <Link href="/shop" className="sh2-link">{pick(lang, '→ Voir tout', '→ See all', '← كل المتجر')}</Link>
           </div>
           <div className="g3 reveal-stagger">
             {products.slice(0, 6).map((p, i) => (
@@ -170,7 +174,7 @@ export function HomePage({ products }: { products: Product[] }) {
           {[0, 1].map((k) => (
             <span key={k} style={{ paddingRight: 56, flexShrink: 0 }}>
               wrida<em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>chic</em>
-              {' '}✦{' '}{lang !== 'ar' ? 'marocaine & fière' : 'مغربية وفخورة'}
+              {' '}✦{' '}{pick(lang, 'marocaine & fière', 'Moroccan & proud', 'مغربية وفخورة')}
               {' '}✦{' '}
             </span>
           ))}
@@ -187,28 +191,31 @@ export function HomePage({ products }: { products: Product[] }) {
               </div>
               <div style={{ position: 'absolute', bottom: 28, right: -16 }}>
                 <span className="sticker sticker-sky" style={{ transform: 'rotate(-4deg)' }}>
-                  {lang !== 'ar' ? 'Élégance & beauté ✦' : 'أناقة وجمال ✦'}
+                  {pick(lang, 'Élégance & beauté ✦', 'Elegance & beauty ✦', 'أناقة وجمال ✦')}
                 </span>
               </div>
             </div>
             <div className="reveal">
-              <span className="chip"><span className="chip-dot" /> {lang !== 'ar' ? 'Espace prière' : 'ملابس الصلاة'}</span>
+              <span className="chip"><span className="chip-dot" /> {pick(lang, 'Espace prière', 'Prayer space', 'ملابس الصلاة')}</span>
               <h2 className="display" style={{ fontSize: 'clamp(40px, 5vw, 68px)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: '20px 0' }}>
-                {lang !== 'ar'
-                  ? <>La prière<br />mérite la<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>beauté.</em></>
-                  : <>الصلاة تستحق<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>الأجمل.</em></>}
+                {lang === 'ar'
+                  ? <>الصلاة تستحق<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>الأجمل.</em></>
+                  : lang === 'en'
+                    ? <>Prayer<br />deserves<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>beauty.</em></>
+                    : <>La prière<br />mérite la<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>beauté.</em></>}
               </h2>
               <p style={{ fontSize: 15, maxWidth: 420, lineHeight: 1.7, opacity: 0.75, marginBottom: 28 }}>
-                {lang !== 'ar'
-                  ? 'Jilbabs, khimars & ensembles de prière pensés pour être confortables, couvrants et élégants. Dès 149 MAD.'
-                  : 'جلابيب، خمارات وطقم صلاة مصممة لتكون مريحة، محتشمة وجميلة. ابتداءً من 149 درهم.'}
+                {pick(lang,
+                  'Jilbabs, khimars & ensembles de prière pensés pour être confortables, couvrants et élégants. Dès 149 MAD.',
+                  'Jilbabs, khimars & prayer sets designed to be comfortable, modest and elegant. From 149 MAD.',
+                  'جلابيب، خمارات وطقم صلاة مصممة لتكون مريحة، محتشمة وجميلة. ابتداءً من 149 درهم.')}
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Link href="/prayer" className="btn2 btn2-clay btn2-lg">
-                  {lang !== 'ar' ? 'Voir la collection' : 'عرض المجموعة'} <Icon n="arr" s={14} />
+                  {pick(lang, 'Voir la collection', 'View the collection', 'عرض المجموعة')} <Icon n="arr" s={14} />
                 </Link>
                 <Link href="/shop" className="btn2 btn2-outline btn2-lg">
-                  {lang !== 'ar' ? 'Voir la boutique' : 'تصفحي المتجر'}
+                  {pick(lang, 'Voir la boutique', 'Visit the shop', 'تصفحي المتجر')}
                 </Link>
               </div>
             </div>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Logo } from '@/components/ui/Logo';
 import { useApp } from '@/store/AppContext';
-import { TR } from '@/lib/i18n';
+import { TR, pick } from '@/lib/i18n';
 
 export function Footer() {
   const { lang, openAuth } = useApp();
@@ -22,29 +22,34 @@ export function Footer() {
         <div className="f2-hero">
           <div>
             <h2>
-              {lang !== 'ar' ? <>Rejoins l&apos;<em>univers</em>.</> : <>انضمي إلى <em>عالمنا</em>.</>}
+              {lang === 'ar'
+                ? <>انضمي إلى <em>عالمنا</em>.</>
+                : lang === 'en'
+                  ? <>Join the <em>universe</em>.</>
+                  : <>Rejoins l&apos;<em>univers</em>.</>}
             </h2>
             <p style={{ fontSize: 15, opacity: 0.75, marginTop: 16, maxWidth: '100%' }}>
-              {lang !== 'ar'
-                ? "Reçois nos nouveautés, lookbooks & coups de cœur chaque semaine — l'élégance marocaine dans ta boîte mail."
-                : 'استقبلي جديدنا، اللوكبوك ومختاراتنا كل أسبوع — أناقة مغربية مباشرة في بريدك.'}
+              {pick(lang,
+                "Reçois nos nouveautés, lookbooks & coups de cœur chaque semaine — l'élégance marocaine dans ta boîte mail.",
+                'Receive our new arrivals, lookbooks & favourites every week — Moroccan elegance in your inbox.',
+                'استقبلي جديدنا، اللوكبوك ومختاراتنا كل أسبوع — أناقة مغربية مباشرة في بريدك.')}
             </p>
             <form className="f2-newsletter" onSubmit={submit}>
               <input
                 type="email" value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder={lang !== 'ar' ? 'Ton e-mail…' : 'بريدك الإلكتروني…'}
+                placeholder={pick(lang, 'Ton e-mail…', 'Your e-mail…', 'بريدك الإلكتروني…')}
               />
-              <button type="submit">{lang !== 'ar' ? "Je m'inscris →" : 'اشتركي →'}</button>
+              <button type="submit">{pick(lang, "Je m'inscris →", 'Sign up →', 'اشتركي →')}</button>
             </form>
           </div>
           <div className="f2-stickers">
-            <span className="sticker">100% Maroc 🇲🇦</span>
+            <span className="sticker">{pick(lang, '100% Maroc 🇲🇦', '100% Morocco 🇲🇦', '100% المغرب 🇲🇦')}</span>
             <span className="sticker sticker-rose" style={{ transform: 'rotate(3deg)' }}>
-              {lang !== 'ar' ? 'Livraison gratuite 500+ MAD' : 'توصيل مجاني 500+ درهم'}
+              {pick(lang, 'Livraison gratuite 500+ MAD', 'Free shipping over 500 MAD', 'توصيل مجاني 500+ درهم')}
             </span>
             <span className="sticker sticker-sky" style={{ transform: 'rotate(-1deg)' }}>
-              {lang !== 'ar' ? 'COD disponible ✓' : 'دفع عند الاستلام ✓'}
+              {pick(lang, 'COD disponible ✓', 'COD available ✓', 'دفع عند الاستلام ✓')}
             </span>
           </div>
         </div>
@@ -87,7 +92,7 @@ export function Footer() {
 
         <div className="f2-bottom">
           <div>{t.footer.rights}</div>
-          <div>MAD · Casablanca — partout au Maroc</div>
+          <div>{pick(lang, 'MAD · Casablanca — partout au Maroc', 'MAD · Casablanca — all over Morocco', 'درهم · الدار البيضاء — في كل المغرب')}</div>
         </div>
       </div>
     </footer>

@@ -7,7 +7,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { Marquee } from '@/components/ui/Marquee';
 import { useApp } from '@/store/AppContext';
-import { TR } from '@/lib/i18n';
+import { TR, pick } from '@/lib/i18n';
 
 const NAV_ITEMS = [
   { href: '/shop',   key: 'shop' as const },
@@ -60,10 +60,10 @@ export function Nav() {
               <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'ar' ? 'active' : ''} onClick={() => setLang('ar')}>ع</button>
             </div>
-            <button className="nav2-search-btn" title="Recherche" aria-label="Recherche"><Icon n="search" /></button>
+            <button className="nav2-search-btn" title={pick(lang, 'Recherche', 'Search', 'بحث')} aria-label={pick(lang, 'Recherche', 'Search', 'بحث')}><Icon n="search" /></button>
             <div ref={userRef} style={{ position: 'relative' }}>
               <button
-                title={user ? (lang !== 'ar' ? 'Mon compte' : 'حسابي') : (lang !== 'ar' ? 'Connexion' : 'دخول')}
+                title={user ? pick(lang, 'Mon compte', 'My account', 'حسابي') : pick(lang, 'Connexion', 'Sign in', 'دخول')}
                 onClick={() => (user ? setUserOpen((o) => !o) : openAuth())}
                 style={user ? { background: 'var(--ink)', color: 'var(--paper)' } : {}}
                 aria-label="Account"
@@ -87,9 +87,9 @@ export function Nav() {
                     </div>
                   </div>
                   {[
-                    { label: lang !== 'ar' ? 'Mon profil' : 'ملفي الشخصي', tab: 'profile' },
-                    { label: lang !== 'ar' ? 'Mes commandes' : 'طلباتي', tab: 'orders' },
-                    { label: lang !== 'ar' ? 'Mes favoris' : 'مفضلاتي', tab: 'wishlist' },
+                    { label: pick(lang, 'Mon profil',    'My profile',  'ملفي الشخصي'), tab: 'profile' },
+                    { label: pick(lang, 'Mes commandes', 'My orders',   'طلباتي'),       tab: 'orders' },
+                    { label: pick(lang, 'Mes favoris',   'My wishlist', 'مفضلاتي'),     tab: 'wishlist' },
                   ].map((it, i) => (
                     <a
                       key={i}
@@ -110,12 +110,12 @@ export function Nav() {
                     onClick={async () => { setUserOpen(false); await logout(); router.push('/'); }}
                     style={{ display: 'block', padding: '9px 12px', borderRadius: 8, fontSize: 13, color: 'var(--clay)', cursor: 'pointer', borderTop: '1px solid var(--line)', marginTop: 4 }}
                   >
-                    ↗ {lang !== 'ar' ? 'Déconnexion' : 'تسجيل خروج'}
+                    ↗ {pick(lang, 'Déconnexion', 'Sign out', 'تسجيل خروج')}
                   </a>
                 </div>
               )}
             </div>
-            <Link href="/cart" title="Panier" style={{ width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }} aria-label="Cart">
+            <Link href="/cart" title={pick(lang, 'Panier', 'Cart', 'السلة')} style={{ width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }} aria-label={pick(lang, 'Panier', 'Cart', 'السلة')}>
               <Icon n="bag" />
               {cartCount > 0 && <span className="cart-dot">{cartCount}</span>}
             </Link>

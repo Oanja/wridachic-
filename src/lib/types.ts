@@ -7,6 +7,7 @@ export interface Product {
   slug: string;
   name: string;
   nameAr: string;
+  nameEn?: string;
   cat: string;
   price: number;
   oldPrice?: number;
@@ -16,6 +17,7 @@ export interface Product {
   imgFiles: string[];
   description?: string;
   descriptionAr?: string;
+  descriptionEn?: string;
   composition?: string;
   entretien?: string;
   details?: string;
@@ -26,6 +28,7 @@ export interface Category {
   id: string;
   name: string;
   nameAr: string;
+  nameEn?: string;
   desc: string;
   img: string;
 }

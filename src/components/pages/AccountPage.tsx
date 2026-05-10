@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { PCard } from '@/components/ui/PCard';
 import { TINTS } from '@/lib/data';
+import { pick } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
@@ -114,36 +115,36 @@ export function AccountPage({ products }: { products: Product[] }) {
 
   const saveName = async () => {
     setMsg('');
-    if (!currentPwdName) return setMsg(lang !== 'ar' ? '⚠ Confirme ton mot de passe actuel' : '⚠ أكدي كلمة السر الحالية');
+    if (!currentPwdName) return setMsg(pick(lang, '⚠ Confirme ton mot de passe actuel', '⚠ Confirm your current password', '⚠ أكدي كلمة السر الحالية'));
     setBusy(true);
     const ok = await verifyPwd(currentPwdName);
-    if (!ok) { setBusy(false); return setMsg(lang !== 'ar' ? '⚠ Mot de passe incorrect' : '⚠ كلمة السر غير صحيحة'); }
+    if (!ok) { setBusy(false); return setMsg(pick(lang, '⚠ Mot de passe incorrect', '⚠ Incorrect password', '⚠ كلمة السر غير صحيحة')); }
     const { error } = await sb.auth.updateUser({ data: { full_name: name } });
     setCurrentPwdName(''); setBusy(false);
     if (error) { setMsg('⚠ ' + error.message); return; }
-    setMsg(lang !== 'ar' ? '✓ Nom mis à jour. Reconnexion...' : '✓ تم حفظ الاسم. إعادة الدخول...');
+    setMsg(pick(lang, '✓ Nom mis à jour. Reconnexion...', '✓ Name updated. Signing out…', '✓ تم حفظ الاسم. إعادة الدخول...'));
     setTimeout(async () => { await logout(); router.push('/'); }, 1800);
   };
 
   const savePwd = async () => {
     setMsg('');
-    if (!currentPwdPwd) return setMsg(lang !== 'ar' ? '⚠ Confirme ton mot de passe actuel' : '⚠ أكدي كلمة السر الحالية');
-    if (pwd.length < 6) return setMsg(lang !== 'ar' ? '⚠ 6 caractères minimum' : '⚠ 6 أحرف على الأقل');
-    if (pwd !== pwd2) return setMsg(lang !== 'ar' ? '⚠ Les mots de passe ne correspondent pas' : '⚠ كلمتا السر مختلفتان');
+    if (!currentPwdPwd) return setMsg(pick(lang, '⚠ Confirme ton mot de passe actuel', '⚠ Confirm your current password', '⚠ أكدي كلمة السر الحالية'));
+    if (pwd.length < 6) return setMsg(pick(lang, '⚠ 6 caractères minimum', '⚠ At least 6 characters', '⚠ 6 أحرف على الأقل'));
+    if (pwd !== pwd2) return setMsg(pick(lang, '⚠ Les mots de passe ne correspondent pas', "⚠ Passwords don't match", '⚠ كلمتا السر مختلفتان'));
     setBusy(true);
     const ok = await verifyPwd(currentPwdPwd);
-    if (!ok) { setBusy(false); return setMsg(lang !== 'ar' ? '⚠ Mot de passe actuel incorrect' : '⚠ كلمة السر الحالية غير صحيحة'); }
+    if (!ok) { setBusy(false); return setMsg(pick(lang, '⚠ Mot de passe actuel incorrect', '⚠ Current password is incorrect', '⚠ كلمة السر الحالية غير صحيحة')); }
     const { error } = await sb.auth.updateUser({ password: pwd });
     setPwd(''); setPwd2(''); setCurrentPwdPwd(''); setBusy(false);
     if (error) { setMsg('⚠ ' + error.message); return; }
-    setMsg(lang !== 'ar' ? '✓ Mot de passe modifié. Reconnexion...' : '✓ تم تغيير كلمة السر. إعادة الدخول...');
+    setMsg(pick(lang, '✓ Mot de passe modifié. Reconnexion...', '✓ Password updated. Signing out…', '✓ تم تغيير كلمة السر. إعادة الدخول...'));
     setTimeout(async () => { await logout(); router.push('/'); }, 1800);
   };
 
   const tabs = [
-    { id: 'profile' as const,  label: lang !== 'ar' ? 'Profil' : 'الملف الشخصي' },
-    { id: 'orders' as const,   label: lang !== 'ar' ? 'Commandes' : 'طلباتي' },
-    { id: 'wishlist' as const, label: lang !== 'ar' ? 'Favoris' : 'مفضلاتي', count: fav.length },
+    { id: 'profile' as const,  label: pick(lang, 'Profil',    'Profile',  'الملف الشخصي') },
+    { id: 'orders' as const,   label: pick(lang, 'Commandes', 'Orders',   'طلباتي') },
+    { id: 'wishlist' as const, label: pick(lang, 'Favoris',   'Wishlist', 'مفضلاتي'), count: fav.length },
   ];
 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: '2-digit' });
@@ -176,12 +177,17 @@ export function AccountPage({ products }: { products: Product[] }) {
             <span style={{ fontSize: 28, lineHeight: 1 }}>✦</span>
             <div style={{ flex: 1 }}>
               <div className="display" style={{ fontSize: 22, lineHeight: 1.2, marginBottom: 4 }}>
-                {lang !== 'ar'
-                  ? <>Bienvenue <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email?.split('@')[0]}</em> ✦</>
-                  : <>مرحبا بك <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email?.split('@')[0]}</em> ✦</>}
+                {lang === 'ar'
+                  ? <>مرحبا بك <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email?.split('@')[0]}</em> ✦</>
+                  : lang === 'en'
+                    ? <>Welcome <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email?.split('@')[0]}</em> ✦</>
+                    : <>Bienvenue <em style={{ fontStyle: 'italic' }}>{welcomeName || user.email?.split('@')[0]}</em> ✦</>}
               </div>
               <div style={{ fontSize: 13, opacity: 0.9 }}>
-                {lang !== 'ar' ? 'dans ta boutique wridachic — ton compte a été créé avec succès.' : 'في متجرك وريدة شيك — تم إنشاء حسابك بنجاح.'}
+                {pick(lang,
+                  'dans ta boutique wridachic — ton compte a été créé avec succès.',
+                  'in your wridachic shop — your account was created successfully.',
+                  'في متجرك وريدة شيك — تم إنشاء حسابك بنجاح.')}
               </div>
             </div>
             <button onClick={() => setWelcomeName(null)} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', width: 28, height: 28, borderRadius: '50%', flexShrink: 0 }}>
@@ -191,14 +197,14 @@ export function AccountPage({ products }: { products: Product[] }) {
         )}
         <div style={{ borderBottom: '1px solid var(--ink)', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {lang !== 'ar' ? 'mon compte' : 'حسابي'} /</span>
+            <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {pick(lang, 'mon compte', 'my account', 'حسابي')} /</span>
             <h1 className="display" style={{ fontSize: 'clamp(36px, 6vw, 56px)', lineHeight: 1, letterSpacing: '-0.03em' }}>
-              {lang !== 'ar' ? 'Bonjour' : 'مرحبا'}, <em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>{meta.full_name || user.email?.split('@')[0]}</em>
+              {pick(lang, 'Bonjour', 'Hello', 'مرحبا')}, <em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>{meta.full_name || user.email?.split('@')[0]}</em>
             </h1>
             <p className="mono" style={{ fontSize: 12, opacity: 0.5, marginTop: 6 }}>{user.email}</p>
           </div>
           <button className="btn2 btn2-outline" onClick={async () => { await logout(); router.push('/'); }}>
-            {lang !== 'ar' ? '↗ Déconnexion' : '↗ خروج'}
+            {pick(lang, '↗ Déconnexion', '↗ Sign out', '↗ خروج')}
           </button>
         </div>
 
@@ -218,10 +224,10 @@ export function AccountPage({ products }: { products: Product[] }) {
           <div style={{ maxWidth: 480 }}>
             <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <h3 className="display" style={{ fontSize: 20 }}>{lang !== 'ar' ? 'Informations' : 'المعلومات'}</h3>
+                <h3 className="display" style={{ fontSize: 20 }}>{pick(lang, 'Informations', 'Information', 'المعلومات')}</h3>
                 {!editingName && (
                   <button onClick={() => setEditingName(true)} className="mono" style={{ fontSize: 11, padding: '6px 14px', border: '1px solid var(--ink)', borderRadius: 999, background: 'transparent', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {lang !== 'ar' ? '✎ Modifier' : '✎ تعديل'}
+                    {pick(lang, '✎ Modifier', '✎ Edit', '✎ تعديل')}
                   </button>
                 )}
               </div>
@@ -229,7 +235,7 @@ export function AccountPage({ products }: { products: Product[] }) {
               {!editingName ? (
                 <div>
                   <div style={{ marginBottom: 14 }}>
-                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{lang !== 'ar' ? 'Nom complet' : 'الاسم الكامل'}</label>
+                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{pick(lang, 'Nom complet', 'Full name', 'الاسم الكامل')}</label>
                     <div style={{ fontSize: 16, fontWeight: 500 }}>{meta.full_name || '—'}</div>
                   </div>
                   <div>
@@ -239,18 +245,18 @@ export function AccountPage({ products }: { products: Product[] }) {
                 </div>
               ) : (
                 <div>
-                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang !== 'ar' ? 'Nom complet' : 'الاسم الكامل'}</label>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{pick(lang, 'Nom complet', 'Full name', 'الاسم الكامل')}</label>
                   <input className="input2" value={name} onChange={(e) => setName(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
                   <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>E-mail</label>
                   <input className="input2" value={user.email ?? ''} disabled style={{ marginTop: 4, marginBottom: 12, opacity: 0.6 }} />
-                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang !== 'ar' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
-                  <input className="input2" type="password" value={currentPwdName} onChange={(e) => setCurrentPwdName(e.target.value)} placeholder={lang !== 'ar' ? 'Pour confirmer' : 'للتأكيد'} style={{ marginTop: 4, marginBottom: 12 }} />
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{pick(lang, 'Mot de passe actuel', 'Current password', 'كلمة السر الحالية')}</label>
+                  <input className="input2" type="password" value={currentPwdName} onChange={(e) => setCurrentPwdName(e.target.value)} placeholder={pick(lang, 'Pour confirmer', 'To confirm', 'للتأكيد')} style={{ marginTop: 4, marginBottom: 12 }} />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn2 btn2-dark" onClick={saveName} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
-                      {lang !== 'ar' ? 'Enregistrer' : 'حفظ'}
+                      {pick(lang, 'Enregistrer', 'Save', 'حفظ')}
                     </button>
                     <button onClick={() => { setEditingName(false); setName(meta.full_name || ''); setCurrentPwdName(''); setMsg(''); }} className="mono" style={{ fontSize: 12, padding: '0 18px', border: '1px solid var(--line)', borderRadius: 999, background: 'transparent', cursor: 'pointer' }}>
-                      {lang !== 'ar' ? 'Annuler' : 'إلغاء'}
+                      {pick(lang, 'Annuler', 'Cancel', 'إلغاء')}
                     </button>
                   </div>
                 </div>
@@ -259,33 +265,33 @@ export function AccountPage({ products }: { products: Product[] }) {
 
             <div style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <h3 className="display" style={{ fontSize: 20 }}>{lang !== 'ar' ? 'Mot de passe' : 'كلمة السر'}</h3>
+                <h3 className="display" style={{ fontSize: 20 }}>{pick(lang, 'Mot de passe', 'Password', 'كلمة السر')}</h3>
                 {!editingPwd && (
                   <button onClick={() => setEditingPwd(true)} className="mono" style={{ fontSize: 11, padding: '6px 14px', border: '1px solid var(--ink)', borderRadius: 999, background: 'transparent', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {lang !== 'ar' ? '✎ Modifier' : '✎ تعديل'}
+                    {pick(lang, '✎ Modifier', '✎ Edit', '✎ تعديل')}
                   </button>
                 )}
               </div>
 
               {!editingPwd ? (
                 <div>
-                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{lang !== 'ar' ? 'Mot de passe' : 'كلمة السر'}</label>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>{pick(lang, 'Mot de passe', 'Password', 'كلمة السر')}</label>
                   <div style={{ fontSize: 18, fontWeight: 500, letterSpacing: '0.2em' }}>••••••••</div>
                 </div>
               ) : (
                 <div>
-                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang !== 'ar' ? 'Mot de passe actuel' : 'كلمة السر الحالية'}</label>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{pick(lang, 'Mot de passe actuel', 'Current password', 'كلمة السر الحالية')}</label>
                   <input className="input2" type="password" value={currentPwdPwd} onChange={(e) => setCurrentPwdPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
-                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang !== 'ar' ? 'Nouveau mot de passe' : 'كلمة السر الجديدة'}</label>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{pick(lang, 'Nouveau mot de passe', 'New password', 'كلمة السر الجديدة')}</label>
                   <input className="input2" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
-                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{lang !== 'ar' ? 'Confirmer' : 'تأكيد'}</label>
+                  <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>{pick(lang, 'Confirmer', 'Confirm', 'تأكيد')}</label>
                   <input className="input2" type="password" value={pwd2} onChange={(e) => setPwd2(e.target.value)} style={{ marginTop: 4, marginBottom: 12 }} />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn2 btn2-dark" onClick={savePwd} disabled={busy} style={{ opacity: busy ? 0.5 : 1 }}>
-                      {lang !== 'ar' ? 'Modifier' : 'تغيير'}
+                      {pick(lang, 'Modifier', 'Update', 'تغيير')}
                     </button>
                     <button onClick={() => { setEditingPwd(false); setPwd(''); setPwd2(''); setCurrentPwdPwd(''); setMsg(''); }} className="mono" style={{ fontSize: 12, padding: '0 18px', border: '1px solid var(--line)', borderRadius: 999, background: 'transparent', cursor: 'pointer' }}>
-                      {lang !== 'ar' ? 'Annuler' : 'إلغاء'}
+                      {pick(lang, 'Annuler', 'Cancel', 'إلغاء')}
                     </button>
                   </div>
                 </div>
@@ -300,7 +306,7 @@ export function AccountPage({ products }: { products: Product[] }) {
               <div style={{ textAlign: 'center', padding: 40, background: 'var(--paper-2)', borderRadius: 16 }}>
                 <div style={{ fontSize: 40 }}>📦</div>
                 <p style={{ marginTop: 10, opacity: 0.6 }}>
-                  {lang !== 'ar' ? 'Aucune commande pour le moment.' : 'مكاين حتى طلب.'}
+                  {pick(lang, 'Aucune commande pour le moment.', 'No orders yet.', 'مكاين حتى طلب.')}
                 </p>
               </div>
             ) : (
@@ -332,7 +338,7 @@ export function AccountPage({ products }: { products: Product[] }) {
             <div style={{ textAlign: 'center', padding: 40, background: 'var(--paper-2)', borderRadius: 16 }}>
               <div style={{ fontSize: 40 }}>🤍</div>
               <p style={{ marginTop: 10, opacity: 0.6 }}>
-                {lang !== 'ar' ? 'Aucun favori pour le moment.' : 'مكاين والو فالمفضلات.'}
+                {pick(lang, 'Aucun favori pour le moment.', 'No wishlist items yet.', 'مكاين والو فالمفضلات.')}
               </p>
             </div>
           ) : (

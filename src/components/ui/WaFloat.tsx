@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/store/AppContext';
+import { pick } from '@/lib/i18n';
 import { Icon } from './Icon';
 
 export function WaFloat() {
@@ -8,7 +9,7 @@ export function WaFloat() {
   return (
     <a className="wafloat2" href="https://wa.me/212772086545" target="_blank" rel="noopener noreferrer">
       <Icon n="wa" s={18} />
-      <span className="wa-label">{lang !== 'ar' ? 'Commander via WhatsApp' : 'اطلبي عبر واتساب'}</span>
+      <span className="wa-label">{pick(lang, 'Commander via WhatsApp', 'Order via WhatsApp', 'اطلبي عبر واتساب')}</span>
     </a>
   );
 }

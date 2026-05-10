@@ -156,3 +156,30 @@ export type Translations = typeof TR['fr'];
 export function t(lang: Lang): Translations {
   return TR[lang] as unknown as Translations;
 }
+
+/**
+ * Inline 3-way text picker. Use for strings outside the structured TR object
+ * (one-off labels, errors, tooltips) so EN gets proper English instead of
+ * falling back to French.
+ *
+ * Example: pick(lang, 'Bonjour', 'Hello', 'مرحبا')
+ */
+export function pick<T>(lang: Lang, fr: T, en: T, ar: T): T {
+  return lang === 'ar' ? ar : lang === 'en' ? en : fr;
+}
+
+/**
+ * Localised name/description pick for product & category objects where the
+ * English field is optional. Falls back to FR when EN is missing — admins
+ * can add EN later without breaking the site.
+ */
+export function pickField(
+  lang: Lang,
+  fr: string | null | undefined,
+  en: string | null | undefined,
+  ar: string | null | undefined,
+): string {
+  if (lang === 'ar') return ar || fr || en || '';
+  if (lang === 'en') return en || fr || '';
+  return fr || '';
+}

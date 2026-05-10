@@ -8,6 +8,7 @@ interface SupabaseProductRow {
   slug: string;
   name: string;
   name_ar: string | null;
+  name_en: string | null;
   cat: string;
   price: number | string;
   tag: string | null;
@@ -16,6 +17,7 @@ interface SupabaseProductRow {
   img_files: string[] | null;
   description: string | null;
   description_ar: string | null;
+  description_en: string | null;
   composition: string | null;
   entretien: string | null;
   details: string | null;
@@ -36,6 +38,7 @@ function transform(row: SupabaseProductRow): Product {
     slug: row.slug,
     name: row.name,
     nameAr: row.name_ar ?? row.name,
+    nameEn: row.name_en ?? undefined,
     cat: row.cat,
     price: Number(row.price),
     tag: (row.tag === 'new' || row.tag === 'sale' || row.tag === 'best' ? row.tag : undefined) as Product['tag'],
@@ -44,6 +47,7 @@ function transform(row: SupabaseProductRow): Product {
     imgFiles: (row.img_files ?? []).map(normalizeImg).filter(Boolean),
     description: row.description ?? undefined,
     descriptionAr: row.description_ar ?? undefined,
+    descriptionEn: row.description_en ?? undefined,
     composition: row.composition ?? undefined,
     entretien: row.entretien ?? undefined,
     details: row.details ?? undefined,

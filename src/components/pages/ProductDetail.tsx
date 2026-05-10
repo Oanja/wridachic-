@@ -7,7 +7,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Placeholder } from '@/components/ui/Placeholder';
 import { PCard } from '@/components/ui/PCard';
 import { TINTS, CATEGORIES } from '@/lib/data';
-import { TR } from '@/lib/i18n';
+import { TR, pick, pickField } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
@@ -58,8 +58,9 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
     setMain((next + imgCount) % imgCount);
   };
 
-  const name = lang !== 'ar' ? product.name : product.nameAr;
+  const name = pickField(lang, product.name, product.nameEn, product.nameAr);
   const cat = CATEGORIES.find((c) => c.id === product.cat);
+  const catName = cat ? pickField(lang, cat.name, cat.nameEn, cat.nameAr) : '';
 
   const handleAdd = () => {
     addToCart({ ...product, size, color, qty });
@@ -76,8 +77,8 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
     <div className="page2" style={{ padding: '32px 0 80px' }}>
       <div className="wrap">
         <div className="mono" style={{ fontSize: 11, opacity: 0.5, marginBottom: 24 }}>
-          <Link href="/shop" style={{ cursor: 'pointer' }}>/ {lang !== 'ar' ? 'boutique' : 'المتجر'}</Link>
-          {' / '}{cat ? (lang !== 'ar' ? cat.name : cat.nameAr) : ''}
+          <Link href="/shop" style={{ cursor: 'pointer' }}>/ {pick(lang, 'boutique', 'shop', 'المتجر')}</Link>
+          {' / '}{catName}
           {' / '}{name}
         </div>
 
@@ -128,33 +129,34 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
           </div>
 
           <div className="reveal" style={{ transitionDelay: '0.15s' }}>
-            {product.tag === 'new' && <span className="sticker">{lang !== 'ar' ? 'NOUVEAU ✦' : 'جديد ✦'}</span>}
+            {product.tag === 'new' && <span className="sticker">{pick(lang, 'NOUVEAU ✦', 'NEW ✦', 'جديد ✦')}</span>}
             {product.tag === 'best' && (
               <span className="sticker" style={{ background: 'var(--lime)' }}>
-                {lang !== 'ar' ? 'BEST-SELLER ✦' : 'الأكثر مبيعاً ✦'}
+                {pick(lang, 'BEST-SELLER ✦', 'BEST-SELLER ✦', 'الأكثر مبيعاً ✦')}
               </span>
             )}
             {product.tag === 'sale' && (
               <span className="sticker sticker-clay">
                 {product.oldPrice
-                  ? `${lang !== 'ar' ? 'SOLDE' : 'تخفيض'} −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
-                  : (lang !== 'ar' ? 'PROMO ✦' : 'تخفيض ✦')}
+                  ? `${pick(lang, 'SOLDE', 'SALE', 'تخفيض')} −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+                  : pick(lang, 'PROMO ✦', 'SALE ✦', 'تخفيض ✦')}
               </span>
             )}
             <h1 className="display" style={{ fontSize: 'clamp(32px, 4vw, 52px)', lineHeight: 1, marginTop: 12, marginBottom: 12, letterSpacing: '-0.02em' }}>{name}</h1>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, fontSize: 11, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.55 }}>
-              <span>✦ {lang !== 'ar' ? 'Made in Maroc' : 'صنع في المغرب'}</span>
+              <span>✦ {pick(lang, 'Made in Maroc', 'Made in Morocco', 'صنع في المغرب')}</span>
               <span style={{ opacity: 0.4 }}>·</span>
-              <span>{lang !== 'ar' ? 'Production limitée' : 'إنتاج محدود'}</span>
+              <span>{pick(lang, 'Production limitée', 'Limited production', 'إنتاج محدود')}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'baseline', marginBottom: 24, fontFamily: 'JetBrains Mono, monospace' }}>
               <span style={{ fontSize: 28, fontWeight: 600 }}>{product.price} MAD</span>
               {product.oldPrice && <span style={{ fontSize: 16, opacity: 0.4, textDecoration: 'line-through' }}>{product.oldPrice} MAD</span>}
             </div>
             <p style={{ fontSize: 14, opacity: 0.7, lineHeight: 1.7, marginBottom: 28 }}>
-              {lang !== 'ar'
-                ? 'Coupe soigneuse, tissu de qualité, finitions artisanales. Une pièce qui traverse les saisons.'
-                : 'قصّة محكمة، قماش عالي الجودة، تشطيب يدوي. قطعة تدوم عبر المواسم.'}
+              {pick(lang,
+                'Coupe soigneuse, tissu de qualité, finitions artisanales. Une pièce qui traverse les saisons.',
+                'Careful cut, quality fabric, artisan finishes. A piece that lasts through the seasons.',
+                'قصّة محكمة، قماش عالي الجودة، تشطيب يدوي. قطعة تدوم عبر المواسم.')}
             </p>
 
             <div style={{ marginBottom: 20 }}>
@@ -191,23 +193,25 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                 <button onClick={() => setQty(qty + 1)} style={{ padding: '0 14px', height: 48 }}><Icon n="plus" s={12} /></button>
               </div>
               <button className="btn2 btn2-dark" style={{ flex: 1 }} onClick={handleAdd}>
-                {added ? <><Icon n="check" s={14} /> {lang !== 'ar' ? 'Ajouté !' : 'تمت!'}</> : `+ ${t.product.add}`}
+                {added ? <><Icon n="check" s={14} /> {pick(lang, 'Ajouté !', 'Added!', 'تمت!')}</> : `+ ${t.product.add}`}
               </button>
               <button className="btn2 btn2-outline" onClick={() => toggleWish(product.id)}><Icon n="heart" s={16} /></button>
             </div>
             <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12 }} onClick={handleBuyNow}>
-              {lang !== 'ar' ? 'Commander maintenant →' : 'اطلبي دابا ←'}
+              {pick(lang, 'Commander maintenant →', 'Order now →', 'اطلبي دابا ←')}
             </button>
             {(() => {
               const total = product.price * qty;
-              const msg = lang !== 'ar'
-                ? `Bonjour wridachic 👋\n\nJe voudrais commander :\n• ${product.name}\n• Taille : ${size} · Couleur : ${color}\n• Quantité : ${qty}\n• Prix : ${total} MAD`
-                : `السلام، بغيت نطلب:\n• ${product.nameAr || product.name}\n• القياس: ${size} · اللون: ${color}\n• الكمية: ${qty}\n• الثمن: ${total} درهم`;
+              const msg = lang === 'ar'
+                ? `السلام، بغيت نطلب:\n• ${name}\n• القياس: ${size} · اللون: ${color}\n• الكمية: ${qty}\n• الثمن: ${total} درهم`
+                : lang === 'en'
+                  ? `Hi wridachic 👋\n\nI'd like to order:\n• ${name}\n• Size: ${size} · Colour: ${color}\n• Qty: ${qty}\n• Price: ${total} MAD`
+                  : `Bonjour wridachic 👋\n\nJe voudrais commander :\n• ${name}\n• Taille : ${size} · Couleur : ${color}\n• Quantité : ${qty}\n• Prix : ${total} MAD`;
               const href = `https://wa.me/212772086545?text=${encodeURIComponent(msg)}`;
               return (
                 <div style={{ textAlign: 'center', marginBottom: 24, fontSize: 13 }}>
                   <a href={href} target="_blank" rel="noopener noreferrer" style={{ opacity: 0.7, borderBottom: '1px solid currentColor', paddingBottom: 1, cursor: 'pointer' }}>
-                    {lang !== 'ar' ? 'Préfères WhatsApp ? Cliquer ici' : 'تفضلين واتساب؟ اضغطي هنا'}
+                    {pick(lang, 'Préfères WhatsApp ? Cliquer ici', 'Prefer WhatsApp? Click here', 'تفضلين واتساب؟ اضغطي هنا')}
                   </a>
                 </div>
               );
@@ -228,22 +232,26 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
 
             <div style={{ borderTop: '1px solid var(--line)' }}>
               {[
-                { id: 'composition', fr: 'Composition & matière', ar: 'التركيبة والقماش',
-                  content: product.composition || (lang !== 'ar'
-                    ? "Tissu noble travaillé avec soin. Composition détaillée bientôt — contactez-nous via WhatsApp pour plus d'infos."
-                    : 'قماش راقي مشغول بعناية. التركيبة المفصلة قريباً — تواصلي معنا عبر واتساب للمزيد.') },
-                { id: 'entretien', fr: 'Entretien & lavage', ar: 'العناية والغسيل',
-                  content: product.entretien || (lang !== 'ar'
-                    ? "Lavage à la main à l'eau froide recommandé. Pas de sèche-linge, séchage à plat à l'ombre. Repassage à basse température si nécessaire."
-                    : 'يُنصح بالغسيل اليدوي بالماء البارد. تجنبي مجفف الملابس، النشر مسطحاً في الظل. الكي على درجة منخفضة عند الحاجة.') },
-                { id: 'details', fr: 'Détails & coupe', ar: 'التفاصيل والقصة',
-                  content: product.details || (lang !== 'ar'
-                    ? 'Coupe pensée pour la femme marocaine, longueur ample, finitions soignées. Mannequin : 1m70, porte taille M.'
-                    : 'قصّة مصممة للمرأة المغربية، طول فضفاض، تشطيب متقن. الموديل: 1.70م، تلبس مقاس M.') },
-                { id: 'livraison', fr: 'Livraison & retours', ar: 'التوصيل والإرجاع',
-                  content: lang !== 'ar'
-                    ? 'Livraison partout au Maroc en environ 1 semaine après confirmation. Paiement à la livraison disponible. Retours acceptés sous 14 jours, articles intacts avec étiquette.'
-                    : 'التوصيل في كل المغرب في حوالي أسبوع بعد التأكيد. الدفع عند التوصيل متاح. الإرجاع مقبول خلال 14 يوماً، القطع سليمة مع البطاقة.' },
+                { id: 'composition', fr: 'Composition & matière', en: 'Composition & material', ar: 'التركيبة والقماش',
+                  content: product.composition || pick(lang,
+                    "Tissu noble travaillé avec soin. Composition détaillée bientôt — contactez-nous via WhatsApp pour plus d'infos.",
+                    'Premium fabric crafted with care. Detailed composition coming soon — contact us on WhatsApp for more info.',
+                    'قماش راقي مشغول بعناية. التركيبة المفصلة قريباً — تواصلي معنا عبر واتساب للمزيد.') },
+                { id: 'entretien', fr: 'Entretien & lavage', en: 'Care & washing', ar: 'العناية والغسيل',
+                  content: product.entretien || pick(lang,
+                    "Lavage à la main à l'eau froide recommandé. Pas de sèche-linge, séchage à plat à l'ombre. Repassage à basse température si nécessaire.",
+                    'Hand wash in cold water recommended. No tumble dryer, dry flat in the shade. Iron at low temperature if needed.',
+                    'يُنصح بالغسيل اليدوي بالماء البارد. تجنبي مجفف الملابس، النشر مسطحاً في الظل. الكي على درجة منخفضة عند الحاجة.') },
+                { id: 'details', fr: 'Détails & coupe', en: 'Details & fit', ar: 'التفاصيل والقصة',
+                  content: product.details || pick(lang,
+                    'Coupe pensée pour la femme marocaine, longueur ample, finitions soignées. Mannequin : 1m70, porte taille M.',
+                    'Cut designed for the Moroccan woman, generous length, careful finishes. Model: 1m70, wears size M.',
+                    'قصّة مصممة للمرأة المغربية، طول فضفاض، تشطيب متقن. الموديل: 1.70م، تلبس مقاس M.') },
+                { id: 'livraison', fr: 'Livraison & retours', en: 'Delivery & returns', ar: 'التوصيل والإرجاع',
+                  content: pick(lang,
+                    'Livraison partout au Maroc en environ 1 semaine après confirmation. Paiement à la livraison disponible. Retours acceptés sous 14 jours, articles intacts avec étiquette.',
+                    'Delivered anywhere in Morocco in about 1 week after confirmation. Cash on delivery available. Returns accepted within 14 days, items intact with tag.',
+                    'التوصيل في كل المغرب في حوالي أسبوع بعد التأكيد. الدفع عند التوصيل متاح. الإرجاع مقبول خلال 14 يوماً، القطع سليمة مع البطاقة.') },
               ].map((sec) => {
                 const isOpen = openSection === sec.id;
                 return (
@@ -257,7 +265,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                         textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer',
                       }}
                     >
-                      <span>{lang !== 'ar' ? sec.fr : sec.ar}</span>
+                      <span>{pick(lang, sec.fr, sec.en, sec.ar)}</span>
                       <span style={{ fontSize: 18, transition: 'transform 0.2s', transform: isOpen ? 'rotate(45deg)' : 'rotate(0)' }}>+</span>
                     </button>
                     {isOpen && (
@@ -275,8 +283,8 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
         {related.length > 0 && (
           <section style={{ marginTop: 80 }}>
             <div className="sh2 reveal">
-              <span className="sh2-num mono">/ {lang !== 'ar' ? 'vous aimerez aussi' : 'قد يعجبك'}</span>
-              <h2 className="sh2-title">{lang !== 'ar' ? 'Dans le même style' : 'في نفس الأسلوب'}</h2>
+              <span className="sh2-num mono">/ {pick(lang, 'vous aimerez aussi', 'you might also like', 'قد يعجبك')}</span>
+              <h2 className="sh2-title">{pick(lang, 'Dans le même style', 'In the same style', 'في نفس الأسلوب')}</h2>
             </div>
             <div className="g4 reveal-stagger">
               {related.map((p, i) => (
@@ -292,24 +300,25 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
           <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', padding: 32, borderRadius: 22, width: '100%', maxWidth: 540, position: 'relative', boxShadow: '0 30px 80px rgba(15,14,13,0.35)', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={() => setSizeGuideOpen(false)} style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', border: 'none', cursor: 'pointer', fontSize: 14 }}>✕</button>
             <div className="mono" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
-              ✦ {lang !== 'ar' ? 'Mensurations' : 'القياسات'} ✦
+              ✦ {pick(lang, 'Mensurations', 'Measurements', 'القياسات')} ✦
             </div>
             <h2 className="display" style={{ fontSize: 28, marginBottom: 18, letterSpacing: '-0.02em' }}>
-              {lang !== 'ar' ? 'Guide des tailles' : 'دليل المقاسات'}
+              {pick(lang, 'Guide des tailles', 'Size guide', 'دليل المقاسات')}
             </h2>
             <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 18, lineHeight: 1.6 }}>
-              {lang !== 'ar'
-                ? 'Mesures en centimètres. En cas de doute entre deux tailles, choisis la plus grande pour un confort optimal.'
-                : 'المقاسات بالسنتيمتر. في حال التردد بين مقاسين، اختاري الأكبر لراحة أفضل.'}
+              {pick(lang,
+                'Mesures en centimètres. En cas de doute entre deux tailles, choisis la plus grande pour un confort optimal.',
+                'Measurements in centimeters. If unsure between two sizes, pick the larger one for the best fit.',
+                'المقاسات بالسنتيمتر. في حال التردد بين مقاسين، اختاري الأكبر لراحة أفضل.')}
             </p>
             <div style={{ overflowX: 'auto', marginBottom: 14 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>
                 <thead>
                   <tr style={{ background: 'var(--paper-2)' }}>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Taille' : 'المقاس'}</th>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Poitrine' : 'الصدر'}</th>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Taille' : 'الخصر'}</th>
-                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{lang !== 'ar' ? 'Hanches' : 'الأرداف'}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{pick(lang, 'Taille', 'Size', 'المقاس')}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{pick(lang, 'Poitrine', 'Bust', 'الصدر')}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{pick(lang, 'Taille', 'Waist', 'الخصر')}</th>
+                    <th style={{ padding: 10, textAlign: 'left', fontWeight: 500 }}>{pick(lang, 'Hanches', 'Hips', 'الأرداف')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -322,7 +331,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
               </table>
             </div>
             <p className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {lang !== 'ar' ? '✦ Toutes les coupes sont amples & confortables' : '✦ جميع القصّات فضفاضة ومريحة'}
+              {pick(lang, '✦ Toutes les coupes sont amples & confortables', '✦ All cuts are loose & comfortable', '✦ جميع القصّات فضفاضة ومريحة')}
             </p>
           </div>
         </div>

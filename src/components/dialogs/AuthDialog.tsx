@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { useApp } from '@/store/AppContext';
+import { pick } from '@/lib/i18n';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
@@ -55,7 +56,7 @@ export function AuthDialog() {
       router.push('/account');
     } else {
       const userName = (u.user_metadata as { full_name?: string })?.full_name || u.email?.split('@')[0];
-      showToast({ msg: lang !== 'ar' ? `✓ Bon retour, ${userName} !` : `✓ مرحبا بعودتك، ${userName}!`, type: 'ok' });
+      showToast({ msg: pick(lang, `✓ Bon retour, ${userName} !`, `✓ Welcome back, ${userName}!`, `✓ مرحبا بعودتك، ${userName}!`), type: 'ok' });
     }
   };
 
@@ -65,7 +66,7 @@ export function AuthDialog() {
     setErr(''); setInfo(''); setBusy(true);
     try {
       if (mode === 'signup') {
-        if (pwd.length < 6) throw new Error(lang !== 'ar' ? '6 caractères minimum' : '6 أحرف على الأقل');
+        if (pwd.length < 6) throw new Error(pick(lang, '6 caractères minimum', 'At least 6 characters', '6 أحرف على الأقل'));
         const { data, error } = await sb.auth.signUp({
           email, password: pwd,
           options: { data: { full_name: name }, emailRedirectTo: redirectTo },
@@ -74,16 +75,17 @@ export function AuthDialog() {
 
         const identities = (data.user as { identities?: unknown[] } | null)?.identities;
         if (data.user && Array.isArray(identities) && identities.length === 0) {
-          throw new Error(lang !== 'ar'
-            ? 'Cet e-mail est déjà utilisé. Connecte-toi ou clique sur « Mot de passe oublié ».'
-            : 'هاد الإيميل مسجل من قبل. سجلي الدخول أو اضغطي « نسيت كلمة السر ».');
+          throw new Error(pick(lang,
+            'Cet e-mail est déjà utilisé. Connecte-toi ou clique sur « Mot de passe oublié ».',
+            'This e-mail is already registered. Sign in or click "Forgot password".',
+            'هاد الإيميل مسجل من قبل. سجلي الدخول أو اضغطي « نسيت كلمة السر ».'));
         }
 
         if (data.user && !data.session) {
           setOtpType('signup');
           setMode('otp');
           setResendIn(RESEND_COOLDOWN_SEC);
-          setInfo(lang !== 'ar' ? '✉ Code à 6 chiffres envoyé par email' : '✉ تم إرسال رمز من 6 أرقام للإيميل');
+          setInfo(pick(lang, '✉ Code à 6 chiffres envoyé par email', '✉ 6-digit code sent by email', '✉ تم إرسال رمز من 6 أرقام للإيميل'));
         } else if (data.user && data.session) {
           onSuccess(data.user, { welcome: true });
         }
@@ -95,7 +97,10 @@ export function AuthDialog() {
             setOtpType('signup');
             setMode('otp');
             setResendIn(RESEND_COOLDOWN_SEC);
-            setInfo(lang !== 'ar' ? '⚠ Compte non confirmé. Code renvoyé par email.' : '⚠ الحساب غير مؤكد. تم إرسال رمز جديد.');
+            setInfo(pick(lang,
+              '⚠ Compte non confirmé. Code renvoyé par email.',
+              '⚠ Account not confirmed. Code resent by email.',
+              '⚠ الحساب غير مؤكد. تم إرسال رمز جديد.'));
           } else throw error;
         } else if (data.user) {
           onSuccess(data.user);
@@ -126,9 +131,10 @@ export function AuthDialog() {
         setOtpType('recovery');
         setMode('otp');
         setResendIn(RESEND_COOLDOWN_SEC);
-        setInfo(lang !== 'ar'
-          ? '✉ Code à 6 chiffres envoyé par email'
-          : '✉ تم إرسال رمز من 6 أرقام للإيميل');
+        setInfo(pick(lang,
+          '✉ Code à 6 chiffres envoyé par email',
+          '✉ 6-digit code sent by email',
+          '✉ تم إرسال رمز من 6 أرقام للإيميل'));
       }
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Erreur');
@@ -145,7 +151,7 @@ export function AuthDialog() {
     if (error) {
       setErr(error.message);
     } else {
-      setInfo(lang !== 'ar' ? '✓ Code renvoyé !' : '✓ تم إعادة الإرسال!');
+      setInfo(pick(lang, '✓ Code renvoyé !', '✓ Code resent!', '✓ تم إعادة الإرسال!'));
       setResendIn(RESEND_COOLDOWN_SEC);
     }
     setBusy(false);
@@ -186,19 +192,19 @@ export function AuthDialog() {
 
         {mode === 'signup' && (
           <>
-            <input className="input2" placeholder={lang !== 'ar' ? 'Nom complet' : 'الاسم الكامل'} value={name} onChange={(e) => setName(e.target.value)} style={{ marginBottom: 10 }} />
-            <input className="input2" type="email" placeholder={lang !== 'ar' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
-            <input className="input2" type="password" placeholder={lang !== 'ar' ? 'Mot de passe (6+ caractères)' : 'كلمة السر (6+ أحرف)'} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
+            <input className="input2" placeholder={pick(lang, 'Nom complet', 'Full name', 'الاسم الكامل')} value={name} onChange={(e) => setName(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="email" placeholder={pick(lang, 'E-mail', 'E-mail', 'البريد الإلكتروني')} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="password" placeholder={pick(lang, 'Mot de passe (6+ caractères)', 'Password (6+ characters)', 'كلمة السر (6+ أحرف)')} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
           </>
         )}
 
         {mode === 'login' && (
           <>
-            <input className="input2" type="email" placeholder={lang !== 'ar' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
-            <input className="input2" type="password" placeholder={lang !== 'ar' ? 'Mot de passe' : 'كلمة السر'} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 6 }} />
+            <input className="input2" type="email" placeholder={pick(lang, 'E-mail', 'E-mail', 'البريد الإلكتروني')} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="password" placeholder={pick(lang, 'Mot de passe', 'Password', 'كلمة السر')} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 6 }} />
             <p style={{ textAlign: 'right', fontSize: 12, marginBottom: 10 }}>
               <a onClick={() => { setMode('reset'); setErr(''); setInfo(''); }} style={{ opacity: 0.6, cursor: 'pointer', borderBottom: '1px solid currentColor' }}>
-                {lang !== 'ar' ? 'Mot de passe oublié ?' : 'نسيت كلمة السر؟'}
+                {pick(lang, 'Mot de passe oublié ?', 'Forgot password?', 'نسيت كلمة السر؟')}
               </a>
             </p>
           </>
@@ -207,19 +213,20 @@ export function AuthDialog() {
         {mode === 'otp' && (
           <>
             <p style={{ fontSize: 13, opacity: 0.7, textAlign: 'center', marginBottom: 14 }}>
-              {lang !== 'ar' ? 'Email envoyé à ' : 'تم الإرسال إلى '}<strong>{email}</strong>
+              {pick(lang, 'Email envoyé à ', 'Email sent to ', 'تم الإرسال إلى ')}<strong>{email}</strong>
             </p>
             <input className="input2" type="text" inputMode="numeric" maxLength={6} placeholder="••••••" value={otp} onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10, textAlign: 'center', fontSize: 22, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '8px' }} />
             <p style={{ textAlign: 'center', fontSize: 12, marginBottom: 10 }}>
               {resendIn > 0 ? (
                 <span style={{ opacity: 0.5 }}>
-                  {lang !== 'ar'
-                    ? `Renvoyer le code dans ${resendIn}s`
-                    : `إعادة الإرسال بعد ${resendIn}ث`}
+                  {pick(lang,
+                    `Renvoyer le code dans ${resendIn}s`,
+                    `Resend code in ${resendIn}s`,
+                    `إعادة الإرسال بعد ${resendIn}ث`)}
                 </span>
               ) : (
                 <a onClick={resendCode} style={{ opacity: busy ? 0.4 : 0.7, cursor: busy ? 'not-allowed' : 'pointer', borderBottom: '1px solid currentColor' }}>
-                  {lang !== 'ar' ? 'Renvoyer le code' : 'إعادة إرسال الرمز'}
+                  {pick(lang, 'Renvoyer le code', 'Resend code', 'إعادة إرسال الرمز')}
                 </a>
               )}
             </p>
@@ -227,7 +234,7 @@ export function AuthDialog() {
         )}
 
         {mode === 'reset' && (
-          <input className="input2" type="email" placeholder={lang !== 'ar' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
+          <input className="input2" type="email" placeholder={pick(lang, 'E-mail', 'E-mail', 'البريد الإلكتروني')} value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
         )}
 
         {info && <p style={{ color: 'green', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>{info}</p>}

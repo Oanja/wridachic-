@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useApp } from '@/store/AppContext';
+import { pick } from '@/lib/i18n';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 
 export function NewsletterPopup() {
@@ -72,35 +73,38 @@ export function NewsletterPopup() {
           aria-label="Close"
         >✕</button>
         <div className="mono" style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
-          {lang !== 'ar' ? '✦ Offre fidélité ✦' : '✦ عرض خاص ✦'}
+          {pick(lang, '✦ Offre fidélité ✦', '✦ Loyalty offer ✦', '✦ عرض خاص ✦')}
         </div>
         <h2 className="display" style={{ fontSize: 26, lineHeight: 1.2, marginBottom: 12, letterSpacing: '-0.02em' }}>
-          {lang !== 'ar' ? (
-            <>Achète <em>2 articles</em> et plus → <em>−10%</em> direct + un code cadeau</>
-          ) : (
+          {lang === 'ar' ? (
             <>اشتري <em>قطعتين</em> فأكثر → <em>−10%</em> مباشرة + كود هدية</>
+          ) : lang === 'en' ? (
+            <>Buy <em>2 items</em> or more → <em>−10%</em> instantly + a gift code</>
+          ) : (
+            <>Achète <em>2 articles</em> et plus → <em>−10%</em> direct + un code cadeau</>
           )}
         </h2>
         <p style={{ fontSize: 14, opacity: 0.7, marginBottom: 20, lineHeight: 1.55 }}>
-          {lang !== 'ar'
-            ? "Le prix se réduit automatiquement de 10% dans ton panier, et tu reçois un code cadeau pour ta prochaine commande. Laisse ton e-mail ou ton numéro pour recevoir nos prochaines offres."
-            : 'الثمن كينقص تلقائيا بـ10٪ ف السلة، وفنفس الوقت كتوصلك كود هدية لطلبيتك القادمة. خلي إيميلك أو رقمك باش توصلوك العروض الجاية.'}
+          {pick(lang,
+            "Le prix se réduit automatiquement de 10% dans ton panier, et tu reçois un code cadeau pour ta prochaine commande. Laisse ton e-mail ou ton numéro pour recevoir nos prochaines offres.",
+            'The price drops 10% automatically in your cart, and you receive a gift code for your next order. Leave your e-mail or phone to get our upcoming offers.',
+            'الثمن كينقص تلقائيا بـ10٪ ف السلة، وفنفس الوقت كتوصلك كود هدية لطلبيتك القادمة. خلي إيميلك أو رقمك باش توصلوك العروض الجاية.')}
         </p>
         {done ? (
           <div style={{ padding: '18px 0', color: 'var(--clay)', fontSize: 14, fontWeight: 500, lineHeight: 1.6 }}>
-            {lang !== 'ar' ? '✓ Merci ! Tu es dans la liste.' : '✓ شكراً! دخلتي اللائحة.'}
+            {pick(lang, '✓ Merci ! Tu es dans la liste.', '✓ Thanks! You\'re on the list.', '✓ شكراً! دخلتي اللائحة.')}
           </div>
         ) : (
           <form onSubmit={submit}>
             <input
               className="input2" type="email"
-              placeholder={lang !== 'ar' ? 'Ton e-mail (optionnel)' : 'بريدك الإلكتروني (اختياري)'}
+              placeholder={pick(lang, 'Ton e-mail (optionnel)', 'Your e-mail (optional)', 'بريدك الإلكتروني (اختياري)')}
               value={email} onChange={(e) => setEmail(e.target.value)}
               style={{ marginBottom: 8, textAlign: 'center' }}
             />
             <input
               className="input2" type="tel"
-              placeholder={lang !== 'ar' ? 'Ton numéro (optionnel)' : 'رقم هاتفك (اختياري)'}
+              placeholder={pick(lang, 'Ton numéro (optionnel)', 'Your phone (optional)', 'رقم هاتفك (اختياري)')}
               value={phone} onChange={(e) => setPhone(e.target.value)}
               style={{ marginBottom: 12, textAlign: 'center' }}
             />
@@ -109,12 +113,12 @@ export function NewsletterPopup() {
               disabled={busy || (!email.trim() && !phone.trim())}
               style={{ width: '100%', opacity: busy ? 0.5 : 1 }}
             >
-              {busy ? '…' : (lang !== 'ar' ? "Je m'inscris →" : 'سجلي ←')}
+              {busy ? '…' : pick(lang, "Je m'inscris →", 'Sign up →', 'سجلي ←')}
             </button>
           </form>
         )}
         <p className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 14, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          {lang !== 'ar' ? 'Pas de spam. Désinscription en 1 clic.' : 'بدون سبام. إلغاء الاشتراك بضغطة.'}
+          {pick(lang, 'Pas de spam. Désinscription en 1 clic.', 'No spam. 1-click unsubscribe.', 'بدون سبام. إلغاء الاشتراك بضغطة.')}
         </p>
       </div>
     </div>

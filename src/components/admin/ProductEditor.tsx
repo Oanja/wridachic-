@@ -9,6 +9,7 @@ interface ProductRow {
   slug: string;
   name: string;
   name_ar?: string | null;
+  name_en?: string | null;
   cat: string;
   price: number;
   tag?: string | null;
@@ -16,6 +17,7 @@ interface ProductRow {
   img_files?: string[] | null;
   description?: string | null;
   description_ar?: string | null;
+  description_en?: string | null;
   sort_order?: number;
   active?: boolean;
 }
@@ -40,6 +42,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
     slug: product?.slug ?? '',
     name: product?.name ?? '',
     name_ar: product?.name_ar ?? '',
+    name_en: product?.name_en ?? '',
     cat: product?.cat ?? 'robes',
     price: String(product?.price ?? ''),
     tag: product?.tag ?? '',
@@ -47,6 +50,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
     img_files: product?.img_files ?? [],
     description: product?.description ?? '',
     description_ar: product?.description_ar ?? '',
+    description_en: product?.description_en ?? '',
     sort_order: product?.sort_order ?? nextSortOrder,
     active: product?.active ?? true,
   });
@@ -101,11 +105,15 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
     if (!form.price || isNaN(Number(form.price))) return setErr('Prix invalide');
     setBusy(true);
     const payload = {
-      id: form.id, slug: form.slug, name: form.name, name_ar: form.name_ar || null,
+      id: form.id, slug: form.slug, name: form.name,
+      name_ar: form.name_ar || null,
+      name_en: form.name_en || null,
       cat: form.cat, price: Number(form.price), tag: form.tag || null,
       colors: form.colors, img: null,
-      img_files: form.img_files, description: form.description || null,
+      img_files: form.img_files,
+      description: form.description || null,
       description_ar: form.description_ar || null,
+      description_en: form.description_en || null,
       sort_order: Number(form.sort_order) || 0,
       active: form.active,
       updated_at: new Date().toISOString(),
@@ -144,6 +152,10 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
             <input style={inputStyle} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Ex: Robe Wrap Naturelle" />
           </div>
           <div>
+            <label style={labelStyle}>Name (EN)</label>
+            <input style={inputStyle} value={form.name_en} onChange={(e) => set('name_en', e.target.value)} placeholder="Ex: Natural Wrap Dress" />
+          </div>
+          <div>
             <label style={labelStyle}>Nom (AR)</label>
             <input style={inputStyle} value={form.name_ar} onChange={(e) => set('name_ar', e.target.value)} placeholder="رداء راب طبيعي" dir="rtl" />
           </div>
@@ -178,6 +190,10 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
           <div>
             <label style={labelStyle}>Description (FR)</label>
             <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.description} onChange={(e) => set('description', e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Description (EN)</label>
+            <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.description_en} onChange={(e) => set('description_en', e.target.value)} />
           </div>
           <div>
             <label style={labelStyle}>Description (AR)</label>

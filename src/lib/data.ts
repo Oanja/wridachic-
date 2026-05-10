@@ -9,9 +9,9 @@ export const FALLBACK_PRODUCTS: Product[] = [
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: 'prayer', name: 'Espace Prière',     nameAr: 'ملابس الصلاة', desc: 'Jilbabs, khimars & ensembles',   img: 'cat-prayer' },
-  { id: 'robes',  name: 'Robes & Ensembles', nameAr: 'فساتين وأطقم',  desc: 'Robes longues, wrap & ensembles', img: 'cat-robes'  },
-  { id: 'basics', name: 'Denim',             nameAr: 'جينز',          desc: 'Jeans & ensembles denim',         img: 'cat-basics' },
+  { id: 'prayer', name: 'Espace Prière',     nameEn: 'Prayer space',    nameAr: 'ملابس الصلاة', desc: 'Jilbabs, khimars & ensembles',   img: 'cat-prayer' },
+  { id: 'robes',  name: 'Robes & Ensembles', nameEn: 'Dresses & Sets',  nameAr: 'فساتين وأطقم',  desc: 'Robes longues, wrap & ensembles', img: 'cat-robes'  },
+  { id: 'basics', name: 'Denim',             nameEn: 'Denim',           nameAr: 'جينز',          desc: 'Jeans & ensembles denim',         img: 'cat-basics' },
 ];
 
 export const TINTS = ['rose', 'clay', 'mint', 'lime', 'sky', 'ink'] as const;

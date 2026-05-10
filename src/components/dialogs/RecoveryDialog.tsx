@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Logo } from '@/components/ui/Logo';
 import { useApp } from '@/store/AppContext';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { pick } from '@/lib/i18n';
 
 export function RecoveryDialog() {
   const { lang } = useApp();
@@ -55,8 +56,8 @@ export function RecoveryDialog() {
 
   const submit = async () => {
     setMsg('');
-    if (pwd.length < 6) return setMsg(lang !== 'ar' ? '⚠ 6 caractères minimum' : '⚠ 6 أحرف على الأقل');
-    if (pwd !== pwd2) return setMsg(lang !== 'ar' ? '⚠ Les mots de passe ne correspondent pas' : '⚠ كلمتا السر مختلفتان');
+    if (pwd.length < 6) return setMsg(pick(lang, '⚠ 6 caractères minimum', '⚠ 6 characters minimum', '⚠ 6 أحرف على الأقل'));
+    if (pwd !== pwd2) return setMsg(pick(lang, '⚠ Les mots de passe ne correspondent pas', '⚠ Passwords do not match', '⚠ كلمتا السر مختلفتان'));
     setBusy(true);
     const sb = getSupabaseBrowser();
     const { error } = await sb.auth.updateUser({ password: pwd });
@@ -73,37 +74,37 @@ export function RecoveryDialog() {
           <Logo size={40} />
         </div>
         <h2 className="display" style={{ fontSize: 24, textAlign: 'center', marginBottom: 6 }}>
-          {lang !== 'ar' ? 'Nouveau mot de passe' : 'كلمة سر جديدة'}
+          {pick(lang, 'Nouveau mot de passe', 'New password', 'كلمة سر جديدة')}
         </h2>
         <p className="mono" style={{ fontSize: 11, opacity: 0.5, textAlign: 'center', marginBottom: 20 }}>
-          {lang !== 'ar' ? 'Choisis un nouveau mot de passe' : 'اختاري كلمة سر جديدة'}
+          {pick(lang, 'Choisis un nouveau mot de passe', 'Choose a new password', 'اختاري كلمة سر جديدة')}
         </p>
 
         {done ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: 38, marginBottom: 8 }}>✓</div>
             <p style={{ color: '#2E7D32', fontWeight: 600 }}>
-              {lang !== 'ar' ? 'Mot de passe modifié !' : 'تم تغيير كلمة السر!'}
+              {pick(lang, 'Mot de passe modifié !', 'Password updated!', 'تم تغيير كلمة السر!')}
             </p>
           </div>
         ) : (
           <>
             <input
               className="input2" type="password"
-              placeholder={lang !== 'ar' ? 'Nouveau mot de passe (6+)' : 'كلمة السر الجديدة (6+)'}
+              placeholder={pick(lang, 'Nouveau mot de passe (6+)', 'New password (6+)', 'كلمة السر الجديدة (6+)')}
               value={pwd} onChange={(e) => setPwd(e.target.value)}
               style={{ marginBottom: 10 }}
             />
             <input
               className="input2" type="password"
-              placeholder={lang !== 'ar' ? 'Confirmer' : 'التأكيد'}
+              placeholder={pick(lang, 'Confirmer', 'Confirm', 'التأكيد')}
               value={pwd2} onChange={(e) => setPwd2(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && submit()}
               style={{ marginBottom: 14 }}
             />
             {msg && <p className="mono" style={{ fontSize: 12, color: 'var(--clay)', marginBottom: 10 }}>{msg}</p>}
             <button className="btn2 btn2-dark" onClick={submit} disabled={busy} style={{ width: '100%', opacity: busy ? 0.5 : 1 }}>
-              {busy ? '...' : (lang !== 'ar' ? 'Modifier →' : 'تغيير →')}
+              {busy ? '...' : pick(lang, 'Modifier →', 'Update →', 'تغيير →')}
             </button>
           </>
         )}

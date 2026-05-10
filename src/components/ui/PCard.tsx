@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Icon } from './Icon';
 import { Placeholder } from './Placeholder';
 import { TINTS } from '@/lib/data';
-import { TR } from '@/lib/i18n';
+import { TR, pick, pickField } from '@/lib/i18n';
 import type { Lang, Product } from '@/lib/types';
 
 interface PCardProps {
@@ -19,7 +19,7 @@ interface PCardProps {
 
 export function PCard({ product, lang, onWish, wished, tint, priority = false }: PCardProps) {
   const t = TR[lang];
-  const name = lang === 'ar' ? product.nameAr : product.name;
+  const name = pickField(lang, product.name, product.nameEn, product.nameAr);
   const fallbackTint = tint ?? TINTS[parseInt(product.id.replace(/\D/g, '') || '0') % TINTS.length];
 
   return (
@@ -39,18 +39,16 @@ export function PCard({ product, lang, onWish, wished, tint, priority = false }:
         )}
 
         {product.tag === 'new' && (
-          <span className="pcard-tag new">{lang === 'ar' ? 'جديد ✦' : 'Nouveau ✦'}</span>
+          <span className="pcard-tag new">{pick(lang, 'Nouveau ✦', 'New ✦', 'جديد ✦')}</span>
         )}
         {product.tag === 'best' && (
-          <span className="pcard-tag best">{lang === 'ar' ? 'الأكثر مبيعاً ✦' : 'Best-seller ✦'}</span>
+          <span className="pcard-tag best">{pick(lang, 'Best-seller ✦', 'Best-seller ✦', 'الأكثر مبيعاً ✦')}</span>
         )}
         {product.tag === 'sale' && (
           <span className="pcard-tag sale">
             {product.oldPrice
-              ? (lang === 'ar'
-                  ? `خصم −${Math.round((1 - product.price / product.oldPrice) * 100)}%`
-                  : `−${Math.round((1 - product.price / product.oldPrice) * 100)}%`)
-              : (lang === 'ar' ? 'تخفيض ✦' : 'Promo ✦')}
+              ? `${lang === 'ar' ? 'خصم ' : ''}−${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+              : pick(lang, 'Promo ✦', 'Sale ✦', 'تخفيض ✦')}
           </span>
         )}
 
