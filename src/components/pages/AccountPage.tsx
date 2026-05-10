@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { PCard } from '@/components/ui/PCard';
 import { TINTS } from '@/lib/data';
@@ -34,10 +34,23 @@ export function AccountPage({ products }: { products: Product[] }) {
   const [editingPwd, setEditingPwd] = useState(false);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [welcomeName, setWelcomeName] = useState<string | null>(null);
+  // Track whether we ever saw a user. If yes and they vanish, that's a logout —
+  // route home silently instead of popping the auth dialog.
+  const wasLoggedIn = useRef(false);
 
   useEffect(() => {
     if (!authReady) return;
-    if (!user) { openAuth(); return; }
+    if (!user) {
+      if (wasLoggedIn.current) {
+        // User just logged out from this page → go home, no popup.
+        router.push('/');
+      } else {
+        // Guest hit /account directly → invite to log in.
+        openAuth();
+      }
+      return;
+    }
+    wasLoggedIn.current = true;
     const meta = user.user_metadata as { full_name?: string } | undefined;
     setName(meta?.full_name || '');
     if (typeof window !== 'undefined') {
@@ -52,7 +65,7 @@ export function AccountPage({ products }: { products: Product[] }) {
         delete (window as unknown as { __accountTab?: string }).__accountTab;
       }
     }
-  }, [authReady, user, openAuth]);
+  }, [authReady, user, openAuth, router]);
 
   useEffect(() => {
     if (welcomeName === null) return;
