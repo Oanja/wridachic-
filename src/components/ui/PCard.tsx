@@ -21,6 +21,8 @@ export function PCard({ product, lang, onWish, wished, tint, priority = false }:
   const t = TR[lang];
   const name = pickField(lang, product.name, product.nameEn, product.nameAr);
   const fallbackTint = tint ?? TINTS[parseInt(product.id.replace(/\D/g, '') || '0') % TINTS.length];
+  // stock === null/undefined → unlimited (no tracking). stock === 0 → out of stock.
+  const soldOut = product.stock === 0;
 
   return (
     <Link href={`/product/${product.slug}`} className="pcard" style={{ display: 'block', color: 'inherit' }}>
@@ -32,24 +34,33 @@ export function PCard({ product, lang, onWish, wished, tint, priority = false }:
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
             priority={priority}
-            style={{ objectFit: 'cover' }}
+            style={{ objectFit: 'cover', opacity: soldOut ? 0.55 : 1, filter: soldOut ? 'grayscale(0.4)' : 'none' }}
           />
         ) : (
           <Placeholder tint={fallbackTint} rose />
         )}
 
-        {product.tag === 'new' && (
-          <span className="pcard-tag new">{pick(lang, 'Nouveau ✦', 'New ✦', 'جديد ✦')}</span>
-        )}
-        {product.tag === 'best' && (
-          <span className="pcard-tag best">{pick(lang, 'Best-seller ✦', 'Best-seller ✦', 'الأكثر مبيعاً ✦')}</span>
-        )}
-        {product.tag === 'sale' && (
-          <span className="pcard-tag sale">
-            {product.oldPrice
-              ? `${lang === 'ar' ? 'خصم ' : ''}−${Math.round((1 - product.price / product.oldPrice) * 100)}%`
-              : pick(lang, 'Promo ✦', 'Sale ✦', 'تخفيض ✦')}
+        {/* Sold-out badge takes priority over other tags. */}
+        {soldOut ? (
+          <span className="pcard-tag" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
+            {pick(lang, 'Épuisé', 'Sold out', 'نفد')}
           </span>
+        ) : (
+          <>
+            {product.tag === 'new' && (
+              <span className="pcard-tag new">{pick(lang, 'Nouveau ✦', 'New ✦', 'جديد ✦')}</span>
+            )}
+            {product.tag === 'best' && (
+              <span className="pcard-tag best">{pick(lang, 'Best-seller ✦', 'Best-seller ✦', 'الأكثر مبيعاً ✦')}</span>
+            )}
+            {product.tag === 'sale' && (
+              <span className="pcard-tag sale">
+                {product.oldPrice
+                  ? `${lang === 'ar' ? 'خصم ' : ''}−${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+                  : pick(lang, 'Promo ✦', 'Sale ✦', 'تخفيض ✦')}
+              </span>
+            )}
+          </>
         )}
 
         <button

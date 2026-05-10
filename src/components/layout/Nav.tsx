@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/ui/Logo';
 import { Icon } from '@/components/ui/Icon';
 import { Marquee } from '@/components/ui/Marquee';
 import { useApp } from '@/store/AppContext';
 import { TR, pick } from '@/lib/i18n';
+
+// Lazy-loaded — keeps the search bundle out of the initial nav payload.
+const SearchModal = dynamic(() => import('@/components/ui/SearchModal').then((m) => m.SearchModal), { ssr: false });
 
 const NAV_ITEMS = [
   { href: '/shop',   key: 'shop' as const },
@@ -23,6 +27,7 @@ export function Nav() {
   const t = TR[lang];
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const userRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,7 +65,7 @@ export function Nav() {
               <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
               <button className={lang === 'ar' ? 'active' : ''} onClick={() => setLang('ar')}>ع</button>
             </div>
-            <button className="nav2-search-btn" title={pick(lang, 'Recherche', 'Search', 'بحث')} aria-label={pick(lang, 'Recherche', 'Search', 'بحث')}><Icon n="search" /></button>
+            <button className="nav2-search-btn" onClick={() => setSearchOpen(true)} title={pick(lang, 'Recherche', 'Search', 'بحث')} aria-label={pick(lang, 'Recherche', 'Search', 'بحث')}><Icon n="search" /></button>
             <div ref={userRef} style={{ position: 'relative' }}>
               <button
                 title={user ? pick(lang, 'Mon compte', 'My account', 'حسابي') : pick(lang, 'Connexion', 'Sign in', 'دخول')}
@@ -158,6 +163,7 @@ export function Nav() {
         .nav2-menu-btn { display: none !important; }
         @media (max-width: 768px) { .nav2-menu-btn { display: flex !important; } }
       `}</style>
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

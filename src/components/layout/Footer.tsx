@@ -72,11 +72,10 @@ export function Footer() {
           <div>
             <h4>{t.footer.help}</h4>
             <ul>
-              <li><a>{t.footer.contact}</a></li>
-              <li><a>{t.footer.faq}</a></li>
-              <li><a>{t.footer.delivery}</a></li>
-              <li><a>{t.footer.returns}</a></li>
-              <li><a>{t.footer.sizes}</a></li>
+              <li><Link href="/contact">{t.footer.contact}</Link></li>
+              <li><Link href="/returns">{t.footer.returns}</Link></li>
+              <li><Link href="/terms">{pick(lang, 'CGV', 'Terms', 'الشروط')}</Link></li>
+              <li><Link href="/privacy">{pick(lang, 'Confidentialité', 'Privacy', 'الخصوصية')}</Link></li>
             </ul>
           </div>
           <div>

@@ -20,6 +20,7 @@ interface ProductRow {
   description_en?: string | null;
   sort_order?: number;
   active?: boolean;
+  stock?: number | null;
 }
 
 interface Props {
@@ -53,6 +54,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
     description_en: product?.description_en ?? '',
     sort_order: product?.sort_order ?? nextSortOrder,
     active: product?.active ?? true,
+    stock: product?.stock ?? null as number | null,
   });
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -116,6 +118,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
       description_en: form.description_en || null,
       sort_order: Number(form.sort_order) || 0,
       active: form.active,
+      stock: form.stock,
       updated_at: new Date().toISOString(),
     };
     const res = isNew
@@ -250,6 +253,23 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
                 <span style={{ fontSize: 9, opacity: 0.5 }}>{uploading ? 'Upload...' : 'Ajouter'}</span>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} disabled={uploading} />
               </label>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(15,14,13,0.1)', paddingTop: 14 }}>
+            <label style={labelStyle}>Stock (laisser vide = illimité)</label>
+            <input
+              type="number" min={0}
+              style={inputStyle}
+              value={form.stock ?? ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                set('stock', v === '' ? null : Math.max(0, Number(v)));
+              }}
+              placeholder="Ex: 10 (vide = illimité)"
+            />
+            <div style={{ fontSize: 10, opacity: 0.5, marginTop: 6 }}>
+              0 = rupture de stock · vide = pas de suivi (toujours disponible)
             </div>
           </div>
 

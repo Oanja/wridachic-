@@ -24,6 +24,7 @@ interface SupabaseProductRow {
   mannequin: string | null;
   active: boolean | null;
   sort_order: number | null;
+  stock: number | null;
 }
 
 function normalizeImg(src: string): string {
@@ -52,6 +53,7 @@ function transform(row: SupabaseProductRow): Product {
     entretien: row.entretien ?? undefined,
     details: row.details ?? undefined,
     mannequin: row.mannequin ?? undefined,
+    stock: row.stock,
   };
 }
 

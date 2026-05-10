@@ -115,6 +115,24 @@ export function CheckoutPage() {
           if (data) setGiftCode(data);
         } catch {}
       }
+
+      // Fire-and-forget email notification (admin + customer). Failure here
+      // must NOT block the user — the order is already saved in Supabase.
+      fetch('/api/notify-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: num,
+          fullName: form.fullName,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+          city: form.city,
+          total,
+          items: itemsData,
+          lang,
+        }),
+      }).catch(() => { /* silent — email is non-critical */ });
     } catch (e) { console.error('Supabase:', e); }
     setSaving(false); setStep(4);
   };

@@ -22,6 +22,8 @@ export interface Product {
   entretien?: string;
   details?: string;
   mannequin?: string;
+  /** Available units in stock. null/undefined = unlimited (no tracking). 0 = sold out. */
+  stock?: number | null;
 }
 
 export interface Category {

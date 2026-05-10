@@ -61,6 +61,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
   const name = pickField(lang, product.name, product.nameEn, product.nameAr);
   const cat = CATEGORIES.find((c) => c.id === product.cat);
   const catName = cat ? pickField(lang, cat.name, cat.nameEn, cat.nameAr) : '';
+  const soldOut = product.stock === 0;
 
   const handleAdd = () => {
     addToCart({ ...product, size, color, qty });
@@ -186,18 +187,27 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--ink)', borderRadius: 999 }}>
-                <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ padding: '0 14px', height: 48 }}><Icon n="minus" s={12} /></button>
-                <span style={{ minWidth: 28, textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>{qty}</span>
-                <button onClick={() => setQty(qty + 1)} style={{ padding: '0 14px', height: 48 }}><Icon n="plus" s={12} /></button>
+            {soldOut && (
+              <div style={{ background: 'var(--ink)', color: 'var(--paper)', padding: '14px 18px', borderRadius: 14, marginBottom: 14, fontSize: 14, textAlign: 'center', fontWeight: 500 }}>
+                ✕ {pick(lang,
+                  'Épuisé — contacte-nous pour être prévenue du retour',
+                  'Sold out — contact us to be notified when it\'s back',
+                  'نفد — تواصلي معنا ليتم إعلامك عند توفرها')}
               </div>
-              <button className="btn2 btn2-dark" style={{ flex: 1 }} onClick={handleAdd}>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--ink)', borderRadius: 999, opacity: soldOut ? 0.4 : 1 }}>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} disabled={soldOut} style={{ padding: '0 14px', height: 48 }}><Icon n="minus" s={12} /></button>
+                <span style={{ minWidth: 28, textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>{qty}</span>
+                <button onClick={() => setQty(qty + 1)} disabled={soldOut} style={{ padding: '0 14px', height: 48 }}><Icon n="plus" s={12} /></button>
+              </div>
+              <button className="btn2 btn2-dark" style={{ flex: 1, opacity: soldOut ? 0.4 : 1, cursor: soldOut ? 'not-allowed' : 'pointer' }} disabled={soldOut} onClick={handleAdd}>
                 {added ? <><Icon n="check" s={14} /> {pick(lang, 'Ajouté !', 'Added!', 'تمت!')}</> : `+ ${t.product.add}`}
               </button>
               <button className="btn2 btn2-outline" onClick={() => toggleWish(product.id)}><Icon n="heart" s={16} /></button>
             </div>
-            <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12 }} onClick={handleBuyNow}>
+            <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12, opacity: soldOut ? 0.4 : 1, cursor: soldOut ? 'not-allowed' : 'pointer' }} disabled={soldOut} onClick={handleBuyNow}>
               {pick(lang, 'Commander maintenant →', 'Order now →', 'اطلبي دابا ←')}
             </button>
             {(() => {

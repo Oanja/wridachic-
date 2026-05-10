@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import { AppProvider } from '@/store/AppContext';
 import { LayoutShell } from '@/components/layout/LayoutShell';
+import { TrackingScripts } from '@/components/analytics/TrackingScripts';
 import './globals.css';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wridachic.com';
@@ -75,6 +77,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AppProvider>
           <LayoutShell>{children}</LayoutShell>
+          <TrackingScripts />
+          <Analytics />
         </AppProvider>
       </body>
     </html>
