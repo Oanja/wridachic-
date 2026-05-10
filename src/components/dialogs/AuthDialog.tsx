@@ -9,6 +9,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 type Mode = 'login' | 'signup' | 'otp' | 'reset';
+type OtpType = 'signup' | 'recovery';
 
 const RESEND_COOLDOWN_SEC = 60;
 
@@ -16,6 +17,7 @@ export function AuthDialog() {
   const { lang, authOpen, closeAuth, authPrefill, setUser, showToast } = useApp();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(authPrefill.mode);
+  const [otpType, setOtpType] = useState<OtpType>('signup');
   const [email, setEmail] = useState(authPrefill.email);
   const [pwd, setPwd] = useState('');
   const [name, setName] = useState('');
@@ -30,6 +32,7 @@ export function AuthDialog() {
     if (!authOpen) return;
     setMode(authPrefill.mode);
     setEmail(authPrefill.email);
+    setOtpType('signup');
     setErr(''); setInfo('');
   }, [authOpen, authPrefill]);
 
@@ -49,9 +52,6 @@ export function AuthDialog() {
     closeAuth();
     if (opts?.welcome) {
       sessionStorage.setItem('wc2-welcome', name || '');
-      // Soft-navigate so the React tree keeps the just-logged-in user in context.
-      // window.location.href would force a reload and briefly render with user=null,
-      // which made AccountPage re-trigger the auth dialog.
       router.push('/account');
     } else {
       const userName = (u.user_metadata as { full_name?: string })?.full_name || u.email?.split('@')[0];
@@ -59,9 +59,6 @@ export function AuthDialog() {
     }
   };
 
-  // Use the current origin so links in emails (signup confirm + password reset)
-  // come back to the right environment — localhost in dev, wridachic.com in prod.
-  // The Supabase project's allowed Redirect URLs must include both.
   const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
 
   const submit = async () => {
@@ -75,9 +72,6 @@ export function AuthDialog() {
         });
         if (error) throw error;
 
-        // Supabase user-enumeration protection: when the email already exists,
-        // signUp returns a fake user with `identities: []` and no error.
-        // Detect that and tell the user to log in instead.
         const identities = (data.user as { identities?: unknown[] } | null)?.identities;
         if (data.user && Array.isArray(identities) && identities.length === 0) {
           throw new Error(lang === 'fr'
@@ -86,6 +80,7 @@ export function AuthDialog() {
         }
 
         if (data.user && !data.session) {
+          setOtpType('signup');
           setMode('otp');
           setResendIn(RESEND_COOLDOWN_SEC);
           setInfo(lang === 'fr' ? '✉ Code à 6 chiffres envoyé par email' : '✉ تم إرسال رمز من 6 أرقام للإيميل');
@@ -97,6 +92,7 @@ export function AuthDialog() {
         if (error) {
           if (error.message.toLowerCase().includes('not confirmed') || error.message.toLowerCase().includes('email')) {
             await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
+            setOtpType('signup');
             setMode('otp');
             setResendIn(RESEND_COOLDOWN_SEC);
             setInfo(lang === 'fr' ? '⚠ Compte non confirmé. Code renvoyé par email.' : '⚠ الحساب غير مؤكد. تم إرسال رمز جديد.');
@@ -105,13 +101,34 @@ export function AuthDialog() {
           onSuccess(data.user);
         }
       } else if (mode === 'otp') {
-        const { data, error } = await sb.auth.verifyOtp({ email, token: otp.trim(), type: 'signup' });
+        // Same Supabase API for both signup & recovery, only the `type` differs.
+        // Recovery verify creates a recovery session → PASSWORD_RECOVERY event
+        // fires → RecoveryDialog opens automatically.
+        const { data, error } = await sb.auth.verifyOtp({
+          email, token: otp.trim(),
+          type: otpType === 'recovery' ? 'recovery' : 'signup',
+        });
         if (error) throw error;
-        if (data.user) onSuccess(data.user, { welcome: true });
+        if (data.user) {
+          if (otpType === 'recovery') {
+            // Close auth dialog so the RecoveryDialog (listening to PASSWORD_RECOVERY) can take over.
+            closeAuth();
+          } else {
+            onSuccess(data.user, { welcome: true });
+          }
+        }
       } else if (mode === 'reset') {
+        // resetPasswordForEmail with no `redirectTo` makes Supabase send the
+        // {{ .Token }} OTP code email (template-permitting). The redirectTo is
+        // only used when the email contains {{ .ConfirmationURL }} link.
         const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw error;
-        setInfo(lang === 'fr' ? '✓ Lien de réinitialisation envoyé.' : '✓ تم إرسال رابط إعادة التعيين.');
+        setOtpType('recovery');
+        setMode('otp');
+        setResendIn(RESEND_COOLDOWN_SEC);
+        setInfo(lang === 'fr'
+          ? '✉ Code à 6 chiffres envoyé par email'
+          : '✉ تم إرسال رمز من 6 أرقام للإيميل');
       }
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Erreur');
@@ -122,10 +139,10 @@ export function AuthDialog() {
   const resendCode = async () => {
     if (resendIn > 0 || busy) return;
     setErr(''); setBusy(true);
-    const { error } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
+    const { error } = otpType === 'recovery'
+      ? await sb.auth.resetPasswordForEmail(email, { redirectTo })
+      : await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectTo } });
     if (error) {
-      // Supabase typically returns "Email rate limit exceeded" or "For security
-      // purposes, you can only request this after N seconds." Surface it raw.
       setErr(error.message);
     } else {
       setInfo(lang === 'fr' ? '✓ Code renvoyé !' : '✓ تم إعادة الإرسال!');
@@ -134,17 +151,25 @@ export function AuthDialog() {
     setBusy(false);
   };
 
+  // OTP view shows different copy for signup vs recovery.
+  const otpTitle = otpType === 'recovery'
+    ? { fr: 'Code de réinitialisation', ar: 'رمز إعادة التعيين' }
+    : { fr: 'Confirmation', ar: 'تأكيد' };
+  const otpSubtitle = otpType === 'recovery'
+    ? { fr: 'Entre le code reçu par email', ar: 'أدخلي الرمز من الإيميل' }
+    : { fr: 'Entre le code reçu par email', ar: 'أدخلي الرمز من الإيميل' };
+
   const titles: Record<Mode, { fr: string; ar: string }> = {
     login:  { fr: 'Connexion',           ar: 'تسجيل الدخول' },
     signup: { fr: 'Créer un compte',     ar: 'إنشاء حساب' },
-    otp:    { fr: 'Confirmation',        ar: 'تأكيد' },
+    otp:    otpTitle,
     reset:  { fr: 'Mot de passe oublié', ar: 'نسيت كلمة السر' },
   };
   const subtitles: Record<Mode, { fr: string; ar: string }> = {
     login:  { fr: 'Retrouve tes favoris',         ar: 'استرجعي مفضلاتك' },
     signup: { fr: 'Sauvegarde tes favoris',       ar: 'احفظي مفضلاتك' },
-    otp:    { fr: 'Entre le code reçu par email', ar: 'أدخلي الرمز من الإيميل' },
-    reset:  { fr: "On t'envoie un lien",          ar: 'سنرسل لك رابطًا' },
+    otp:    otpSubtitle,
+    reset:  { fr: 'On t\'envoie un code à 6 chiffres', ar: 'سنرسل لك رمزًا من 6 أرقام' },
   };
 
   return (
@@ -202,7 +227,7 @@ export function AuthDialog() {
         )}
 
         {mode === 'reset' && (
-          <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
+          <input className="input2" type="email" placeholder={lang === 'fr' ? 'E-mail' : 'البريد الإلكتروني'} value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
         )}
 
         {info && <p style={{ color: 'green', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>{info}</p>}
@@ -213,7 +238,7 @@ export function AuthDialog() {
             mode === 'login'  ? (lang === 'fr' ? 'Se connecter →' : 'دخول ←') :
             mode === 'signup' ? (lang === 'fr' ? 'Créer le compte →' : 'إنشاء ←') :
             mode === 'otp'    ? (lang === 'fr' ? 'Confirmer →' : 'تأكيد ←') :
-                                (lang === 'fr' ? 'Envoyer le lien →' : 'إرسال الرابط ←')
+                                (lang === 'fr' ? 'Envoyer le code →' : 'إرسال الرمز ←')
           )}
         </button>
 
