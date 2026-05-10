@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
 import { Icon } from './Icon';
 import { Placeholder } from './Placeholder';
 import { TINTS } from '@/lib/data';
@@ -21,46 +20,20 @@ interface PCardProps {
 export function PCard({ product, lang, onWish, wished, tint, priority = false }: PCardProps) {
   const t = TR[lang];
   const name = lang === 'ar' ? product.nameAr : product.name;
-  const [hovered, setHovered] = useState(false);
-  const [autoIdx, setAutoIdx] = useState(0);
-  const hasTwo = product.imgFiles.length > 1;
-
-  useEffect(() => {
-    if (!hasTwo) return;
-    const id = setInterval(() => setAutoIdx((i) => (i + 1) % 2), 2800);
-    return () => clearInterval(id);
-  }, [hasTwo]);
-
-  const showSecond = hasTwo && (hovered || autoIdx === 1);
   const fallbackTint = tint ?? TINTS[parseInt(product.id.replace(/\D/g, '') || '0') % TINTS.length];
 
   return (
     <Link href={`/product/${product.slug}`} className="pcard" style={{ display: 'block', color: 'inherit' }}>
-      <div
-        className="pcard-img"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
+      <div className="pcard-img">
         {product.imgFiles.length > 0 ? (
-          <>
-            <Image
-              src={product.imgFiles[0]}
-              alt={name}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-              priority={priority}
-              style={{ objectFit: 'cover', transition: 'opacity 0.6s ease', opacity: showSecond ? 0 : 1 }}
-            />
-            {hasTwo && (
-              <Image
-                src={product.imgFiles[1]}
-                alt={name}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-                style={{ objectFit: 'cover', transition: 'opacity 0.6s ease', opacity: showSecond ? 1 : 0 }}
-              />
-            )}
-          </>
+          <Image
+            src={product.imgFiles[0]}
+            alt={name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+            priority={priority}
+            style={{ objectFit: 'cover' }}
+          />
         ) : (
           <Placeholder tint={fallbackTint} rose />
         )}

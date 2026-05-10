@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 
 /**
  * Watches the DOM for `.reveal`, `.reveal-stagger`, `.reveal-img` elements and
- * adds `.is-visible` when they enter the viewport. Re-scans on route changes.
+ * adds `.is-visible` when they enter the viewport. Re-scans on route changes
+ * and whenever the DOM changes (instead of polling on a setInterval).
  */
 export function ScrollReveal() {
   const pathname = usePathname();
@@ -26,8 +27,13 @@ export function ScrollReveal() {
         .forEach((el) => io.observe(el));
     };
     observe();
-    const id = window.setInterval(observe, 600);
-    return () => { io.disconnect(); window.clearInterval(id); };
+
+    // Catch elements added later (e.g. after data fetch / filter change) without
+    // polling. MutationObserver fires only when the DOM actually changes.
+    const mo = new MutationObserver(observe);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => { io.disconnect(); mo.disconnect(); };
   }, [pathname]);
 
   return null;
