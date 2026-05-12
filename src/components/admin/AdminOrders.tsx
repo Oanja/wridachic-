@@ -5,8 +5,9 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 
 const STATUS_COLORS: Record<string, string> = {
   nouveau: '#C85C3F', confirmé: '#4A90D9', expédié: '#7B68EE', livré: '#4CAF50',
+  annulé: '#C62828', 'modification demandée': '#D89B2B',
 };
-const STATUS_LABELS = ['nouveau', 'confirmé', 'expédié', 'livré'];
+const STATUS_LABELS = ['nouveau', 'confirmé', 'modification demandée', 'annulé', 'expédié', 'livré'];
 
 interface Order {
   id: string;

@@ -88,6 +88,7 @@ export function CheckoutPage() {
     const itemsData = cart.map((it) => ({
       name: pickField(lang, it.name, it.nameEn, it.nameAr),
       qty: it.qty, size: it.size, color: it.color, price: it.price,
+      image: it.imgFiles?.[0],
     }));
     try {
       const payload: Record<string, unknown> = {

@@ -1,0 +1,141 @@
+export type WhatsAppAction = 'confirm' | 'cancel' | 'edit';
+
+export interface WhatsAppOrderItem {
+  name: string;
+  qty: number;
+  size: string;
+  color: string;
+  price: number;
+  image?: string;
+}
+
+export interface WhatsAppOrderPayload {
+  orderNumber: string;
+  fullName: string;
+  phone: string;
+  total: number;
+  items: WhatsAppOrderItem[];
+}
+
+const GRAPH_VERSION = process.env.WHATSAPP_GRAPH_VERSION || 'v21.0';
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const TEMPLATE_NAME = process.env.WHATSAPP_ORDER_TEMPLATE_NAME;
+const TEMPLATE_LANG = process.env.WHATSAPP_ORDER_TEMPLATE_LANG || 'fr';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://wridachic.com';
+
+export function normalizeWhatsAppPhone(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('212')) return digits;
+  if (digits.startsWith('0')) return `212${digits.slice(1)}`;
+  if (digits.length === 9) return `212${digits}`;
+  return digits;
+}
+
+export function buildWhatsAppPayload(action: WhatsAppAction, orderNumber: string) {
+  return `wridachic:${action}:${orderNumber}`;
+}
+
+export function parseWhatsAppPayload(payload: string) {
+  const match = payload.match(/^wridachic:(confirm|cancel|edit):(WC-\d{6})$/i);
+  if (!match) return null;
+  return {
+    action: match[1].toLowerCase() as WhatsAppAction,
+    orderNumber: match[2].toUpperCase(),
+  };
+}
+
+function absoluteUrl(url?: string) {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  return new URL(url, SITE_URL).toString();
+}
+
+async function sendWhatsAppMessage(to: string, message: Record<string, unknown>) {
+  if (!ACCESS_TOKEN || !PHONE_NUMBER_ID) {
+    return { ok: false, reason: 'missing-whatsapp-env' };
+  }
+
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${PHONE_NUMBER_ID}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      ...message,
+    }),
+  });
+
+  const body = await res.text();
+  return { ok: res.ok, reason: res.ok ? 'sent' : body };
+}
+
+export async function sendWhatsAppText(toPhone: string, body: string) {
+  return sendWhatsAppMessage(normalizeWhatsAppPhone(toPhone), {
+    type: 'text',
+    text: {
+      preview_url: false,
+      body,
+    },
+  });
+}
+
+export async function sendOrderWhatsAppConfirmation(order: WhatsAppOrderPayload) {
+  if (!TEMPLATE_NAME) {
+    return { ok: false, reason: 'missing-template-name' };
+  }
+
+  const item = order.items[0];
+  if (!item) {
+    return { ok: false, reason: 'missing-order-items' };
+  }
+
+  const productLabel = `${item.name} (${item.color} / ${item.size}) x ${item.qty}`;
+  const to = normalizeWhatsAppPhone(order.phone);
+  const headerImage = absoluteUrl(item.image);
+
+  const components: Array<Record<string, unknown>> = [];
+  if (headerImage) {
+    components.push({
+      type: 'header',
+      parameters: [{ type: 'image', image: { link: headerImage } }],
+    });
+  }
+
+  components.push({
+    type: 'body',
+    parameters: [
+      { type: 'text', text: order.fullName },
+      { type: 'text', text: order.orderNumber },
+      { type: 'text', text: productLabel },
+      { type: 'text', text: String(order.total) },
+    ],
+  });
+
+  (['confirm', 'cancel', 'edit'] as const).forEach((action, index) => {
+    components.push({
+      type: 'button',
+      sub_type: 'quick_reply',
+      index: String(index),
+      parameters: [
+        {
+          type: 'payload',
+          payload: buildWhatsAppPayload(action, order.orderNumber),
+        },
+      ],
+    });
+  });
+
+  return sendWhatsAppMessage(to, {
+    type: 'template',
+    template: {
+      name: TEMPLATE_NAME,
+      language: { code: TEMPLATE_LANG },
+      components,
+    },
+  });
+}

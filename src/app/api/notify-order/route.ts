@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { sendOrderWhatsAppConfirmation } from '@/lib/whatsapp';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -21,6 +22,7 @@ interface OrderItem {
   size: string;
   color: string;
   price: number;
+  image?: string;
 }
 
 interface OrderPayload {
@@ -165,7 +167,15 @@ export async function POST(req: Request) {
       customerResult = await sendEmail(data.email, t.subject, customerHtml);
     }
 
-    return NextResponse.json({ ok: true, admin: adminResult, customer: customerResult });
+    const whatsappResult = await sendOrderWhatsAppConfirmation({
+      orderNumber: data.orderNumber,
+      fullName: data.fullName,
+      phone: data.phone,
+      total: data.total,
+      items: data.items,
+    });
+
+    return NextResponse.json({ ok: true, admin: adminResult, customer: customerResult, whatsapp: whatsappResult });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : 'unknown' }, { status: 500 });
   }
