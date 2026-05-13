@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Placeholder } from '@/components/ui/Placeholder';
 import { TINTS } from '@/lib/data';
@@ -11,6 +11,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 import {
   AUTO_DISCOUNT_PCT, computeAutoDiscount, computeDiscount, readCoupon, writeCoupon,
 } from '@/lib/coupon';
+import { cartPayload, trackMetaEvent } from '@/lib/metaPixel';
 import type { Coupon } from '@/lib/types';
 
 const CITIES = ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger', 'Agadir', 'Meknès', 'Oujda'];
@@ -42,6 +43,13 @@ export function CheckoutPage() {
   const totalDiscount = autoDiscount + discount;
   const delivery = subtotal - totalDiscount > 500 ? 0 : 35;
   const total = Math.max(0, subtotal - totalDiscount) + delivery;
+  const checkoutTracked = useRef(false);
+
+  useEffect(() => {
+    if (checkoutTracked.current || cart.length === 0) return;
+    checkoutTracked.current = true;
+    trackMetaEvent('InitiateCheckout', cartPayload(cart, total));
+  }, [cart, total]);
 
   const applyCoupon = async () => {
     const code = codeInput.trim().toUpperCase();
@@ -134,6 +142,8 @@ export function CheckoutPage() {
           lang,
         }),
       }).catch(() => { /* silent — email is non-critical */ });
+
+      trackMetaEvent('Purchase', cartPayload(cart, total));
     } catch (e) { console.error('Supabase:', e); }
     setSaving(false); setStep(4);
   };

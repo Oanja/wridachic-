@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Placeholder } from '@/components/ui/Placeholder';
 import { PCard } from '@/components/ui/PCard';
@@ -10,6 +10,7 @@ import { TINTS, CATEGORIES } from '@/lib/data';
 import { TR, pick, pickField } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import { useRouter } from 'next/navigation';
+import { productPayload, trackMetaEvent } from '@/lib/metaPixel';
 import type { Product } from '@/lib/types';
 
 interface ProductDetailProps {
@@ -62,6 +63,10 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
   const cat = CATEGORIES.find((c) => c.id === product.cat);
   const catName = cat ? pickField(lang, cat.name, cat.nameEn, cat.nameAr) : '';
   const soldOut = product.stock === 0;
+
+  useEffect(() => {
+    trackMetaEvent('ViewContent', productPayload(product));
+  }, [product]);
 
   const handleAdd = () => {
     addToCart({ ...product, size, color, qty });

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { productPayload, trackMetaEvent } from '@/lib/metaPixel';
 import type { CartItem, Lang } from '@/lib/types';
 
 interface Toast {
@@ -135,8 +136,14 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
   };
 
   const setLang = useCallback((l: Lang) => setLangState(l), []);
-  const addToCart = useCallback((item: CartItem) => setCart((c) => [...c, item]), []);
-  const buyNow = useCallback((item: CartItem) => setCart([item]), []);
+  const addToCart = useCallback((item: CartItem) => {
+    setCart((c) => [...c, item]);
+    trackMetaEvent('AddToCart', productPayload(item, item.qty));
+  }, []);
+  const buyNow = useCallback((item: CartItem) => {
+    setCart([item]);
+    trackMetaEvent('AddToCart', productPayload(item, item.qty));
+  }, []);
   const updateQty = useCallback((index: number, qty: number) =>
     setCart((c) => c.map((it, i) => (i === index ? { ...it, qty } : it))), []);
   const removeItem = useCallback((index: number) =>
