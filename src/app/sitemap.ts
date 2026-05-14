@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/new`,      lastModified: now, changeFrequency: 'daily',   priority: 0.8 },
     { url: `${SITE_URL}/about`,    lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/lookbook`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/data-deletion`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ];
 
   const productUrls: MetadataRoute.Sitemap = products.map((p) => ({
