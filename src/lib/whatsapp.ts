@@ -130,12 +130,35 @@ export async function sendOrderWhatsAppConfirmation(order: WhatsAppOrderPayload)
     });
   });
 
-  return sendWhatsAppMessage(to, {
-    type: 'template',
-    template: {
-      name: TEMPLATE_NAME,
-      language: { code: TEMPLATE_LANG },
-      components,
-    },
-  });
+  const sendWithLang = (code: string) =>
+    sendWhatsAppMessage(to, {
+      type: 'template',
+      template: {
+        name: TEMPLATE_NAME,
+        language: { code },
+        components,
+      },
+    });
+
+  // The Meta UI shows the template language as "French (MAR)", but the API
+  // language.code may be `fr_MA` OR plain `fr` depending on how Meta registered
+  // it. Try the configured code first; if Meta rejects it with a language /
+  // translation error, retry once with the other common French code so a
+  // mis-set env var doesn't silently break order confirmations.
+  const primary = await sendWithLang(TEMPLATE_LANG);
+  if (primary.ok) return primary;
+
+  const looksLikeLangError = /language|translation|does not exist|132001|132000/i.test(
+    primary.reason,
+  );
+  const fallbackLang = TEMPLATE_LANG === 'fr' ? 'fr_MA' : 'fr';
+  if (looksLikeLangError && fallbackLang !== TEMPLATE_LANG) {
+    const retry = await sendWithLang(fallbackLang);
+    if (retry.ok) {
+      return { ok: true, reason: `sent (lang fallback: ${fallbackLang})` };
+    }
+    return { ok: false, reason: `primary[${TEMPLATE_LANG}]: ${primary.reason} | retry[${fallbackLang}]: ${retry.reason}` };
+  }
+
+  return primary;
 }
