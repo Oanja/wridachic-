@@ -174,6 +174,19 @@ export async function POST(req: Request) {
       total: data.total,
       items: data.items,
     });
+    if (whatsappResult.ok) {
+      console.info('[whatsapp] order confirmation sent', {
+        orderNumber: data.orderNumber,
+        phoneLast4: data.phone.replace(/\D/g, '').slice(-4),
+        reason: whatsappResult.reason,
+      });
+    } else {
+      console.error('[whatsapp] order confirmation failed', {
+        orderNumber: data.orderNumber,
+        phoneLast4: data.phone.replace(/\D/g, '').slice(-4),
+        reason: whatsappResult.reason,
+      });
+    }
 
     return NextResponse.json({ ok: true, admin: adminResult, customer: customerResult, whatsapp: whatsappResult });
   } catch (e) {
