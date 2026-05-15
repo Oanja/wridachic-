@@ -22,6 +22,7 @@ export function AuthDialog() {
   const [email, setEmail] = useState(authPrefill.email);
   const [pwd, setPwd] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -66,10 +67,13 @@ export function AuthDialog() {
     setErr(''); setInfo(''); setBusy(true);
     try {
       if (mode === 'signup') {
+        if (!name.trim()) throw new Error(pick(lang, 'Nom requis', 'Name required', 'الاسم مطلوب'));
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 9) throw new Error(pick(lang, 'Téléphone invalide', 'Invalid phone', 'رقم الهاتف غير صحيح'));
         if (pwd.length < 6) throw new Error(pick(lang, '6 caractères minimum', 'At least 6 characters', '6 أحرف على الأقل'));
         const { data, error } = await sb.auth.signUp({
           email, password: pwd,
-          options: { data: { full_name: name }, emailRedirectTo: redirectTo },
+          options: { data: { full_name: name, phone: phoneDigits }, emailRedirectTo: redirectTo },
         });
         if (error) throw error;
 
@@ -193,6 +197,7 @@ export function AuthDialog() {
         {mode === 'signup' && (
           <>
             <input className="input2" placeholder={pick(lang, 'Nom complet', 'Full name', 'الاسم الكامل')} value={name} onChange={(e) => setName(e.target.value)} style={{ marginBottom: 10 }} />
+            <input className="input2" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder={pick(lang, 'Téléphone', 'Phone', 'رقم الهاتف')} value={phone} onChange={(e) => setPhone(e.target.value)} style={{ marginBottom: 10, textAlign: lang === 'ar' ? 'right' : 'left' }} />
             <input className="input2" type="email" placeholder={pick(lang, 'E-mail', 'E-mail', 'البريد الإلكتروني')} value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginBottom: 10 }} />
             <input className="input2" type="password" placeholder={pick(lang, 'Mot de passe (6+ caractères)', 'Password (6+ characters)', 'كلمة السر (6+ أحرف)')} value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ marginBottom: 10 }} />
           </>

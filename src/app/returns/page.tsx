@@ -56,7 +56,7 @@ export default function Page() {
 2. We confirm the return address and procedure.
 3. You ship the parcel (return shipping is at your cost, unless the item is defective).
 4. Upon receipt, we check the item and process the refund.`,
-            ar: `1. تواصلي معنا واتساب (+212 773-847986) أو إيميل (hello@wridachic.com) برقم طلبك.
+            ar: `1. تواصلي معنا واتساب (‎+212 773-847986‎) أو إيميل (hello@wridachic.com) برقم طلبك.
 2. نؤكد لك عنوان الإرجاع والإجراء.
 3. تشحنين الطرد (تكلفة الشحن المرتجع عليك، إلا إذا كانت القطعة بها عيب).
 4. بعد الاستلام، نتحقق ونرد المبلغ.`,

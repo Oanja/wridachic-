@@ -23,7 +23,7 @@ export default function Page() {
           body: {
             fr: `wridachic est une marque marocaine de mode féminine. Pour toute question concernant cette politique, contactez-nous à hello@wridachic.com ou via WhatsApp au +212 773-847986.`,
             en: `wridachic is a Moroccan women's fashion brand. For any question about this policy, contact us at hello@wridachic.com or via WhatsApp on +212 773-847986.`,
-            ar: `وريدة شيك علامة مغربية للأزياء النسائية. لأي سؤال حول هذه السياسة، تواصلي معنا على hello@wridachic.com أو واتساب +212 773-847986.`,
+            ar: `وريدة شيك علامة مغربية للأزياء النسائية. لأي سؤال حول هذه السياسة، تواصلي معنا على hello@wridachic.com أو واتساب ‎+212 773-847986‎.`,
           },
         },
         {
@@ -55,30 +55,6 @@ export default function Page() {
         },
         {
           num: '04',
-          title: { fr: 'Partage avec des tiers', en: 'Sharing with third parties', ar: 'المشاركة مع أطراف ثالثة' },
-          body: {
-            fr: `Nous utilisons :
-• Supabase (hébergement de données — UE)
-• Vercel (hébergement du site)
-• Resend (envoi d'emails de confirmation)
-• Le transporteur de ton choix (pour la livraison)
-• Google Analytics & Facebook Pixel (uniquement avec ton consentement)`,
-            en: `We use:
-• Supabase (data hosting — EU)
-• Vercel (site hosting)
-• Resend (confirmation emails)
-• The courier you select (for delivery)
-• Google Analytics & Facebook Pixel (only with your consent)`,
-            ar: `نستعمل:
-• Supabase (استضافة البيانات — الاتحاد الأوروبي)
-• Vercel (استضافة الموقع)
-• Resend (إرسال إيميلات التأكيد)
-• شركة التوصيل المختارة (للتسليم)
-• Google Analytics و Facebook Pixel (فقط بموافقتك)`,
-          },
-        },
-        {
-          num: '05',
           title: { fr: 'Tes droits', en: 'Your rights', ar: 'حقوقك' },
           body: {
             fr: `Tu peux à tout moment :
@@ -99,7 +75,7 @@ export default function Page() {
           },
         },
         {
-          num: '06',
+          num: '05',
           title: { fr: 'Conservation', en: 'Retention', ar: 'مدة الاحتفاظ' },
           body: {
             fr: `Les données de commande sont conservées 5 ans (obligation légale comptable au Maroc). Les comptes inactifs depuis 3 ans peuvent être supprimés sur demande.`,

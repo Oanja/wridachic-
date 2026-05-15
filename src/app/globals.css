@@ -78,6 +78,15 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* `clip` (better than hidden) prevents off-screen elements from creating a
+     horizontal scroll on mobile while still allowing position:sticky inside. */
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
+html {
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 body.ar {

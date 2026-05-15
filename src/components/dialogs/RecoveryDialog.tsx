@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Logo } from '@/components/ui/Logo';
+import { Icon } from '@/components/ui/Icon';
 import { useApp } from '@/store/AppContext';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { pick } from '@/lib/i18n';
@@ -45,6 +46,20 @@ export function RecoveryDialog() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Make sure browser back / Esc dismisses the dialog instead of leaving it
+  // floating over a stale page.
+  useEffect(() => {
+    if (!open) return;
+    const onPop = () => setOpen(false);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   if (!open) return null;
 
   const close = () => {
@@ -68,8 +83,11 @@ export function RecoveryDialog() {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: 'var(--paper)', padding: 32, borderRadius: 20, width: '100%', maxWidth: 400, position: 'relative' }}>
+    <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', padding: 32, borderRadius: 20, width: '100%', maxWidth: 400, position: 'relative' }}>
+        <button onClick={close} aria-label="Close" style={{ position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon n="close" s={14} />
+        </button>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
           <Logo size={40} />
         </div>

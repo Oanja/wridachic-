@@ -6,10 +6,15 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Nouveautés',
-  description: 'Les dernières arrivées chez wridachic — nouvelles robes, ensembles et tenues de prière.',
+  description: 'Les dernières arrivées chez wridachic — nouvelles robes & ensembles raffinés.',
 };
+
+// Categories surfaced on the public storefront. Anything else (legacy
+// "prayer", "basics", etc.) stays in Supabase but is filtered out here.
+const VISIBLE_CATS = new Set(['robes', 'caftans']);
 
 export default async function Page() {
   const products = await getAllProducts();
-  return <ShopPage products={products} filterNew title={{ fr: 'Nouveautés.', en: 'New arrivals.', ar: 'الجديد.' }} />;
+  const filtered = products.filter((p) => VISIBLE_CATS.has(p.cat));
+  return <ShopPage products={filtered} filterNew title={{ fr: 'Nouveautés.', en: 'New arrivals.', ar: 'الجديد.' }} />;
 }

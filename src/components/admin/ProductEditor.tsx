@@ -258,21 +258,21 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
               ))}
               {form.colors.length === 0 && <span style={{ fontSize: 11, opacity: 0.4 }}>Aucune couleur</span>}
             </div>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'stretch', flexWrap: 'wrap' }}>
               <input
                 type="color"
                 value={colorInput && /^#[0-9A-F]{6}$/i.test(colorInput) ? colorInput : '#C85C3F'}
                 onChange={(e) => setColorInput(e.target.value)}
-                style={{ width: 52, height: 42, padding: 2, borderRadius: 10, border: '1px solid rgba(15,14,13,0.15)', background: '#fff', cursor: 'pointer' }}
+                style={{ width: 52, height: 42, padding: 2, borderRadius: 10, border: '1px solid rgba(15,14,13,0.15)', background: '#fff', cursor: 'pointer', flexShrink: 0 }}
               />
               <input
-                style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
+                style={{ ...inputStyle, flex: '1 1 140px', minWidth: 140, fontFamily: 'monospace' }}
                 value={colorInput}
                 onChange={(e) => setColorInput(e.target.value)}
                 placeholder="#C4746B"
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addColor(); } }}
               />
-              <button onClick={addColor} style={{ padding: '0 16px', background: 'var(--clay)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Ajouter</button>
+              <button onClick={addColor} style={{ padding: '0 16px', background: 'var(--clay)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>+ Ajouter</button>
             </div>
           </div>
 

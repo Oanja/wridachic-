@@ -145,6 +145,9 @@ export function CheckoutPage() {
 
       trackMetaEvent('Purchase', cartPayload(cart, total));
     } catch (e) { console.error('Supabase:', e); }
+    // Empty the cart immediately so navigating away (or back to /cart)
+    // shows the right state, even if the customer never clicks "Retour".
+    clearCart();
     setSaving(false); setStep(4);
   };
 
@@ -152,7 +155,7 @@ export function CheckoutPage() {
     try { await navigator.clipboard.writeText(giftCode); setGiftCopied(true); setTimeout(() => setGiftCopied(false), 1800); } catch {}
   };
 
-  const finishOrder = () => { clearCart(); router.push('/'); };
+  const finishOrder = () => { router.push('/'); };
 
   if (step === 4) {
     return (
@@ -294,7 +297,7 @@ export function CheckoutPage() {
             )}
           </div>
 
-          <aside style={{ background: 'var(--paper-2)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
+          <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
             <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {pick(lang, 'articles', 'items', 'قطعة')}</div>
             {cart.map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13 }}>
@@ -308,7 +311,7 @@ export function CheckoutPage() {
                 <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty}</div>
               </div>
             ))}
-            <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginTop: 8 }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
                 <span style={{ opacity: 0.5 }}>subtotal</span>
                 <span>{subtotal} MAD</span>
@@ -334,7 +337,7 @@ export function CheckoutPage() {
               </div>
 
               {!coupon && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed var(--line)' }}>
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(255,255,255,0.15)' }}>
                   <div className="mono" style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     {pick(lang, 'Code promo', 'Promo code', 'كود الخصم')}
                   </div>
@@ -344,9 +347,9 @@ export function CheckoutPage() {
                       onChange={(e) => setCodeInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
                       placeholder={pick(lang, 'EX: GIFT-A8K3', 'EX: GIFT-A8K3', 'مثال: GIFT-A8K3')}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 999, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: 'var(--paper)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
                     />
-                    <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '7px 12px', borderRadius: 999, background: 'var(--ink)', color: 'var(--paper)', fontSize: 11, fontWeight: 600, opacity: couponBusy || !codeInput.trim() ? 0.5 : 1 }}>
+                    <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '7px 12px', borderRadius: 999, background: 'var(--paper)', color: 'var(--ink)', fontSize: 11, fontWeight: 600, opacity: couponBusy || !codeInput.trim() ? 0.5 : 1 }}>
                       {couponBusy ? '…' : 'OK'}
                     </button>
                   </div>
@@ -354,7 +357,7 @@ export function CheckoutPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid var(--line)', marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 12 }}>
                 <span className="display" style={{ fontSize: 20 }}>total</span>
                 <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
               </div>

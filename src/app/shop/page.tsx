@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   description: 'Découvrez toute la collection wridachic : robes, ensembles, caftans et essentiels féminins. Livraison 24-48h partout au Maroc.',
 };
 
+const VISIBLE_CATS = new Set(['robes', 'caftans']);
+
 export default async function Page() {
   const products = await getAllProducts();
-  return <ShopPage products={products} />;
+  const filtered = products.filter((p) => VISIBLE_CATS.has(p.cat));
+  return <ShopPage products={filtered} />;
 }

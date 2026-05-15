@@ -123,7 +123,7 @@ export function AccountPage({ products }: { products: Product[] }) {
     setCurrentPwdName(''); setBusy(false);
     if (error) { setMsg('⚠ ' + error.message); return; }
     setMsg(pick(lang, '✓ Nom mis à jour. Reconnexion...', '✓ Name updated. Signing out…', '✓ تم حفظ الاسم. إعادة الدخول...'));
-    setTimeout(async () => { await logout(); router.push('/'); }, 1800);
+    setTimeout(async () => { await logout(); window.location.href = '/'; }, 1800);
   };
 
   const savePwd = async () => {
@@ -138,7 +138,7 @@ export function AccountPage({ products }: { products: Product[] }) {
     setPwd(''); setPwd2(''); setCurrentPwdPwd(''); setBusy(false);
     if (error) { setMsg('⚠ ' + error.message); return; }
     setMsg(pick(lang, '✓ Mot de passe modifié. Reconnexion...', '✓ Password updated. Signing out…', '✓ تم تغيير كلمة السر. إعادة الدخول...'));
-    setTimeout(async () => { await logout(); router.push('/'); }, 1800);
+    setTimeout(async () => { await logout(); window.location.href = '/'; }, 1800);
   };
 
   const tabs = [
@@ -203,7 +203,7 @@ export function AccountPage({ products }: { products: Product[] }) {
             </h1>
             <p className="mono" style={{ fontSize: 12, opacity: 0.5, marginTop: 6 }}>{user.email}</p>
           </div>
-          <button className="btn2 btn2-outline" onClick={async () => { await logout(); router.push('/'); }}>
+          <button className="btn2 btn2-outline" onClick={async () => { await logout(); window.location.href = '/'; }}>
             {pick(lang, '↗ Déconnexion', '↗ Sign out', '↗ خروج')}
           </button>
         </div>

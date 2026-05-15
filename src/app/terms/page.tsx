@@ -28,7 +28,7 @@ Toute commande passée sur wridachic.com implique l'acceptation des présentes c
 Email: hello@wridachic.com — WhatsApp: +212 773-847986.
 Any order placed on wridachic.com implies acceptance of these terms.`,
             ar: `وريدة شيك — علامة مغربية للأزياء النسائية، مقرها الدار البيضاء.
-البريد: hello@wridachic.com — واتساب: +212 773-847986.
+البريد: hello@wridachic.com — واتساب: ‎+212 773-847986‎.
 أي طلب على wridachic.com يعني قبول هذه الشروط.`,
           },
         },
