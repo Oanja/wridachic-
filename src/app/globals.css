@@ -371,8 +371,8 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   body:not(.ar) .hero-small { left: 0 !important; right: auto !important; }
   body.ar .hero-small { right: 0 !important; left: auto !important; }
 
-  .checkout-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-  .checkout-grid > aside { order: 2; }
+  .checkout-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .checkout-grid > aside { order: -1 !important; }
 
   .wrap { padding: 0 16px; }
   .sh2 { gap: 10px; margin-bottom: 20px; }
@@ -453,6 +453,13 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .wafloat2:not(body.ar *) { right: 16px; }
 
   .btn2-lg { padding: 14px 24px; font-size: 13px; }
+}
+
+/* ======= CHECKOUT GRID ======= */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 40px;
 }
 
 /* ======= ADMIN — responsive grid ======= */

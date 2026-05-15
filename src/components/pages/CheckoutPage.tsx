@@ -3,8 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { Placeholder } from '@/components/ui/Placeholder';
-import { TINTS } from '@/lib/data';
+import Image from 'next/image';
 import { TR, pick, pickField } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
@@ -222,7 +221,7 @@ export function CheckoutPage() {
           })}
         </div>
 
-        <div className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40 }}>
+        <div className="checkout-grid">
           <div>
             {step === 1 && (
               <div>
@@ -299,18 +298,23 @@ export function CheckoutPage() {
 
           <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
             <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {pick(lang, 'articles', 'items', 'قطعة')}</div>
-            {cart.map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13 }}>
-                <div style={{ width: 44, aspectRatio: '3/4', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
-                  <Placeholder tint={TINTS[i % TINTS.length]} />
+            {cart.map((item, i) => {
+              const src = item.imgFiles?.[0];
+              return (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13, alignItems: 'center' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
+                    {src && (
+                      <Image src={src} alt="" fill sizes="48px" style={{ objectFit: 'cover' }} unoptimized={src.startsWith('http')} />
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
+                    <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 2 }}>{item.size} · x{item.qty}</div>
+                  </div>
+                  <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty} MAD</div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 500 }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
-                  <div className="mono" style={{ fontSize: 10, opacity: 0.5 }}>{item.size} · x{item.qty}</div>
-                </div>
-                <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty}</div>
-              </div>
-            ))}
+              );
+            })}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
                 <span style={{ opacity: 0.5 }}>subtotal</span>

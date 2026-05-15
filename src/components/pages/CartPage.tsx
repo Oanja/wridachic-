@@ -1,11 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { Placeholder } from '@/components/ui/Placeholder';
-import { TINTS } from '@/lib/data';
 import { TR, pick, pickField } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
@@ -84,8 +83,10 @@ export function CartPage() {
           <div>
             {cart.map((item, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr auto', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--line)' }}>
-                <div style={{ aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
-                  <Placeholder tint={TINTS[i % TINTS.length]} />
+                <div style={{ aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden', position: 'relative', background: 'var(--paper-2)' }}>
+                  {item.imgFiles?.[0] && (
+                    <Image src={item.imgFiles[0]} alt="" fill sizes="110px" style={{ objectFit: 'cover' }} unoptimized={item.imgFiles[0].startsWith('http')} />
+                  )}
                 </div>
                 <div>
                   <div className="display" style={{ fontSize: 20 }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
