@@ -12,18 +12,22 @@ const STATUS_BY_ACTION = {
 } as const;
 
 // Friendly auto-replies sent back to the customer after a button click.
-// Tone: warm, brand voice — Moroccan French.
+// Tone: warm, brand voice — Moroccan French. The 🌹 WridaChic header makes
+// the sender obvious in the customer's chat list even before they save the
+// number to their contacts.
+const BRAND_HEADER = '🌹 *WridaChic*\n────────────\n';
+
 const REPLY_BY_ACTION = {
   confirm: (orderNumber: string) =>
-    `✓ Merci ! Ta commande ${orderNumber} est confirmée.\n\nOn la prépare avec soin et tu recevras un appel pour finaliser la livraison. À très vite ! 💛\n— wridachic`,
+    `${BRAND_HEADER}✓ Merci ! Ta commande ${orderNumber} est confirmée.\n\nOn la prépare avec soin et tu recevras un appel pour finaliser la livraison. À très vite ! 💛`,
   cancel: (orderNumber: string) =>
-    `Bien reçu, ta commande ${orderNumber} est annulée.\n\nPour nous aider à améliorer notre service, peux-tu nous dire la raison ? (taille, délai, prix, autre…)\n\nÉcris-nous simplement ici en réponse 🙏\n— wridachic`,
+    `${BRAND_HEADER}Bien reçu, ta commande ${orderNumber} est annulée.\n\nPour nous aider à améliorer notre service, peux-tu nous dire la raison ? (taille, délai, prix, autre…)\n\nÉcris-nous simplement ici en réponse 🙏`,
   edit: (orderNumber: string) =>
-    `Bien noté ! Pour modifier ta commande ${orderNumber}, notre équipe va te contacter dans les plus brefs délais.\n\nMerci pour ta patience 💛\n— wridachic`,
+    `${BRAND_HEADER}Bien noté ! Pour modifier ta commande ${orderNumber}, notre équipe va te contacter dans les plus brefs délais.\n\nMerci pour ta patience 💛`,
 } as const;
 
 const CANCEL_REASON_THANK_YOU =
-  `Merci beaucoup pour ton retour 🙏\nC'est précieux pour nous, on en tient compte. À bientôt sur wridachic ! 💛`;
+  `${BRAND_HEADER}Merci beaucoup pour ton retour 🙏\nC'est précieux pour nous, on en tient compte. À bientôt ! 💛`;
 
 type WhatsAppWebhookMessage = {
   from?: string;

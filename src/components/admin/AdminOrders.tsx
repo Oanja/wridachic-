@@ -1,7 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+
+type RangeKey = 'today' | '7d' | '30d' | 'all';
+const RANGE_LABELS: Record<RangeKey, string> = {
+  today: "Aujourd'hui",
+  '7d': '7 derniers jours',
+  '30d': '30 derniers jours',
+  all: 'Tout',
+};
+
+function startOfRange(range: RangeKey): number | null {
+  const now = new Date();
+  if (range === 'today') {
+    const d = new Date(now); d.setHours(0, 0, 0, 0); return d.getTime();
+  }
+  if (range === '7d') return now.getTime() - 7 * 86400000;
+  if (range === '30d') return now.getTime() - 30 * 86400000;
+  return null;
+}
 
 const STATUS_COLORS: Record<string, string> = {
   nouveau: '#C85C3F', confirmé: '#4A90D9', expédié: '#7B68EE', livré: '#4CAF50',
@@ -28,6 +46,15 @@ export function AdminOrders() {
   const sb = getSupabaseBrowser();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<RangeKey>('7d');
+
+  // Stats: filtered by the selected time range. The order LIST below stays
+  // unfiltered so the admin can still scroll older commands when needed.
+  const statsOrders = useMemo(() => {
+    const cutoff = startOfRange(range);
+    if (cutoff === null) return orders;
+    return orders.filter((o) => new Date(o.created_at).getTime() >= cutoff);
+  }, [orders, range]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -54,17 +81,51 @@ export function AdminOrders() {
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 
+  const totalCount = statsOrders.length;
+  const totalRevenue = statsOrders
+    .filter((o) => o.status !== 'annulé')
+    .reduce((acc, o) => acc + (o.total || 0), 0);
+
   return (
     <>
+      {/* Date range filter */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14, alignItems: 'center' }}>
+        <span style={{ fontSize: 11, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginRight: 6 }}>
+          Période :
+        </span>
+        {(Object.keys(RANGE_LABELS) as RangeKey[]).map((k) => (
+          <button
+            key={k}
+            onClick={() => setRange(k)}
+            style={{
+              padding: '6px 14px', borderRadius: 999, fontSize: 11, cursor: 'pointer',
+              background: range === k ? 'var(--clay)' : '#fff',
+              color: range === k ? '#fff' : 'rgba(15,14,13,0.7)',
+              border: `1px solid ${range === k ? 'var(--clay)' : 'rgba(15,14,13,0.18)'}`,
+              textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600,
+            }}
+          >
+            {RANGE_LABELS[k]}
+          </button>
+        ))}
+        <div style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.65 }}>
+          <strong style={{ color: 'var(--clay)' }}>{totalCount}</strong> commandes ·
+          <strong style={{ color: 'var(--clay)', marginLeft: 6 }}>{totalRevenue} MAD</strong> de chiffre
+        </div>
+      </div>
+
       <div className="adm-stats-grid">
         {STATUS_LABELS.map((s) => {
-          const list = orders.filter((o) => o.status === s);
+          const list = statsOrders.filter((o) => o.status === s);
           const total = list.reduce((acc, o) => acc + (o.total || 0), 0);
+          const pct = totalCount ? Math.round((list.length / totalCount) * 100) : 0;
           return (
             <div key={s} style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', borderLeft: `3px solid ${STATUS_COLORS[s]}` }}>
               <div style={{ fontSize: 11, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{s}</div>
               <div className="display" style={{ fontSize: 34, marginTop: 6, lineHeight: 1 }}>{list.length}</div>
-              <div style={{ fontSize: 12, opacity: 0.55, marginTop: 6 }}>{total} MAD</div>
+              <div style={{ fontSize: 12, opacity: 0.55, marginTop: 6 }}>
+                {total} MAD{totalCount > 0 ? ` · ${pct}%` : ''}
+              </div>
             </div>
           );
         })}
