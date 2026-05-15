@@ -11,24 +11,43 @@ import { DEFAULT_SETTINGS, type SiteSettingKey, type SiteSettings } from '@/lib/
  * UI scales by adding more entries to SLOTS.
  */
 
-const SLOTS: Array<{ key: SiteSettingKey; label: string; aspect: string; help: string }> = [
+const SLOTS: Array<{ key: SiteSettingKey; label: string; aspect: string; help: string; group: string }> = [
+  // ===== HERO =====
+  {
+    key: 'hero_big_image',
+    label: 'Hero — Grande image',
+    aspect: '3/4',
+    help: 'Image principale du hero (en haut). Format vertical.',
+    group: 'Hero (en-tête de la page d\'accueil)',
+  },
+  {
+    key: 'hero_small_image',
+    label: 'Hero — Petite image',
+    aspect: '4/5',
+    help: 'Image qui chevauche la grande. Format vertical.',
+    group: 'Hero (en-tête de la page d\'accueil)',
+  },
+  // ===== SHOP BY MOOD =====
   {
     key: 'shop_mood_main_image',
-    label: 'Image principale (Dresses & Sets)',
+    label: 'Dresses & Sets',
     aspect: '4/5',
     help: 'Grande carte à gauche. Format vertical conseillé.',
+    group: 'Shop by mood (3 cartes)',
   },
   {
     key: 'shop_mood_top_image',
-    label: 'Image haut droite (Nouveautés)',
+    label: 'Nouveautés',
     aspect: '1/1',
     help: 'Petite carte en haut à droite. Format carré.',
+    group: 'Shop by mood (3 cartes)',
   },
   {
     key: 'shop_mood_bottom_image',
-    label: 'Image bas droite (Best-sellers)',
+    label: 'Best-sellers',
     aspect: '1/1',
     help: 'Petite carte en bas à droite. Format carré.',
+    group: 'Shop by mood (3 cartes)',
   },
 ];
 
@@ -98,8 +117,13 @@ export function AdminSite() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
-        {SLOTS.map((slot) => {
+      {Array.from(new Set(SLOTS.map((s) => s.group))).map((groupName) => (
+        <div key={groupName} style={{ marginBottom: 28 }}>
+          <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--clay)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {groupName}
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            {SLOTS.filter((s) => s.group === groupName).map((slot) => {
           const current = values[slot.key];
           const isCustom = current !== DEFAULT_SETTINGS[slot.key];
           return (
@@ -152,7 +176,9 @@ export function AdminSite() {
             </div>
           );
         })}
-      </div>
+          </div>
+        </div>
+      ))}
 
       <div style={{ display: 'flex', gap: 10, paddingTop: 18, borderTop: '1px solid rgba(15,14,13,0.1)', alignItems: 'center', flexWrap: 'wrap' }}>
         <button

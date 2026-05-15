@@ -83,11 +83,11 @@ export function HomePage({ products, settings }: { products: Product[]; settings
               <div aria-hidden="true" style={{ position: 'absolute', top: 40, right: 40, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,116,107,0.08), transparent 70%)', zIndex: 0 }} />
 
               <div className="blob hero-big" style={{ position: 'absolute', top: 0, right: 0, width: '88%', aspectRatio: '3/4', borderRadius: 28, overflow: 'hidden', boxShadow: '0 24px 60px -20px rgba(15,14,13,0.25)', zIndex: 1 }}>
-                <Image src="/assets/3.jpg" alt="" fill priority sizes="(max-width: 768px) 100vw, 45vw" style={{ objectFit: 'cover' }} />
+                <Image src={moodImages.hero_big_image} alt="" fill priority sizes="(max-width: 768px) 100vw, 45vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.hero_big_image.startsWith('http')} />
               </div>
 
               <div className="blob hero-small" style={{ position: 'absolute', top: '54%', left: -30, width: '50%', aspectRatio: '4/5', borderRadius: 22, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 18px 40px -10px rgba(15,14,13,0.28)', border: '6px solid var(--paper)', zIndex: 2 }}>
-                <Image src="/assets/1.jpg" alt="" fill priority sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                <Image src={moodImages.hero_small_image} alt="" fill priority sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.hero_small_image.startsWith('http')} />
               </div>
 
               <div className="blob hero-sticker" style={{ position: 'absolute', bottom: 40, right: -8, animationDelay: '-6s', zIndex: 3 }}>
