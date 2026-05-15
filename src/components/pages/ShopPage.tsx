@@ -19,8 +19,20 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
   const [cat, setCat] = useState<string>(initialCat);
   const [sort, setSort] = useState<'featured' | 'new' | 'price-asc' | 'price-desc'>('featured');
 
+  // `cat` is either:
+  //   "all"            → no filter
+  //   "tag:new" / etc. → filter by Product.tag
+  //   anything else    → filter by Product.cat
   const filtered = useMemo(() => {
-    let l = products.filter((p) => cat === 'all' || p.cat === cat);
+    let l = products;
+    if (cat !== 'all') {
+      if (cat.startsWith('tag:')) {
+        const tag = cat.slice(4);
+        l = l.filter((p) => p.tag === tag);
+      } else {
+        l = l.filter((p) => p.cat === cat);
+      }
+    }
     if (filterNew) l = l.filter((p) => p.tag === 'new');
     if (sort === 'price-asc') l = [...l].sort((a, b) => a.price - b.price);
     if (sort === 'price-desc') l = [...l].sort((a, b) => b.price - a.price);
@@ -28,10 +40,11 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
     return l;
   }, [products, cat, sort, filterNew]);
 
-  const allLabel = pick(lang, 'Tout', 'All', 'الكل');
   const cats = [
-    { id: 'all', name: allLabel, nameEn: allLabel, nameAr: allLabel },
+    { id: 'all',      name: pick(lang, 'Tout',         'All',          'الكل'),         nameEn: '', nameAr: '' },
     ...CATEGORIES,
+    { id: 'tag:new',  name: pick(lang, 'Nouveautés',   'New arrivals', 'الجديد'),       nameEn: '', nameAr: '' },
+    { id: 'tag:best', name: pick(lang, 'Best-sellers', 'Best-sellers', 'الأكثر طلباً'), nameEn: '', nameAr: '' },
   ];
 
   const heading = title
@@ -75,7 +88,7 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
                 fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
               }}
             >
-              {pickField(lang, c.name, c.nameEn, c.nameAr)}
+              {c.nameEn ? pickField(lang, c.name, c.nameEn, c.nameAr) : c.name}
             </button>
           ))}
         </div>

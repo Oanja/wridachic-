@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 // Categories surfaced on the public storefront. Anything else (legacy
 // "prayer", "basics", etc.) stays in Supabase but is filtered out here.
-const VISIBLE_CATS = new Set(['robes', 'caftans']);
+const VISIBLE_CATS = new Set(['robes']);
 
 export default async function Page() {
   const products = await getAllProducts();

@@ -101,9 +101,19 @@ export function AdminPage() {
               <div style={{ fontSize: 10, opacity: 0.5, fontFamily: 'monospace' }}>WRIDACHIC ADMIN</div>
             </div>
           </div>
-          <button onClick={logoutAdmin} style={{ padding: '10px 16px', fontSize: 12, background: '#fff', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 8, cursor: 'pointer' }}>
-            Déconnexion
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ padding: '10px 16px', fontSize: 12, background: 'var(--clay)', color: '#fff', border: '1px solid var(--clay)', borderRadius: 8, textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              🌹 Voir le site
+            </a>
+            <button onClick={logoutAdmin} style={{ padding: '10px 16px', fontSize: 12, background: '#fff', border: '1px solid rgba(15,14,13,0.18)', borderRadius: 8, cursor: 'pointer' }}>
+              Déconnexion
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: '1px solid rgba(15,14,13,0.1)', flexWrap: 'wrap' }}>
@@ -127,6 +137,29 @@ export function AdminPage() {
         {tab === 'users' && <AdminUsers />}
         {tab === 'site' && <AdminSite />}
       </div>
+
+      {/* Floating "View site" button — sticks to the bottom-right corner so
+          it's reachable from any tab even when scrolled deep into a long
+          orders/products list. */}
+      <a
+        href="/"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Voir le site"
+        style={{
+          position: 'fixed', bottom: 20, right: 20, zIndex: 100,
+          width: 56, height: 56, borderRadius: '50%',
+          background: 'var(--clay)', color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 24, textDecoration: 'none',
+          boxShadow: '0 8px 20px rgba(200,92,63,0.4)',
+          transition: 'transform 0.2s',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+      >
+        🌹
+      </a>
     </div>
   );
 }

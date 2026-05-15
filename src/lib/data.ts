@@ -9,11 +9,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
 ];
 
 // Public-facing categories shown in the /shop & /new category filter tabs.
-// Legacy cats (prayer, basics) are kept in the DB but hidden from the
-// storefront filter (see also VISIBLE_CATS in app/shop/page.tsx).
+// Legacy cats (prayer, basics, caftans) are kept in the DB but hidden from
+// the storefront filter (see also VISIBLE_CATS in app/shop/page.tsx).
 export const CATEGORIES: Category[] = [
-  { id: 'robes',   name: 'Robes & Ensembles', nameEn: 'Dresses & Sets', nameAr: 'فساتين وأطقم', desc: 'Robes longues, wrap & ensembles', img: 'cat-robes'   },
-  { id: 'caftans', name: 'Caftans',           nameEn: 'Caftans',        nameAr: 'قفطان',         desc: 'Caftans & tenues de cérémonie',   img: 'cat-caftans' },
+  { id: 'robes', name: 'Robes & Ensembles', nameEn: 'Dresses & Sets', nameAr: 'فساتين وأطقم', desc: 'Robes longues, wrap & ensembles', img: 'cat-robes' },
 ];
 
 export const TINTS = ['rose', 'clay', 'mint', 'lime', 'sky', 'ink'] as const;
