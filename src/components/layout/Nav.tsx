@@ -14,10 +14,9 @@ import { TR, pick } from '@/lib/i18n';
 const SearchModal = dynamic(() => import('@/components/ui/SearchModal').then((m) => m.SearchModal), { ssr: false });
 
 const NAV_ITEMS = [
-  { href: '/shop',   key: 'shop' as const },
-  { href: '/prayer', key: 'prayer' as const },
-  { href: '/new',    key: 'new' as const },
-  { href: '/about',  key: 'about' as const },
+  { href: '/shop',  key: 'shop' as const },
+  { href: '/new',   key: 'new' as const },
+  { href: '/about', key: 'about' as const },
 ];
 
 export function Nav() {

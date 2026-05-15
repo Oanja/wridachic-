@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: 'wridachic',
     url: SITE_URL,
     title: 'wridachic — Mode féminine marocaine',
-    description: 'Tenues de prière, robes et essentiels — dès 149 MAD, livrés partout au Maroc en environ 1 semaine.',
+    description: 'Robes, ensembles & essentiels féminins — dès 149 MAD, livrés partout au Maroc en 24-48h.',
     images: [{ url: `${SITE_URL}/assets/3.jpg`, width: 1200, height: 630 }],
     locale: 'fr_MA',
     alternateLocale: ['ar_MA'],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'wridachic — Mode féminine marocaine',
-    description: 'Tenues de prière, robes & essentiels — dès 149 MAD, livraison au Maroc.',
+    description: 'Robes, ensembles & essentiels féminins — dès 149 MAD, livraison rapide au Maroc.',
     images: [`${SITE_URL}/assets/3.jpg`],
   },
   icons: {

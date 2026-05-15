@@ -13,6 +13,7 @@ interface SupabaseProductRow {
   price: number | string;
   tag: string | null;
   colors: string[] | null;
+  sizes: string[] | null;
   img: string;
   img_files: string[] | null;
   description: string | null;
@@ -44,6 +45,7 @@ function transform(row: SupabaseProductRow): Product {
     price: Number(row.price),
     tag: (row.tag === 'new' || row.tag === 'sale' || row.tag === 'best' ? row.tag : undefined) as Product['tag'],
     colors: row.colors ?? [],
+    sizes: row.sizes && row.sizes.length > 0 ? row.sizes : undefined,
     img: row.img,
     imgFiles: (row.img_files ?? []).map(normalizeImg).filter(Boolean),
     description: row.description ?? undefined,

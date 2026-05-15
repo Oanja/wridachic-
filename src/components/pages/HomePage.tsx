@@ -30,7 +30,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 {lang === 'ar' ? (
                   <>أنــــاقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغــــربية</em><br />أصــــيلة.</>
                 ) : lang === 'en' ? (
-                  <>Authentic <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em><br />elegance.</>
+                  <><em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em><br />elegance.</>
                 ) : (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 )}
@@ -38,17 +38,17 @@ export function HomePage({ products }: { products: Product[] }) {
 
               <p className="hero-sub reveal" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36, transitionDelay: '0.2s' }}>
                 {pick(lang,
-                  'Tenues de prière, robes & essentiels — dès 149 MAD, livrés partout au Maroc en environ 1 semaine.',
-                  'Prayer outfits, dresses & essentials — from 149 MAD, delivered all over Morocco in about a week.',
-                  'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.')}
+                  "Robes, ensembles & essentiels féminins — dès 149 MAD, livrés partout au Maroc en 24 à 48h.",
+                  'Dresses, sets & women\'s essentials — from 149 MAD, delivered all over Morocco in 24-48h.',
+                  'فساتين، أطقم وأساسيات نسائية — ابتداءً من 149 درهم، توصيل في كل المغرب خلال 24 إلى 48 ساعة.')}
               </p>
 
               <div className="reveal" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44, transitionDelay: '0.3s' }}>
                 <Link href="/shop" className="btn2 btn2-dark btn2-lg">
                   {pick(lang, 'Découvrir la boutique', 'Discover the shop', 'اكتشفي المتجر')} <Icon n="arr" s={14} />
                 </Link>
-                <Link href="/prayer" className="btn2 btn2-outline btn2-lg">
-                  {pick(lang, 'Espace Prière', 'Prayer space', 'ملابس الصلاة')}
+                <Link href="/new" className="btn2 btn2-outline btn2-lg">
+                  {pick(lang, 'Nouveautés', 'New arrivals', 'الجديد')}
                 </Link>
               </div>
 
@@ -56,7 +56,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 {[
                   { n: '🇲🇦', l: pick(lang, 'Made in Maroc', 'Made in Morocco', 'صنع في المغرب') },
                   { n: 'COD',  l: pick(lang, 'Paiement livraison', 'Pay on delivery', 'الدفع عند التوصيل') },
-                  { n: '7j',   l: pick(lang, 'Livraison', 'Delivery', 'توصيل') },
+                  { n: '24h',  l: pick(lang, 'Livraison', 'Delivery', 'توصيل') },
                 ].map((s, i) => (
                   <div key={i} className="hero-stat">
                     <span className="display stat-num" style={{ fontSize: 30, display: 'block', color: 'var(--clay)', lineHeight: 1, marginBottom: 6 }}>{s.n}</span>
@@ -137,13 +137,13 @@ export function HomePage({ products }: { products: Product[] }) {
                   </div>
                 </div>
               </Link>
-              <Link href="/prayer" className="cat-small">
+              <Link href="/shop" className="cat-small">
                 <Image src="/assets/00.jpg" alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'PRIÈRE', 'PRAYER', 'الصلاة')} / 03</div>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'CAFTANS', 'CAFTANS', 'قفطان')} / 03</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {pick(lang, 'Prière', 'Prayer', 'الصلاة')}
+                    {pick(lang, 'Caftans', 'Caftans', 'قفطان')}
                   </div>
                 </div>
               </Link>
@@ -181,41 +181,41 @@ export function HomePage({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      {/* PRAYER FEATURE */}
+      {/* BRAND FEATURE */}
       <section style={{ padding: '80px 28px' }}>
         <div className="wrap">
           <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 40, alignItems: 'center' }}>
             <div style={{ position: 'relative' }} className="reveal">
               <div style={{ aspectRatio: '4/5', borderRadius: 24, overflow: 'hidden', position: 'relative' }}>
-                <Image src="/assets/00.jpg" alt="" fill sizes="(max-width: 768px) 100vw, 40vw" style={{ objectFit: 'cover' }} />
+                <Image src="/assets/3.jpg" alt="" fill sizes="(max-width: 768px) 100vw, 40vw" style={{ objectFit: 'cover' }} />
               </div>
               <div style={{ position: 'absolute', bottom: 28, right: -16 }}>
                 <span className="sticker sticker-sky" style={{ transform: 'rotate(-4deg)' }}>
-                  {pick(lang, 'Élégance & beauté ✦', 'Elegance & beauty ✦', 'أناقة وجمال ✦')}
+                  {pick(lang, 'Qualité & raffinement ✦', 'Quality & refinement ✦', 'جودة وأناقة ✦')}
                 </span>
               </div>
             </div>
             <div className="reveal">
-              <span className="chip"><span className="chip-dot" /> {pick(lang, 'Espace prière', 'Prayer space', 'ملابس الصلاة')}</span>
+              <span className="chip"><span className="chip-dot" /> {pick(lang, 'Mode féminine', 'Women\'s fashion', 'موضة نسائية')}</span>
               <h2 className="display" style={{ fontSize: 'clamp(40px, 5vw, 68px)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: '20px 0' }}>
                 {lang === 'ar'
-                  ? <>الصلاة تستحق<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>الأجمل.</em></>
+                  ? <>أناقة تستحق<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>الأجمل.</em></>
                   : lang === 'en'
-                    ? <>Prayer<br />deserves<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>beauty.</em></>
-                    : <>La prière<br />mérite la<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>beauté.</em></>}
+                    ? <>Refined style.<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>Fair prices.</em></>
+                    : <>Style raffiné.<br /><em style={{ color: 'var(--clay)', fontStyle: 'italic' }}>Prix juste.</em></>}
               </h2>
               <p style={{ fontSize: 15, maxWidth: 420, lineHeight: 1.7, opacity: 0.75, marginBottom: 28 }}>
                 {pick(lang,
-                  'Jilbabs, khimars & ensembles de prière pensés pour être confortables, couvrants et élégants. Dès 149 MAD.',
-                  'Jilbabs, khimars & prayer sets designed to be comfortable, modest and elegant. From 149 MAD.',
-                  'جلابيب، خمارات وطقم صلاة مصممة لتكون مريحة، محتشمة وجميلة. ابتداءً من 149 درهم.')}
+                  'Robes, ensembles, caftans & basics conçus pour la femme marocaine. Qualité, élégance et prix justes — dès 149 MAD.',
+                  'Dresses, sets, caftans & basics designed for the Moroccan woman. Quality, elegance and fair prices — from 149 MAD.',
+                  'فساتين، أطقم، قفطان وأساسيات مصممة للمرأة المغربية. جودة، أناقة وأثمان مناسبة — ابتداءً من 149 درهم.')}
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <Link href="/prayer" className="btn2 btn2-clay btn2-lg">
+                <Link href="/shop" className="btn2 btn2-clay btn2-lg">
                   {pick(lang, 'Voir la collection', 'View the collection', 'عرض المجموعة')} <Icon n="arr" s={14} />
                 </Link>
-                <Link href="/shop" className="btn2 btn2-outline btn2-lg">
-                  {pick(lang, 'Voir la boutique', 'Visit the shop', 'تصفحي المتجر')}
+                <Link href="/new" className="btn2 btn2-outline btn2-lg">
+                  {pick(lang, 'Nouveautés', 'New arrivals', 'الجديد')}
                 </Link>
               </div>
             </div>

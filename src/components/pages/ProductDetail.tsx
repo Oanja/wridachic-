@@ -183,7 +183,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                 <a onClick={() => setSizeGuideOpen(true)} style={{ fontSize: 12, borderBottom: '1px solid var(--ink)', cursor: 'pointer' }}>{t.product.sizeGuide}</a>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {['XS','S','M','L','XL','XXL'].map((s) => (
+                {(product.sizes && product.sizes.length > 0 ? product.sizes : ['XS','S','M','L','XL','XXL']).map((s) => (
                   <button
                     key={s} onClick={() => setSize(s)}
                     style={{ padding: '9px 14px', border: '1.5px solid var(--ink)', borderRadius: 999, background: size === s ? 'var(--ink)' : 'transparent', color: size === s ? 'var(--paper)' : 'var(--ink)', fontSize: 12, minWidth: 42 }}
@@ -264,9 +264,9 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                     'قصّة مصممة للمرأة المغربية، طول فضفاض، تشطيب متقن. الموديل: 1.70م، تلبس مقاس M.') },
                 { id: 'livraison', fr: 'Livraison & retours', en: 'Delivery & returns', ar: 'التوصيل والإرجاع',
                   content: pick(lang,
-                    'Livraison partout au Maroc en environ 1 semaine après confirmation. Paiement à la livraison disponible. Retours acceptés sous 14 jours, articles intacts avec étiquette.',
-                    'Delivered anywhere in Morocco in about 1 week after confirmation. Cash on delivery available. Returns accepted within 14 days, items intact with tag.',
-                    'التوصيل في كل المغرب في حوالي أسبوع بعد التأكيد. الدفع عند التوصيل متاح. الإرجاع مقبول خلال 14 يوماً، القطع سليمة مع البطاقة.') },
+                    'Livraison partout au Maroc en 24 à 48h après confirmation. Paiement à la livraison disponible. Retours acceptés sous 14 jours, articles intacts avec étiquette.',
+                    'Delivered anywhere in Morocco within 24 to 48h after confirmation. Cash on delivery available. Returns accepted within 14 days, items intact with tag.',
+                    'التوصيل في كل المغرب خلال 24 إلى 48 ساعة بعد التأكيد. الدفع عند التوصيل متاح. الإرجاع مقبول خلال 14 يوماً، القطع سليمة مع البطاقة.') },
               ].map((sec) => {
                 const isOpen = openSection === sec.id;
                 return (

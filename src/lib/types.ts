@@ -13,6 +13,7 @@ export interface Product {
   oldPrice?: number;
   tag?: ProductTag;
   colors: string[];
+  sizes?: string[];
   img: string;
   imgFiles: string[];
   description?: string;

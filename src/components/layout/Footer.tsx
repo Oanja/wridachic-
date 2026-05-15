@@ -65,8 +65,8 @@ export function Footer() {
             <h4>{t.footer.shop}</h4>
             <ul>
               <li><Link href="/shop">{t.nav.shop}</Link></li>
-              <li><Link href="/prayer">{t.nav.prayer}</Link></li>
               <li><Link href="/new">{t.nav.new}</Link></li>
+              <li><Link href="/about">{t.nav.about}</Link></li>
             </ul>
           </div>
           <div>

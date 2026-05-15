@@ -14,6 +14,7 @@ interface ProductRow {
   price: number;
   tag?: string | null;
   colors?: string[] | null;
+  sizes?: string[] | null;
   img_files?: string[] | null;
   description?: string | null;
   description_ar?: string | null;
@@ -22,6 +23,8 @@ interface ProductRow {
   active?: boolean;
   stock?: number | null;
 }
+
+const DEFAULT_SIZES = ['XS','S','M','L','XL','XXL'];
 
 interface Props {
   product: ProductRow | null;
@@ -48,6 +51,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
     price: String(product?.price ?? ''),
     tag: product?.tag ?? '',
     colors: product?.colors ?? [],
+    sizes: product?.sizes ?? DEFAULT_SIZES,
     img_files: product?.img_files ?? [],
     description: product?.description ?? '',
     description_ar: product?.description_ar ?? '',
@@ -58,8 +62,10 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
   });
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [err, setErr] = useState('');
   const [colorInput, setColorInput] = useState('');
+  const [sizeInput, setSizeInput] = useState('');
 
   useEffect(() => {
     if (isNew && form.name && !form.slug) setForm((f) => ({ ...f, slug: slugify(form.name) }));
@@ -76,19 +82,57 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
   };
   const removeColor = (i: number) => set('colors', form.colors.filter((_, idx) => idx !== i));
 
-  const uploadImage = async (file: File) => {
+  const addSize = () => {
+    const s = sizeInput.trim().toUpperCase();
+    if (!s || form.sizes.includes(s)) { setSizeInput(''); return; }
+    set('sizes', [...form.sizes, s]);
+    setSizeInput('');
+  };
+  const removeSize = (i: number) => set('sizes', form.sizes.filter((_, idx) => idx !== i));
+  const toggleStandardSize = (s: string) => {
+    if (form.sizes.includes(s)) removeSize(form.sizes.indexOf(s));
+    else set('sizes', [...form.sizes, s]);
+  };
+
+  // Upload multiple images in parallel (max 4 concurrent to be polite to
+  // Supabase). Failures on one file don't kill the rest — they're surfaced
+  // in the error banner once everything settles.
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) return;
     setUploading(true); setErr('');
-    try {
-      const ext = file.name.split('.').pop() ?? 'jpg';
-      const path = `${form.id}-${Date.now()}.${ext}`;
-      const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: false });
-      if (error) throw error;
-      const { data: pub } = sb.storage.from('product-images').getPublicUrl(path);
-      set('img_files', [...form.img_files, pub.publicUrl]);
-    } catch (e) {
-      setErr('Upload: ' + (e instanceof Error ? e.message : String(e)));
+    setUploadProgress({ done: 0, total: files.length });
+
+    const uploadOne = async (file: File): Promise<string | { error: string }> => {
+      try {
+        const ext = file.name.split('.').pop() ?? 'jpg';
+        const path = `${form.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: false });
+        if (error) return { error: file.name + ': ' + error.message };
+        const { data: pub } = sb.storage.from('product-images').getPublicUrl(path);
+        return pub.publicUrl;
+      } catch (e) {
+        return { error: file.name + ': ' + (e instanceof Error ? e.message : String(e)) };
+      }
+    };
+
+    const uploaded: string[] = [];
+    const errors: string[] = [];
+    let done = 0;
+    const CONCURRENCY = 4;
+    for (let i = 0; i < files.length; i += CONCURRENCY) {
+      const batch = files.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(batch.map(uploadOne));
+      for (const r of results) {
+        if (typeof r === 'string') uploaded.push(r);
+        else errors.push(r.error);
+        done++;
+        setUploadProgress({ done, total: files.length });
+      }
     }
+    if (uploaded.length > 0) set('img_files', [...form.img_files, ...uploaded]);
+    if (errors.length > 0) setErr(`Erreurs upload (${errors.length}/${files.length}) : ${errors.slice(0, 3).join(' · ')}`);
     setUploading(false);
+    setUploadProgress({ done: 0, total: 0 });
   };
 
   const removeImage = (i: number) => set('img_files', form.img_files.filter((_, idx) => idx !== i));
@@ -111,7 +155,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
       name_ar: form.name_ar || null,
       name_en: form.name_en || null,
       cat: form.cat, price: Number(form.price), tag: form.tag || null,
-      colors: form.colors, img: null,
+      colors: form.colors, sizes: form.sizes, img: null,
       img_files: form.img_files,
       description: form.description || null,
       description_ar: form.description_ar || null,
@@ -170,10 +214,10 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
             <div>
               <label style={labelStyle}>Catégorie *</label>
               <select style={inputStyle} value={form.cat} onChange={(e) => set('cat', e.target.value)}>
-                <option value="prayer">Espace Prière</option>
                 <option value="robes">Robes & Ensembles</option>
                 <option value="basics">Denim / Basics</option>
                 <option value="caftans">Caftans</option>
+                <option value="prayer">Espace Prière</option>
               </select>
             </div>
             <div>
@@ -231,6 +275,51 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
               <button onClick={addColor} style={{ padding: '0 16px', background: 'var(--clay)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Ajouter</button>
             </div>
           </div>
+
+          <div>
+            <label style={labelStyle}>Tailles disponibles</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+              {DEFAULT_SIZES.map((s) => {
+                const on = form.sizes.includes(s);
+                return (
+                  <button
+                    key={s}
+                    onClick={() => toggleStandardSize(s)}
+                    style={{
+                      padding: '7px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      background: on ? 'var(--clay)' : '#fff',
+                      color: on ? '#fff' : 'rgba(15,14,13,0.6)',
+                      border: `1px solid ${on ? 'var(--clay)' : 'rgba(15,14,13,0.2)'}`,
+                    }}
+                  >{s}</button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+              {form.sizes.filter((s) => !DEFAULT_SIZES.includes(s)).map((s) => {
+                const i = form.sizes.indexOf(s);
+                return (
+                  <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(15,14,13,0.06)', padding: '4px 10px', borderRadius: 999 }}>
+                    <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 600 }}>{s}</span>
+                    <button onClick={() => removeSize(i)} style={{ background: 'transparent', color: '#C62828', fontSize: 12, padding: 0, lineHeight: 1, border: 'none', cursor: 'pointer' }}>✕</button>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+              <input
+                style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
+                value={sizeInput}
+                onChange={(e) => setSizeInput(e.target.value)}
+                placeholder="Taille personnalisée (ex: 38, 40, Plus)"
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSize(); } }}
+              />
+              <button onClick={addSize} style={{ padding: '0 16px', background: 'var(--clay)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Ajouter</button>
+            </div>
+            <div style={{ fontSize: 10, opacity: 0.55, marginTop: 6 }}>
+              Cliquez sur les tailles standards pour les activer/désactiver. Ou ajoutez vos propres tailles.
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -248,10 +337,28 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
                   {i === 0 && <div style={{ position: 'absolute', bottom: 4, left: 4, background: 'var(--clay)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>PRINCIPALE</div>}
                 </div>
               ))}
-              <label style={{ aspectRatio: '1', borderRadius: 10, border: '2px dashed rgba(15,14,13,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexDirection: 'column', gap: 4 }}>
+              <label style={{ aspectRatio: '1', borderRadius: 10, border: '2px dashed rgba(15,14,13,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploading ? 'wait' : 'pointer', flexDirection: 'column', gap: 4, textAlign: 'center', padding: 6 }}>
                 <span style={{ fontSize: 24, opacity: 0.4 }}>+</span>
-                <span style={{ fontSize: 9, opacity: 0.5 }}>{uploading ? 'Upload...' : 'Ajouter'}</span>
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} disabled={uploading} />
+                <span style={{ fontSize: 9, opacity: 0.6, fontWeight: 600 }}>
+                  {uploading
+                    ? `${uploadProgress.done}/${uploadProgress.total}`
+                    : 'Ajouter'}
+                </span>
+                <span style={{ fontSize: 8, opacity: 0.45 }}>
+                  {uploading ? '...' : 'Plusieurs OK'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.target.value = '';
+                    if (files.length > 0) uploadFiles(files);
+                  }}
+                  disabled={uploading}
+                />
               </label>
             </div>
           </div>

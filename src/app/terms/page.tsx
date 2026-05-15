@@ -69,13 +69,13 @@ Any order placed on wridachic.com implies acceptance of these terms.`,
           num: '05',
           title: { fr: 'Livraison', en: 'Delivery', ar: 'التوصيل' },
           body: {
-            fr: `• Livraison partout au Maroc en 5 à 7 jours ouvrables après confirmation.
+            fr: `• Livraison partout au Maroc en 24 à 48h après confirmation.
 • Frais de livraison : 35 MAD, offerts dès 500 MAD d'achat.
 • Si la livraison échoue (absence, mauvaise adresse), nous te recontactons pour reprogrammer.`,
-            en: `• Delivery anywhere in Morocco within 5–7 working days after confirmation.
+            en: `• Delivery anywhere in Morocco within 24 to 48 hours after confirmation.
 • Shipping: 35 MAD, free over 500 MAD.
 • If delivery fails (absent, wrong address), we will reach out to reschedule.`,
-            ar: `• التوصيل في كل المغرب خلال 5 إلى 7 أيام عمل بعد التأكيد.
+            ar: `• التوصيل في كل المغرب خلال 24 إلى 48 ساعة بعد التأكيد.
 • تكلفة التوصيل: 35 درهم، مجاناً ابتداءً من 500 درهم.
 • إذا فشل التوصيل (غياب، عنوان غير صحيح)، نتواصل معك لإعادة الجدولة.`,
           },

@@ -5,19 +5,19 @@ export const TR = {
     announce: [
       'Livraison gratuite dès 500 MAD — partout au Maroc',
       'Paiement à la livraison disponible',
-      'Nouvelle collection — tenues de prière & mode féminine',
+      'Nouvelle collection — mode féminine raffinée',
       'Retours acceptés sous 14 jours',
     ],
     nav: { shop: 'Boutique', prayer: 'Prière', new: 'Nouveautés', lookbook: 'Lookbook', about: 'À propos' },
     hero: {
       eyebrow: 'La mode féminine marocaine',
       title: 'Le style à portée\nde toutes',
-      sub: 'Tenues de prière, robes & essentiels — dès 149 MAD, livré partout au Maroc.',
-      cta1: 'Découvrir la collection', cta2: 'Espace Prière',
+      sub: 'Robes, ensembles & essentiels féminins — dès 149 MAD, livrés partout au Maroc en 24-48h.',
+      cta1: 'Découvrir la collection', cta2: 'Nouveautés',
     },
     sections: {
       categoriesEyebrow: 'Nos univers', categoriesTitle: 'Toute la femme marocaine',
-      categoriesSub: 'De la tenue de prière aux essentiels du quotidien.',
+      categoriesSub: 'Des essentiels du quotidien aux pièces de cérémonie.',
       bestEyebrow: 'Les coups de cœur', bestTitle: 'Best-sellers',
       bestSub: 'Ce que portent nos clientes cette saison.',
       newEyebrow: 'Cette semaine', newTitle: 'Nouveautés',
@@ -26,7 +26,7 @@ export const TR = {
     product: {
       add: 'Ajouter au panier', buyWa: 'Commander via WhatsApp', wishlist: 'Favoris',
       size: 'Taille', color: 'Couleur', desc: 'Description', sizeGuide: 'Guide des tailles',
-      delivery: 'Livraison ~1 semaine partout au Maroc', cod: 'Paiement à la livraison (COD)',
+      delivery: 'Livraison en 24-48h partout au Maroc', cod: 'Paiement à la livraison (COD)',
       return: 'Retours acceptés sous 14 jours',
     },
     cart: {
@@ -55,19 +55,19 @@ export const TR = {
     announce: [
       'Free shipping from 500 MAD — anywhere in Morocco',
       'Cash on delivery available',
-      'New collection — prayer outfits & women\'s fashion',
+      'New collection — refined women\'s fashion',
       'Returns accepted within 14 days',
     ],
     nav: { shop: 'Shop', prayer: 'Prayer', new: 'New', lookbook: 'Lookbook', about: 'About' },
     hero: {
       eyebrow: 'Moroccan women\'s fashion',
       title: 'Style within reach\nof every woman',
-      sub: 'Prayer outfits, dresses & essentials — from 149 MAD, delivered all over Morocco.',
-      cta1: 'Discover the collection', cta2: 'Prayer space',
+      sub: 'Dresses, sets & women\'s essentials — from 149 MAD, delivered all over Morocco in 24-48h.',
+      cta1: 'Discover the collection', cta2: 'New arrivals',
     },
     sections: {
       categoriesEyebrow: 'Our universes', categoriesTitle: 'For every Moroccan woman',
-      categoriesSub: 'From prayer outfits to everyday essentials.',
+      categoriesSub: 'From everyday essentials to ceremonial pieces.',
       bestEyebrow: 'Customer favourites', bestTitle: 'Best-sellers',
       bestSub: 'What our clients are wearing this season.',
       newEyebrow: 'This week', newTitle: 'New arrivals',
@@ -76,7 +76,7 @@ export const TR = {
     product: {
       add: 'Add to cart', buyWa: 'Order via WhatsApp', wishlist: 'Wishlist',
       size: 'Size', color: 'Colour', desc: 'Description', sizeGuide: 'Size guide',
-      delivery: 'Delivery ~1 week anywhere in Morocco', cod: 'Cash on delivery (COD)',
+      delivery: 'Delivery in 24-48h anywhere in Morocco', cod: 'Cash on delivery (COD)',
       return: 'Returns accepted within 14 days',
     },
     cart: {
@@ -105,18 +105,18 @@ export const TR = {
     announce: [
       'توصيل مجاني من 500 درهم — في كل أنحاء المغرب',
       'الدفع عند التسليم متاح',
-      'مجموعة جديدة — ملابس الصلاة والأزياء النسائية',
+      'مجموعة جديدة — أزياء نسائية راقية',
       'الإرجاع مقبول خلال 14 يوماً',
     ],
     nav: { shop: 'المتجر', prayer: 'الصلاة', new: 'جديد', lookbook: 'لوكبوك', about: 'عنا' },
     hero: {
       eyebrow: 'الأزياء النسائية المغربية', title: 'الأناقة في متناول\nالجميع',
-      sub: 'ملابس صلاة، فساتين وأساسيات — ابتداءً من 149 درهم، توصيل في كل المغرب.',
-      cta1: 'اكتشفي المجموعة', cta2: 'ملابس الصلاة',
+      sub: 'فساتين، أطقم وأساسيات نسائية — ابتداءً من 149 درهم، توصيل في كل المغرب خلال 24-48 ساعة.',
+      cta1: 'اكتشفي المجموعة', cta2: 'الجديد',
     },
     sections: {
       categoriesEyebrow: 'عوالمنا', categoriesTitle: 'لكل امرأة مغربية',
-      categoriesSub: 'من ملابس الصلاة إلى أزياء الحياة اليومية.',
+      categoriesSub: 'من الأساسيات اليومية إلى قطع المناسبات.',
       bestEyebrow: 'الأكثر مبيعاً', bestTitle: 'الأكثر طلباً',
       bestSub: 'ما ترتديه زبوناتنا هذا الموسم.',
       newEyebrow: 'هذا الأسبوع', newTitle: 'جديدنا', newSub: 'وصل حديثاً إلى المتجر.',
@@ -124,7 +124,7 @@ export const TR = {
     product: {
       add: 'أضيفي إلى السلة', buyWa: 'اطلبي عبر واتساب', wishlist: 'المفضلة',
       size: 'المقاس', color: 'اللون', desc: 'الوصف', sizeGuide: 'دليل المقاسات',
-      delivery: 'التوصيل في حوالي أسبوع، في كل المغرب', cod: 'الدفع عند التسليم',
+      delivery: 'التوصيل خلال 24-48 ساعة، في كل المغرب', cod: 'الدفع عند التسليم',
       return: 'الإرجاع مقبول خلال 14 يوماً',
     },
     cart: {
