@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { parseWhatsAppPayload, sendWhatsAppText, normalizeWhatsAppPhone } from '@/lib/whatsapp';
+import { upsertOrderToSheet } from '@/lib/sheets';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const ADMIN_PHONE = process.env.WHATSAPP_ADMIN_PHONE;
@@ -87,11 +88,13 @@ export async function POST(req: Request) {
           updatePayload.awaiting_reply = 'cancel_reason';
         }
 
+        // Fetch the full row back so we have everything Sheets needs (no
+        // second round-trip): items + address are already used by Sheets.
         const { data, error } = await sb
           .from('orders')
           .update(updatePayload)
           .eq('order_number', parsed.orderNumber)
-          .select('order_number, full_name, phone, total')
+          .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at')
           .single();
 
         if (error) {
@@ -107,6 +110,23 @@ export async function POST(req: Request) {
             `WhatsApp: ${data.order_number} -> ${nextStatus}\nClient: ${data.full_name}\nTel: ${data.phone}\nTotal: ${data.total} MAD`
           );
         }
+
+        // Mirror the status change into the Google Sheet. Failure here is
+        // logged but never blocks the reply to the customer.
+        const sheetSync = await upsertOrderToSheet({
+          orderNumber: data.order_number,
+          fullName: data.full_name,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          city: data.city,
+          total: data.total,
+          status: data.status,
+          cancel_reason: data.cancel_reason,
+          created_at: data.created_at,
+          items: data.items ?? [],
+        });
+        if (!sheetSync.ok) console.error('[sheets] webhook sync failed', sheetSync.reason);
         continue;
       }
 
@@ -133,10 +153,12 @@ export async function POST(req: Request) {
 
       if (!pending) continue;
 
-      await sb
+      const { data: updated } = await sb
         .from('orders')
         .update({ cancel_reason: text, awaiting_reply: null })
-        .eq('id', pending.id);
+        .eq('id', pending.id)
+        .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at')
+        .single();
 
       await sendWhatsAppText(from, CANCEL_REASON_THANK_YOU);
 
@@ -145,6 +167,23 @@ export async function POST(req: Request) {
           ADMIN_PHONE,
           `Raison d'annulation reçue\nCommande: ${pending.order_number}\nClient: ${pending.full_name}\nMessage: "${text}"`
         );
+      }
+
+      if (updated) {
+        const sheetSync = await upsertOrderToSheet({
+          orderNumber: updated.order_number,
+          fullName: updated.full_name,
+          phone: updated.phone,
+          email: updated.email,
+          address: updated.address,
+          city: updated.city,
+          total: updated.total,
+          status: updated.status,
+          cancel_reason: updated.cancel_reason,
+          created_at: updated.created_at,
+          items: updated.items ?? [],
+        });
+        if (!sheetSync.ok) console.error('[sheets] cancel-reason sync failed', sheetSync.reason);
       }
     }
 

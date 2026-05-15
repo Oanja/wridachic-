@@ -1,16 +1,14 @@
 /**
  * Google Sheets sync via a user-owned Apps Script Web App.
  *
- * Why this design: a Web App URL + shared secret is the simplest way for a
- * user without a GCP project to get rows into their own Google Sheet. The
- * Apps Script runs *as the user*, so the sheet doesn't need to be shared
- * with any service account — it just needs to be the active spreadsheet of
- * the script. The shared secret stops randoms from spamming the endpoint.
+ * Architecture: a single /exec endpoint accepts {secret, action, ...} POSTs.
+ * Actions: `upsert`, `bulk_upsert`, `delete`, `setup_dashboard`. The shared
+ * secret keeps the public webhook from being spammed. All functions silently
+ * no-op when the env vars are absent so checkout never blocks on Sheets.
  *
- * Required env vars (missing either → sync silently no-ops; orders still
- * succeed):
- *   GOOGLE_SHEETS_WEBHOOK_URL — the /exec URL from "Deploy → Web app"
- *   GOOGLE_SHEETS_WEBHOOK_SECRET — the SECRET constant inside the script
+ * Required env vars:
+ *   GOOGLE_SHEETS_WEBHOOK_URL
+ *   GOOGLE_SHEETS_WEBHOOK_SECRET
  */
 
 const WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
@@ -30,24 +28,18 @@ export interface SheetsOrderPayload {
   items: Array<{ name: string; qty: number; size: string; color: string }>;
 }
 
-export async function upsertOrderToSheet(order: SheetsOrderPayload) {
+type SheetsResult = { ok: boolean; reason: string; details?: unknown };
+
+async function call(body: Record<string, unknown>): Promise<SheetsResult> {
   if (!WEBHOOK_URL || !WEBHOOK_SECRET) {
     return { ok: false, reason: 'missing-sheets-env' };
   }
-
   try {
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // Apps Script's /exec endpoint 302-redirects to a
-      // googleusercontent.com URL on every call. fetch follows it
-      // automatically and re-POSTs the body.
-      redirect: 'follow',
-      body: JSON.stringify({
-        secret: WEBHOOK_SECRET,
-        action: 'upsert',
-        order,
-      }),
+      redirect: 'follow', // Apps Script /exec → googleusercontent redirect
+      body: JSON.stringify({ secret: WEBHOOK_SECRET, ...body }),
     });
 
     const text = await res.text();
@@ -56,14 +48,29 @@ export async function upsertOrderToSheet(order: SheetsOrderPayload) {
     try {
       const json = JSON.parse(text);
       return json.ok
-        ? { ok: true, reason: 'sent' }
-        : { ok: false, reason: json.reason || 'unknown' };
+        ? { ok: true, reason: 'sent', details: json }
+        : { ok: false, reason: json.reason || 'unknown', details: json };
     } catch {
-      // Apps Script sometimes returns HTML on auth/redirect errors. Surface
-      // a short snippet rather than dumping a whole page in logs.
       return { ok: false, reason: `non-json: ${text.slice(0, 120)}` };
     }
   } catch (e) {
     return { ok: false, reason: e instanceof Error ? e.message : 'unknown' };
   }
+}
+
+export async function upsertOrderToSheet(order: SheetsOrderPayload) {
+  return call({ action: 'upsert', order });
+}
+
+export async function bulkUpsertOrdersToSheet(orders: SheetsOrderPayload[]) {
+  if (orders.length === 0) return { ok: true, reason: 'nothing to sync' };
+  return call({ action: 'bulk_upsert', orders });
+}
+
+export async function deleteOrderFromSheet(orderNumber: string) {
+  return call({ action: 'delete', orderNumber });
+}
+
+export async function setupSheetsDashboard() {
+  return call({ action: 'setup_dashboard' });
 }

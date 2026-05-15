@@ -46,6 +46,17 @@ interface Order {
 // Supabase rate-limit politeness. Set to 0 to disable.
 const AUTO_REFRESH_MS = 30000;
 
+// Fire-and-forget Google Sheets sync. Errors are logged but never surfaced
+// to the admin — the source of truth is Supabase, the Sheet is a mirror.
+function syncToSheet(ids?: string[], deleteNums?: string[]) {
+  if ((!ids || ids.length === 0) && (!deleteNums || deleteNums.length === 0)) return;
+  fetch('/api/sync-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids, delete: deleteNums }),
+  }).catch(() => {});
+}
+
 export function AdminOrders() {
   const sb = getSupabaseBrowser();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -110,15 +121,18 @@ export function AdminOrders() {
   const updateStatus = async (id: string, status: string) => {
     await sb.from('orders').update({ status }).eq('id', id);
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+    syncToSheet([id]);
   };
 
   const deleteOrder = async (id: string) => {
     if (!confirm('Supprimer cette commande définitivement ?')) return;
+    const order = orders.find((o) => o.id === id);
     const { data: deleted, error } = await sb.from('orders').delete().eq('id', id).select();
     if (error) { alert('Erreur Supabase : ' + error.message); return; }
     if (!deleted || deleted.length === 0) { alert('Suppression bloquée par RLS.'); return; }
     setOrders((prev) => prev.filter((o) => o.id !== id));
     setSelected((s) => { const n = new Set(s); n.delete(id); return n; });
+    if (order?.order_number) syncToSheet(undefined, [order.order_number]);
   };
 
   // Bulk actions
@@ -128,6 +142,7 @@ export function AdminOrders() {
     if (!confirm(`Passer ${ids.length} commande(s) au statut "${status}" ?`)) return;
     await sb.from('orders').update({ status }).in('id', ids);
     setOrders((prev) => prev.map((o) => (selected.has(o.id) ? { ...o, status } : o)));
+    syncToSheet(ids);
     setSelected(new Set());
   };
 
@@ -135,10 +150,31 @@ export function AdminOrders() {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
     if (!confirm(`Supprimer définitivement ${ids.length} commande(s) ?`)) return;
+    const nums = orders.filter((o) => selected.has(o.id)).map((o) => o.order_number);
     const { error } = await sb.from('orders').delete().in('id', ids);
     if (error) { alert('Erreur Supabase : ' + error.message); return; }
     setOrders((prev) => prev.filter((o) => !selected.has(o.id)));
+    syncToSheet(undefined, nums);
     setSelected(new Set());
+  };
+
+  const [backfilling, setBackfilling] = useState(false);
+  const backfillSheets = async () => {
+    if (!confirm('Synchroniser toutes les commandes vers Google Sheets ?\n(Reconstruit aussi le tableau de bord)')) return;
+    setBackfilling(true);
+    try {
+      const res = await fetch('/api/sheets-backfill', { method: 'POST' });
+      const json = await res.json();
+      if (json.ok) {
+        alert(`✓ Synchronisé : ${json.count} commande(s).\nTableau de bord recréé.`);
+      } else {
+        alert('Erreur : ' + (json.error || 'inconnue'));
+      }
+    } catch (e) {
+      alert('Erreur réseau : ' + (e instanceof Error ? e.message : 'inconnue'));
+    } finally {
+      setBackfilling(false);
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -199,6 +235,15 @@ export function AdminOrders() {
             title="Rafraîchir les données"
           >
             {refreshing ? '↻ ...' : '↻ Rafraîchir'}
+          </button>
+          <button
+            onClick={backfillSheets}
+            disabled={backfilling}
+            className="adm-pill"
+            title="Tout synchroniser vers Google Sheets + reconstruire le tableau de bord"
+            style={{ background: '#4CAF50', color: '#fff', borderColor: '#4CAF50' }}
+          >
+            {backfilling ? '⇅ Sync…' : '⇅ Sync Sheets'}
           </button>
           {lastFetch && (
             <span style={{ fontSize: 10, opacity: 0.5 }}>
