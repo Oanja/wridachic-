@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendOrderWhatsAppConfirmation } from '@/lib/whatsapp';
+import { sendOrderTelegramNotification } from '@/lib/telegram';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -167,13 +168,28 @@ export async function POST(req: Request) {
       customerResult = await sendEmail(data.email, t.subject, customerHtml);
     }
 
-    const whatsappResult = await sendOrderWhatsAppConfirmation({
-      orderNumber: data.orderNumber,
-      fullName: data.fullName,
-      phone: data.phone,
-      total: data.total,
-      items: data.items,
-    });
+    // Fire WhatsApp template + Telegram admin alert in parallel — they're
+    // independent and neither should block the other.
+    const [whatsappResult, telegramResult] = await Promise.all([
+      sendOrderWhatsAppConfirmation({
+        orderNumber: data.orderNumber,
+        fullName: data.fullName,
+        phone: data.phone,
+        total: data.total,
+        items: data.items,
+      }),
+      sendOrderTelegramNotification({
+        orderNumber: data.orderNumber,
+        fullName: data.fullName,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        city: data.city,
+        total: data.total,
+        items: data.items,
+      }),
+    ]);
+
     if (whatsappResult.ok) {
       console.info('[whatsapp] order confirmation sent', {
         orderNumber: data.orderNumber,
@@ -188,7 +204,20 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ ok: true, admin: adminResult, customer: customerResult, whatsapp: whatsappResult });
+    if (!telegramResult.ok) {
+      console.error('[telegram] admin notification failed', {
+        orderNumber: data.orderNumber,
+        reason: telegramResult.reason,
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      admin: adminResult,
+      customer: customerResult,
+      whatsapp: whatsappResult,
+      telegram: telegramResult,
+    });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : 'unknown' }, { status: 500 });
   }

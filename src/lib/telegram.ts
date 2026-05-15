@@ -1,0 +1,100 @@
+/**
+ * Telegram admin notifications.
+ *
+ * Why this exists: WhatsApp Cloud API requires a pre-approved template to
+ * message a number outside the 24h customer window, so notifying ourselves
+ * about new orders through WhatsApp is fragile. Telegram has no such limit
+ * — a bot can DM/group-message us instantly, free, forever.
+ *
+ * Required env vars (both must be set; missing either → notifier silently
+ * no-ops so checkout still succeeds):
+ *   TELEGRAM_BOT_TOKEN  — from @BotFather (1234567890:AAEh...)
+ *   TELEGRAM_CHAT_ID    — private chat id (positive) or group id (negative)
+ */
+
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+export interface TelegramOrderPayload {
+  orderNumber: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  total: number;
+  items: Array<{
+    name: string;
+    qty: number;
+    size: string;
+    color: string;
+  }>;
+}
+
+function escape(s: string) {
+  // Telegram MarkdownV2 reserves: _ * [ ] ( ) ~ ` > # + - = | { } . !
+  // We use HTML mode instead (parse_mode=HTML), which only needs <, >, &.
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+async function send(text: string) {
+  if (!BOT_TOKEN || !CHAT_ID) {
+    return { ok: false, reason: 'missing-telegram-env' };
+  }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      return { ok: false, reason: body };
+    }
+    return { ok: true, reason: 'sent' };
+  } catch (e) {
+    return { ok: false, reason: e instanceof Error ? e.message : 'unknown' };
+  }
+}
+
+export async function sendOrderTelegramNotification(order: TelegramOrderPayload) {
+  const waPhone = order.phone.replace(/^0/, '212').replace(/\D/g, '');
+  const itemsBlock = order.items
+    .map((it) => `📦 ${escape(it.name)} — ${escape(it.size)} / ${escape(it.color)} × ${it.qty}`)
+    .join('\n');
+
+  const text = [
+    `🛍️ <b>NOUVELLE COMMANDE</b>`,
+    `━━━━━━━━━━━━━━━━━`,
+    `<b>${escape(order.orderNumber)}</b>`,
+    ``,
+    `👤 ${escape(order.fullName)}`,
+    `📞 <a href="tel:${escape(order.phone)}">${escape(order.phone)}</a> · <a href="https://wa.me/${waPhone}">WhatsApp</a>`,
+    order.email ? `✉️ ${escape(order.email)}` : '',
+    order.address || order.city
+      ? `📍 ${escape([order.address, order.city].filter(Boolean).join(', '))}`
+      : '',
+    ``,
+    itemsBlock,
+    ``,
+    `💰 <b>${order.total} MAD</b>`,
+    ``,
+    `<a href="https://wridachic.com/admin">→ Ouvrir l'admin</a>`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return send(text);
+}
+
+export async function sendTelegramText(text: string) {
+  return send(text);
+}
