@@ -256,7 +256,7 @@ export function CheckoutPage() {
         </div>
 
         <div className="checkout-grid">
-          <div>
+          <div className="checkout-main">
             {step === 1 && (
               <div>
                 <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>{t.checkout.shipping}</h2>
