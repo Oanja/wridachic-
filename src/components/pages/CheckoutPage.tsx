@@ -50,6 +50,21 @@ export function CheckoutPage() {
     trackMetaEvent('InitiateCheckout', cartPayload(cart, total));
   }, [cart, total]);
 
+  // Reaching /checkout with an empty cart used to render a mostly-blank
+  // page (form + 0-item summary), which looked broken on mobile. Send the
+  // user back to /cart instead. The 250 ms delay leaves room for cart
+  // hydration from localStorage on first paint.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setHydrated(true), 250);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (hydrated && cart.length === 0 && (step as number) !== 4) {
+      router.replace('/cart');
+    }
+  }, [hydrated, cart.length, step, router]);
+
   const applyCoupon = async () => {
     const code = codeInput.trim().toUpperCase();
     if (!code || couponBusy) return;
@@ -198,6 +213,17 @@ export function CheckoutPage() {
   }
 
   const valid = form.fullName.trim() && /^[0-9]{9,10}$/.test(form.phone.trim()) && form.address.trim() && form.city.trim();
+
+  // While we're waiting for localStorage hydration (or while the empty-cart
+  // redirect is firing), render a tiny placeholder rather than a janky
+  // half-broken layout.
+  if (!hydrated || (cart.length === 0 && (step as number) !== 4)) {
+    return (
+      <div className="page2" style={{ padding: '120px 28px', textAlign: 'center', minHeight: '50vh' }}>
+        <div className="mono" style={{ fontSize: 12, opacity: 0.4 }}>...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="page2" style={{ padding: '40px 0 80px' }}>
