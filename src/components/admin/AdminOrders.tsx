@@ -21,6 +21,7 @@ interface Order {
   total: number;
   created_at: string;
   items?: Array<{ name: string; qty: number; size: string; color: string }>;
+  cancel_reason?: string | null;
 }
 
 export function AdminOrders() {
@@ -97,6 +98,14 @@ export function AdminOrders() {
                     </div>
                   ))}
                   <div style={{ marginTop: 6, fontWeight: 700 }}>{o.total} MAD</div>
+                  {o.cancel_reason && (
+                    <div style={{ marginTop: 10, padding: '8px 10px', background: '#FDECE8', borderLeft: '3px solid #C62828', borderRadius: 6, fontSize: 11, lineHeight: 1.5 }}>
+                      <div style={{ fontWeight: 700, color: '#C62828', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 9, marginBottom: 3 }}>
+                        Raison d&apos;annulation
+                      </div>
+                      <div style={{ color: '#0F0E0D' }}>&ldquo;{o.cancel_reason}&rdquo;</div>
+                    </div>
+                  )}
                 </div>
                 <div className="adm-order-actions">
                   {STATUS_LABELS.map((s) => (
