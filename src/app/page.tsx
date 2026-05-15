@@ -1,6 +1,6 @@
 import { HomePage } from '@/components/pages/HomePage';
 import { getAllProducts } from '@/lib/products';
-import { getSiteSettings } from '@/lib/settings';
+import { getSiteSettings } from '@/lib/settings-server';
 
 export const revalidate = 300;
 
