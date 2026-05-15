@@ -8,8 +8,9 @@ import { AdminProducts } from '@/components/admin/AdminProducts';
 import { AdminCoupons } from '@/components/admin/AdminCoupons';
 import { AdminNewsletter } from '@/components/admin/AdminNewsletter';
 import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminSite } from '@/components/admin/AdminSite';
 
-type Tab = 'orders' | 'products' | 'coupons' | 'newsletter' | 'users';
+type Tab = 'orders' | 'products' | 'coupons' | 'newsletter' | 'users' | 'site';
 
 export function AdminPage() {
   const sb = getSupabaseBrowser();
@@ -84,6 +85,7 @@ export function AdminPage() {
     { id: 'coupons', label: 'Coupons' },
     { id: 'newsletter', label: 'Newsletter' },
     { id: 'users', label: 'Utilisateurs' },
+    { id: 'site', label: '🎨 Site' },
   ];
 
   return (
@@ -123,6 +125,7 @@ export function AdminPage() {
         {tab === 'coupons' && <AdminCoupons />}
         {tab === 'newsletter' && <AdminNewsletter />}
         {tab === 'users' && <AdminUsers />}
+        {tab === 'site' && <AdminSite />}
       </div>
     </div>
   );

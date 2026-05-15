@@ -9,10 +9,13 @@ import { TINTS } from '@/lib/data';
 import { pick } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import type { Product } from '@/lib/types';
+import type { SiteSettings } from '@/lib/settings';
+import { DEFAULT_SETTINGS } from '@/lib/settings';
 
-export function HomePage({ products }: { products: Product[] }) {
+export function HomePage({ products, settings }: { products: Product[]; settings?: SiteSettings }) {
   const { lang, wishlist, toggleWish } = useApp();
   const year = 2026;
+  const moodImages = settings ?? DEFAULT_SETTINGS;
 
   return (
     <div className="page2">
@@ -33,7 +36,14 @@ export function HomePage({ products }: { products: Product[] }) {
                 {lang === 'ar' ? (
                   <>أنــــاقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغــــربية</em><br />أصــــيلة.</>
                 ) : lang === 'en' ? (
-                  <><span style={{ whiteSpace: 'nowrap' }}>Authentic <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em></span><br />elegance.</>
+                  // Desktop renders as 3 lines (Authentic / Moroccan / elegance.)
+                  // for impact; on mobile (<= 768px) the desktop-only <br/>
+                  // collapses so we get the compact 2-line version.
+                  <>
+                    Authentic<br className="hero-br-desktop" />{' '}
+                    <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em>
+                    <br />elegance.
+                  </>
                 ) : (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 )}
@@ -116,7 +126,7 @@ export function HomePage({ products }: { products: Product[] }) {
 
           <div className="cat-grid reveal-stagger">
             <Link href="/shop" className="cat-main">
-              <Image src="/assets/3.jpg" alt="" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+              <Image src={moodImages.shop_mood_main_image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.shop_mood_main_image.startsWith('http')} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
               <div style={{ position: 'absolute', bottom: 24, [lang === 'ar' ? 'right' : 'left']: 24, color: 'var(--paper)', zIndex: 3, textAlign: lang === 'ar' ? 'right' : 'left' }}>
                 <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>{pick(lang, 'ROBES', 'DRESSES', 'فساتين')} / 01</div>
@@ -131,7 +141,7 @@ export function HomePage({ products }: { products: Product[] }) {
 
             <div className="cat-side">
               <Link href="/new" className="cat-small">
-                <Image src="/assets/4.jpg" alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                <Image src={moodImages.shop_mood_top_image} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.shop_mood_top_image.startsWith('http')} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'NOUVEAU', 'NEW', 'جديد')} / 02</div>
@@ -141,7 +151,7 @@ export function HomePage({ products }: { products: Product[] }) {
                 </div>
               </Link>
               <Link href="/shop" className="cat-small">
-                <Image src="/assets/00.jpg" alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
+                <Image src={moodImages.shop_mood_bottom_image} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.shop_mood_bottom_image.startsWith('http')} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'TENDANCE', 'TRENDING', 'الرائج')} / 03</div>

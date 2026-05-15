@@ -1,9 +1,13 @@
 import { HomePage } from '@/components/pages/HomePage';
 import { getAllProducts } from '@/lib/products';
+import { getSiteSettings } from '@/lib/settings';
 
 export const revalidate = 300;
 
 export default async function Page() {
-  const products = await getAllProducts();
-  return <HomePage products={products} />;
+  const [products, settings] = await Promise.all([
+    getAllProducts(),
+    getSiteSettings(),
+  ]);
+  return <HomePage products={products} settings={settings} />;
 }
