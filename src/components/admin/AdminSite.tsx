@@ -11,20 +11,34 @@ import { DEFAULT_SETTINGS, type SiteSettingKey, type SiteSettings } from '@/lib/
  * UI scales by adding more entries to SLOTS.
  */
 
-const SLOTS: Array<{ key: SiteSettingKey; label: string; aspect: string; help: string; group: string }> = [
+interface Slot {
+  key: SiteSettingKey;
+  label: string;
+  aspect: string;
+  size: string;
+  ratioLabel: string;
+  help: string;
+  group: string;
+}
+
+const SLOTS: Slot[] = [
   // ===== HERO =====
   {
     key: 'hero_big_image',
     label: 'Hero — Grande image',
     aspect: '3/4',
-    help: 'Image principale du hero (en haut). Format vertical.',
+    size: '1200 × 1600 px',
+    ratioLabel: 'Vertical 3:4',
+    help: 'Image principale du hero, en haut à droite de la page d\'accueil.',
     group: 'Hero (en-tête de la page d\'accueil)',
   },
   {
     key: 'hero_small_image',
     label: 'Hero — Petite image',
     aspect: '4/5',
-    help: 'Image qui chevauche la grande. Format vertical.',
+    size: '960 × 1200 px',
+    ratioLabel: 'Vertical 4:5',
+    help: 'Petite image qui chevauche la grande (en bas à gauche).',
     group: 'Hero (en-tête de la page d\'accueil)',
   },
   // ===== SHOP BY MOOD =====
@@ -32,21 +46,27 @@ const SLOTS: Array<{ key: SiteSettingKey; label: string; aspect: string; help: s
     key: 'shop_mood_main_image',
     label: 'Dresses & Sets',
     aspect: '4/5',
-    help: 'Grande carte à gauche. Format vertical conseillé.',
+    size: '1200 × 1500 px',
+    ratioLabel: 'Vertical 4:5',
+    help: 'Grande carte à gauche dans « Shop by mood ».',
     group: 'Shop by mood (3 cartes)',
   },
   {
     key: 'shop_mood_top_image',
     label: 'Nouveautés',
     aspect: '1/1',
-    help: 'Petite carte en haut à droite. Format carré.',
+    size: '1000 × 1000 px',
+    ratioLabel: 'Carré 1:1',
+    help: 'Petite carte en haut à droite.',
     group: 'Shop by mood (3 cartes)',
   },
   {
     key: 'shop_mood_bottom_image',
     label: 'Best-sellers',
     aspect: '1/1',
-    help: 'Petite carte en bas à droite. Format carré.',
+    size: '1000 × 1000 px',
+    ratioLabel: 'Carré 1:1',
+    help: 'Petite carte en bas à droite.',
     group: 'Shop by mood (3 cartes)',
   },
 ];
@@ -117,6 +137,16 @@ export function AdminSite() {
         </div>
       )}
 
+      <div style={{ padding: '12px 14px', borderRadius: 10, marginBottom: 20, fontSize: 12, background: '#FFF8F0', border: '1px solid var(--clay)', lineHeight: 1.6 }}>
+        <strong style={{ color: 'var(--clay)' }}>💡 Conseils images :</strong>{' '}
+        Pour de meilleurs résultats, utilisez les dimensions indiquées sur chaque carte (badge orange).
+        Format <strong>JPG</strong> ou <strong>WebP</strong>, poids <strong>&lt; 500 KB</strong>.
+        Pour réduire le poids sans perte de qualité :{' '}
+        <a href="https://squoosh.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--clay)', textDecoration: 'underline', fontWeight: 600 }}>squoosh.app</a>
+        {' · '}
+        <a href="https://tinypng.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--clay)', textDecoration: 'underline', fontWeight: 600 }}>tinypng.com</a>
+      </div>
+
       {Array.from(new Set(SLOTS.map((s) => s.group))).map((groupName) => (
         <div key={groupName} style={{ marginBottom: 28 }}>
           <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--clay)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -129,6 +159,14 @@ export function AdminSite() {
           return (
             <div key={slot.key} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.1)', borderRadius: 14, padding: 14 }}>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{slot.label}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', background: 'var(--clay)', color: '#fff', padding: '3px 8px', borderRadius: 999, fontWeight: 700, letterSpacing: '0.04em' }}>
+                  📐 {slot.size}
+                </span>
+                <span style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace', background: 'rgba(15,14,13,0.08)', padding: '3px 8px', borderRadius: 999, fontWeight: 600 }}>
+                  {slot.ratioLabel}
+                </span>
+              </div>
               <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 10 }}>{slot.help}</div>
 
               <div style={{ position: 'relative', aspectRatio: slot.aspect, borderRadius: 10, overflow: 'hidden', background: 'rgba(15,14,13,0.06)', marginBottom: 10 }}>
