@@ -8,10 +8,12 @@ export const FALLBACK_PRODUCTS: Product[] = [
   { id: 'p20', slug: 'ensemble-priere-jasmin',name: 'Ensemble Prière Jasmin', nameAr: 'طقم صلاة ياسمين', cat: 'prayer', price: 259, tag: 'new', colors: ['#E8D5C4','#F7EEE8'],           img: '00', imgFiles: ['/assets/00.jpg'] },
 ];
 
+// Public-facing categories shown in the /shop & /new category filter tabs.
+// Legacy cats (prayer, basics) are kept in the DB but hidden from the
+// storefront filter (see also VISIBLE_CATS in app/shop/page.tsx).
 export const CATEGORIES: Category[] = [
-  { id: 'prayer', name: 'Espace Prière',     nameEn: 'Prayer space',    nameAr: 'ملابس الصلاة', desc: 'Jilbabs, khimars & ensembles',   img: 'cat-prayer' },
-  { id: 'robes',  name: 'Robes & Ensembles', nameEn: 'Dresses & Sets',  nameAr: 'فساتين وأطقم',  desc: 'Robes longues, wrap & ensembles', img: 'cat-robes'  },
-  { id: 'basics', name: 'Denim',             nameEn: 'Denim',           nameAr: 'جينز',          desc: 'Jeans & ensembles denim',         img: 'cat-basics' },
+  { id: 'robes',   name: 'Robes & Ensembles', nameEn: 'Dresses & Sets', nameAr: 'فساتين وأطقم', desc: 'Robes longues, wrap & ensembles', img: 'cat-robes'   },
+  { id: 'caftans', name: 'Caftans',           nameEn: 'Caftans',        nameAr: 'قفطان',         desc: 'Caftans & tenues de cérémonie',   img: 'cat-caftans' },
 ];
 
 export const TINTS = ['rose', 'clay', 'mint', 'lime', 'sky', 'ink'] as const;
