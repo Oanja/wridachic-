@@ -9,8 +9,8 @@ const CHANNELS = [
     icon: 'wa' as const,
     label: { fr: 'WhatsApp', en: 'WhatsApp', ar: 'واتساب' },
     sub: { fr: 'Réponse en quelques heures', en: 'Reply within hours', ar: 'الرد خلال ساعات' },
-    href: 'https://wa.me/212772086545',
-    value: '+212 7 72 08 65 45',
+    href: 'https://wa.me/212773847986',
+    value: '+212 773-847986',
   },
   {
     icon: 'check' as const,

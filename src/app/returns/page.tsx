@@ -48,15 +48,15 @@ export default function Page() {
           num: '03',
           title: { fr: 'Procédure', en: 'How to', ar: 'الخطوات' },
           body: {
-            fr: `1. Écris-nous par WhatsApp (+212 7 72 08 65 45) ou email (hello@wridachic.com) avec ton numéro de commande.
+            fr: `1. Écris-nous par WhatsApp (+212 773-847986) ou email (hello@wridachic.com) avec ton numéro de commande.
 2. On te confirme l'adresse de retour et la procédure.
 3. Tu envoies le colis (les frais d'envoi du retour sont à ta charge, sauf si l'article est défectueux).
 4. Dès réception, on vérifie et on procède au remboursement.`,
-            en: `1. Message us on WhatsApp (+212 7 72 08 65 45) or email (hello@wridachic.com) with your order number.
+            en: `1. Message us on WhatsApp (+212 773-847986) or email (hello@wridachic.com) with your order number.
 2. We confirm the return address and procedure.
 3. You ship the parcel (return shipping is at your cost, unless the item is defective).
 4. Upon receipt, we check the item and process the refund.`,
-            ar: `1. تواصلي معنا واتساب (+212 7 72 08 65 45) أو إيميل (hello@wridachic.com) برقم طلبك.
+            ar: `1. تواصلي معنا واتساب (+212 773-847986) أو إيميل (hello@wridachic.com) برقم طلبك.
 2. نؤكد لك عنوان الإرجاع والإجراء.
 3. تشحنين الطرد (تكلفة الشحن المرتجع عليك، إلا إذا كانت القطعة بها عيب).
 4. بعد الاستلام، نتحقق ونرد المبلغ.`,

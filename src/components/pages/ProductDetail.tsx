@@ -222,7 +222,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                 : lang === 'en'
                   ? `Hi wridachic 👋\n\nI'd like to order:\n• ${name}\n• Size: ${size} · Colour: ${color}\n• Qty: ${qty}\n• Price: ${total} MAD`
                   : `Bonjour wridachic 👋\n\nJe voudrais commander :\n• ${name}\n• Taille : ${size} · Couleur : ${color}\n• Quantité : ${qty}\n• Prix : ${total} MAD`;
-              const href = `https://wa.me/212772086545?text=${encodeURIComponent(msg)}`;
+              const href = `https://wa.me/212773847986?text=${encodeURIComponent(msg)}`;
               return (
                 <div style={{ textAlign: 'center', marginBottom: 24, fontSize: 13 }}>
                   <a href={href} target="_blank" rel="noopener noreferrer" style={{ opacity: 0.7, borderBottom: '1px solid currentColor', paddingBottom: 1, cursor: 'pointer' }}>

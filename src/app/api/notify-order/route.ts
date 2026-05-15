@@ -128,7 +128,7 @@ export async function POST(req: Request) {
             body: 'شكراً لطلبك! وصلنا و سنتصل بك خلال 24 ساعة لتأكيد التوصيل.',
             recap: 'ملخص طلبك',
             total: 'المجموع',
-            help: 'سؤال؟ تواصلي معنا واتساب: +212 7 72 08 65 45',
+            help: 'سؤال؟ تواصلي معنا واتساب: +212 773-847986',
           }
         : lang === 'en'
         ? {
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
             body: 'Thanks for your order! We received it and will call you within 24h to confirm delivery.',
             recap: 'Order summary',
             total: 'Total',
-            help: 'Question? Reach us on WhatsApp: +212 7 72 08 65 45',
+            help: 'Question? Reach us on WhatsApp: +212 773-847986',
           }
         : {
             subject: `✓ Confirmation de commande ${data.orderNumber}`,
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
             body: 'Merci pour ta commande ! On t\'appellera dans les 24h pour confirmer la livraison.',
             recap: 'Récapitulatif',
             total: 'Total',
-            help: 'Une question ? Réponse rapide sur WhatsApp : +212 7 72 08 65 45',
+            help: 'Une question ? Réponse rapide sur WhatsApp : +212 773-847986',
           };
 
       const customerHtml = `

@@ -22,13 +22,13 @@ export default function Page() {
           title: { fr: 'Le vendeur', en: 'The seller', ar: 'البائع' },
           body: {
             fr: `wridachic — marque marocaine de mode féminine, basée à Casablanca.
-Email : hello@wridachic.com — WhatsApp : +212 7 72 08 65 45.
+Email : hello@wridachic.com — WhatsApp : +212 773-847986.
 Toute commande passée sur wridachic.com implique l'acceptation des présentes conditions.`,
             en: `wridachic — Moroccan women's fashion brand, based in Casablanca.
-Email: hello@wridachic.com — WhatsApp: +212 7 72 08 65 45.
+Email: hello@wridachic.com — WhatsApp: +212 773-847986.
 Any order placed on wridachic.com implies acceptance of these terms.`,
             ar: `وريدة شيك — علامة مغربية للأزياء النسائية، مقرها الدار البيضاء.
-البريد: hello@wridachic.com — واتساب: +212 7 72 08 65 45.
+البريد: hello@wridachic.com — واتساب: +212 773-847986.
 أي طلب على wridachic.com يعني قبول هذه الشروط.`,
           },
         },

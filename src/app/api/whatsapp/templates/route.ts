@@ -5,6 +5,19 @@ const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 
+function pickWabaId(value: unknown) {
+  if (!value || typeof value !== 'object') return undefined;
+  const record = value as Record<string, unknown>;
+  const direct = record.whatsapp_business_account_id ?? record.waba_id;
+  if (typeof direct === 'string') return direct;
+  const nested = record.whatsapp_business_account;
+  if (nested && typeof nested === 'object') {
+    const id = (nested as Record<string, unknown>).id;
+    if (typeof id === 'string') return id;
+  }
+  return undefined;
+}
+
 async function graphGet(path: string) {
   const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${path}`, {
     headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
@@ -28,13 +41,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: 'missing-whatsapp-env' }, { status: 500 });
   }
 
-  const phone = await graphGet(`${PHONE_NUMBER_ID}?fields=display_phone_number,verified_name,whatsapp_business_account`);
+  const phone = await graphGet(`${PHONE_NUMBER_ID}?fields=id,display_phone_number,verified_name,whatsapp_business_account_id`);
   if (!phone.ok) return NextResponse.json({ ok: false, step: 'phone', response: phone }, { status: 502 });
 
-  const phoneJson = phone.json as {
-    whatsapp_business_account?: { id?: string; name?: string };
-  };
-  const wabaId = phoneJson.whatsapp_business_account?.id;
+  const wabaId = pickWabaId(phone.json);
   if (!wabaId) {
     return NextResponse.json({ ok: false, error: 'missing-waba-id', phone: phone.json }, { status: 502 });
   }

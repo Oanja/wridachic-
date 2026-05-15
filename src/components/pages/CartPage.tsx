@@ -177,7 +177,7 @@ export function CartPage() {
             <button className="btn2 btn2-clay" style={{ width: '100%', marginTop: 20 }} onClick={() => router.push('/checkout')}>
               {t.cart.checkout} →
             </button>
-            <a className="btn2 btn2-wa" href="https://wa.me/212772086545" target="_blank" rel="noopener noreferrer" style={{ width: '100%', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <a className="btn2 btn2-wa" href="https://wa.me/212773847986" target="_blank" rel="noopener noreferrer" style={{ width: '100%', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Icon n="wa" s={14} /> WhatsApp
             </a>
           </aside>

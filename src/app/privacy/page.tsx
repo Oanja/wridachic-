@@ -21,9 +21,9 @@ export default function Page() {
           num: '01',
           title: { fr: 'Qui sommes-nous', en: 'Who we are', ar: 'من نحن' },
           body: {
-            fr: `wridachic est une marque marocaine de mode féminine. Pour toute question concernant cette politique, contactez-nous à hello@wridachic.com ou via WhatsApp au +212 7 72 08 65 45.`,
-            en: `wridachic is a Moroccan women's fashion brand. For any question about this policy, contact us at hello@wridachic.com or via WhatsApp on +212 7 72 08 65 45.`,
-            ar: `وريدة شيك علامة مغربية للأزياء النسائية. لأي سؤال حول هذه السياسة، تواصلي معنا على hello@wridachic.com أو واتساب +212 7 72 08 65 45.`,
+            fr: `wridachic est une marque marocaine de mode féminine. Pour toute question concernant cette politique, contactez-nous à hello@wridachic.com ou via WhatsApp au +212 773-847986.`,
+            en: `wridachic is a Moroccan women's fashion brand. For any question about this policy, contact us at hello@wridachic.com or via WhatsApp on +212 773-847986.`,
+            ar: `وريدة شيك علامة مغربية للأزياء النسائية. لأي سؤال حول هذه السياسة، تواصلي معنا على hello@wridachic.com أو واتساب +212 773-847986.`,
           },
         },
         {
