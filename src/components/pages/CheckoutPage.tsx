@@ -52,18 +52,15 @@ export function CheckoutPage() {
 
   // Reaching /checkout with an empty cart used to render a mostly-blank
   // page (form + 0-item summary), which looked broken on mobile. Send the
-  // user back to /cart instead. The 250 ms delay leaves room for cart
+  // user back to /cart instead. The 500 ms delay leaves room for cart
   // hydration from localStorage on first paint.
-  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setHydrated(true), 250);
-    return () => clearTimeout(t);
-  }, []);
-  useEffect(() => {
-    if (hydrated && cart.length === 0 && (step as number) !== 4) {
-      router.replace('/cart');
-    }
-  }, [hydrated, cart.length, step, router]);
+    if ((step as number) === 4) return;
+    const id = setTimeout(() => {
+      if (cart.length === 0) router.replace('/cart');
+    }, 500);
+    return () => clearTimeout(id);
+  }, [cart.length, step, router]);
 
   const applyCoupon = async () => {
     const code = codeInput.trim().toUpperCase();
@@ -214,13 +211,24 @@ export function CheckoutPage() {
 
   const valid = form.fullName.trim() && /^[0-9]{9,10}$/.test(form.phone.trim()) && form.address.trim() && form.city.trim();
 
-  // While we're waiting for localStorage hydration (or while the empty-cart
-  // redirect is firing), render a tiny placeholder rather than a janky
-  // half-broken layout.
-  if (!hydrated || (cart.length === 0 && (step as number) !== 4)) {
+  // Empty cart but redirect hasn't fired yet → show a friendly message
+  // instead of an empty form so the user understands why nothing's there.
+  if (cart.length === 0 && (step as number) !== 4) {
     return (
-      <div className="page2" style={{ padding: '120px 28px', textAlign: 'center', minHeight: '50vh' }}>
-        <div className="mono" style={{ fontSize: 12, opacity: 0.4 }}>...</div>
+      <div className="page2" style={{ padding: '80px 24px', textAlign: 'center', maxWidth: 420, margin: '0 auto' }}>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>🛒</div>
+        <h1 className="display" style={{ fontSize: 28, marginBottom: 8, letterSpacing: '-0.02em' }}>
+          {pick(lang, 'Panier vide', 'Empty cart', 'سلتك فارغة')}
+        </h1>
+        <p style={{ opacity: 0.6, fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+          {pick(lang,
+            'Ajoute des articles avant de passer commande.',
+            'Add some items before placing an order.',
+            'زيدي قطع قبل ما تتممي الطلب.')}
+        </p>
+        <button onClick={() => router.push('/shop')} className="btn2 btn2-dark btn2-lg">
+          {pick(lang, 'Découvrir la boutique', 'Discover the shop', 'اكتشفي المتجر')} →
+        </button>
       </div>
     );
   }
