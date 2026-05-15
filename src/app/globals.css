@@ -440,6 +440,115 @@ body.ar .wafloat2 { right: auto; left: 24px; }
 }
 
 /* ======= ADMIN — responsive grid ======= */
+.adm-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(15,14,13,0.08);
+}
+.adm-period-row, .adm-refresh-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.adm-refresh-row { margin-left: auto; }
+.adm-total-pill {
+  width: 100%;
+  text-align: right;
+  font-size: 12px;
+  opacity: 0.75;
+}
+.adm-label {
+  font-size: 11px;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.adm-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+  background: #fff;
+  color: rgba(15,14,13,0.7);
+  border: 1px solid rgba(15,14,13,0.18);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.adm-pill:hover:not(:disabled) { border-color: var(--clay); color: var(--clay); }
+.adm-pill.on { background: var(--clay); color: #fff; border-color: var(--clay); }
+.adm-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.adm-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.adm-search-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(15,14,13,0.18);
+  background: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  color: #0F0E0D;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.adm-search-input:focus { border-color: var(--clay); }
+
+.adm-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  background: #FFF8F0;
+  border: 1px solid var(--clay);
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.adm-stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  cursor: pointer;
+  text-align: left;
+  border-top: 1px solid rgba(15,14,13,0.08);
+  border-right: 1px solid rgba(15,14,13,0.08);
+  border-bottom: 1px solid rgba(15,14,13,0.08);
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.adm-stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15,14,13,0.08); }
+.adm-stat-card.on {
+  background: #FFF8F0;
+  box-shadow: 0 0 0 2px var(--clay);
+}
+.adm-stat-name {
+  font-size: 11px;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.adm-stat-num { font-size: 34px; margin-top: 6px; line-height: 1; }
+.adm-stat-meta { font-size: 12px; opacity: 0.55; margin-top: 6px; }
+
 .adm-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -453,7 +562,11 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   align-items: start;
 }
 @media (max-width: 900px) {
-  .adm-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .adm-stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .adm-stat-num { font-size: 28px; }
+  .adm-topbar { flex-direction: column; align-items: flex-start; }
+  .adm-refresh-row { margin-left: 0; }
+  .adm-total-pill { text-align: left; }
   .adm-order-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
@@ -465,10 +578,14 @@ body.ar .wafloat2 { right: auto; left: 24px; }
   .adm-order-actions button { flex: 1; min-width: 90px; margin-top: 0 !important; }
 }
 @media (max-width: 480px) {
-  .adm-stats-grid { grid-template-columns: 1fr 1fr; }
+  .adm-stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .adm-stat-card { padding: 14px; }
+  .adm-stat-num { font-size: 26px; }
   .adm-order-card { padding: 14px !important; }
   .adm-order-grid { grid-template-columns: 1fr; }
   .adm-order-customer { grid-column: 1; padding-top: 8px; border-top: 1px dashed rgba(15,14,13,0.08); }
+  .adm-search-input { font-size: 14px; }
+  .adm-bulk-bar { padding: 10px; font-size: 11px; }
 }
 
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); will-change: opacity, transform; }
