@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     default: 'wridachic — Mode féminine marocaine',
     template: '%s · wridachic',
   },
-  description: 'wridachic (وريدة شيك) — Mode féminine marocaine : tenues de prière, robes et essentiels. Livraison partout au Maroc, paiement à la livraison. Dès 149 MAD.',
+  description: 'wridachic (وريدة شيك) — Mode féminine marocaine : tenues de prière, robes et essentiels. Livraison partout au Maroc, paiement à la livraison. Dès 299 MAD.',
   keywords: ['wridachic', 'wrida chic', 'وريدة شيك', 'mode marocaine', 'tenues de prière', 'jilbab', 'khimar', 'robes', 'caftan', 'mode femme Maroc', 'abaya', 'vêtements modestes'],
   authors: [{ name: 'wridachic' }],
   alternates: {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: 'wridachic',
     url: SITE_URL,
     title: 'wridachic — Mode féminine marocaine',
-    description: 'Robes, ensembles & essentiels féminins — dès 149 MAD, livrés partout au Maroc en 24-48h.',
+    description: 'Robes, ensembles & essentiels féminins — dès 299 MAD, livrés partout au Maroc en 24-48h.',
     images: [{ url: `${SITE_URL}/assets/3.jpg`, width: 1200, height: 630 }],
     locale: 'fr_MA',
     alternateLocale: ['ar_MA'],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'wridachic — Mode féminine marocaine',
-    description: 'Robes, ensembles & essentiels féminins — dès 149 MAD, livraison rapide au Maroc.',
+    description: 'Robes, ensembles & essentiels féminins — dès 299 MAD, livraison rapide au Maroc.',
     images: [`${SITE_URL}/assets/3.jpg`],
   },
   icons: {
@@ -59,10 +59,10 @@ const ORG_JSONLD = {
   image: `${SITE_URL}/assets/3.jpg`,
   description: 'Mode féminine marocaine : tenues de prière, robes et essentiels. Livraison partout au Maroc.',
   address: { '@type': 'PostalAddress', addressCountry: 'MA', addressLocality: 'Casablanca' },
-  priceRange: '149 MAD - 500 MAD',
+  priceRange: '299 MAD - 500 MAD',
   paymentAccepted: 'Cash on delivery, Credit card',
   areaServed: 'Morocco',
-  sameAs: ['https://www.instagram.com/wrida_chic/'],
+  sameAs: ['https://www.instagram.com/wrida.chic/', 'https://web.facebook.com/profile.php?id=61589508276595'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

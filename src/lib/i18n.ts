@@ -12,7 +12,7 @@ export const TR = {
     hero: {
       eyebrow: 'La mode féminine marocaine',
       title: 'Le style à portée\nde toutes',
-      sub: 'Robes, ensembles & essentiels féminins — dès 149 MAD, livrés partout au Maroc en 24-48h.',
+      sub: 'Robes, ensembles & essentiels féminins — dès 299 MAD, livrés partout au Maroc en 24-48h.',
       cta1: 'Découvrir la collection', cta2: 'Nouveautés',
     },
     sections: {
@@ -62,7 +62,7 @@ export const TR = {
     hero: {
       eyebrow: 'Moroccan women\'s fashion',
       title: 'Style within reach\nof every woman',
-      sub: 'Dresses, sets & women\'s essentials — from 149 MAD, delivered all over Morocco in 24-48h.',
+      sub: 'Dresses, sets & women\'s essentials — from 299 MAD, delivered all over Morocco in 24-48h.',
       cta1: 'Discover the collection', cta2: 'New arrivals',
     },
     sections: {
@@ -111,7 +111,7 @@ export const TR = {
     nav: { shop: 'المتجر', prayer: 'الصلاة', new: 'جديد', lookbook: 'لوكبوك', about: 'عنا' },
     hero: {
       eyebrow: 'الأزياء النسائية المغربية', title: 'الأناقة في متناول\nالجميع',
-      sub: 'فساتين، أطقم وأساسيات نسائية — ابتداءً من 149 درهم، توصيل في كل المغرب خلال 24-48 ساعة.',
+      sub: 'فساتين، أطقم وأساسيات نسائية — ابتداءً من 299 درهم، توصيل في كل المغرب خلال 24-48 ساعة.',
       cta1: 'اكتشفي المجموعة', cta2: 'الجديد',
     },
     sections: {

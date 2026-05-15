@@ -38,9 +38,9 @@ export function AboutPage() {
             </h2>
             <p style={{ fontSize: 15, opacity: 0.7, lineHeight: 1.75 }}>
               {pick(lang,
-                'On collabore avec des ateliers artisanaux à Casablanca, Fès et Marrakech. Chaque pièce est pensée pour allier qualité, modestie et style — des caftans de cérémonie aux tenues de prière.',
-                'We work with artisan ateliers in Casablanca, Fès and Marrakech. Every piece is designed to combine quality, modesty and style — from ceremonial caftans to prayer outfits.',
-                'نتعاون مع ورشات حرفية في الدار البيضاء وفاس ومراكش. كل قطعة مصممة لتجمع بين الجودة والحشمة والأناقة — من قفطان المناسبات إلى ملابس الصلاة.')}
+                'On collabore avec des ateliers artisanaux à Casablanca, Fès et Marrakech. Chaque pièce est pensée pour allier qualité, élégance et style — des robes du quotidien aux ensembles raffinés.',
+                'We work with artisan ateliers in Casablanca, Fès and Marrakech. Every piece is designed to combine quality, elegance and style — from everyday dresses to refined sets.',
+                'نتعاون مع ورشات حرفية في الدار البيضاء وفاس ومراكش. كل قطعة مصممة لتجمع بين الجودة والأناقة — من فساتين اليومي إلى الأطقم الراقية.')}
             </p>
           </div>
         </div>
@@ -50,7 +50,7 @@ export function AboutPage() {
             {
               n: '01',
               t: pick(lang, 'Accessible', 'Affordable', 'في المتناول'),
-              d: pick(lang, 'Dès 149 MAD. La qualité sans compromis.', 'From 149 MAD. Quality without compromise.', 'من 149 درهم. جودة بلا تنازل.'),
+              d: pick(lang, 'Dès 299 MAD. La qualité sans compromis.', 'From 299 MAD. Quality without compromise.', 'من 299 درهم. جودة بلا تنازل.'),
               tint: 'rose',
             },
             {

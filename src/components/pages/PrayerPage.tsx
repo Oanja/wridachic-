@@ -29,9 +29,9 @@ export function PrayerPage({ products }: { products: Product[] }) {
           </h1>
           <p style={{ fontSize: 15, maxWidth: 460, opacity: 0.85, marginTop: 16 }}>
             {pick(lang,
-              'Jilbabs, khimars & ensembles conçus pour être confortables, couvrants et élégants. Dès 149 MAD.',
-              'Jilbabs, khimars & sets designed to be comfortable, modest and elegant. From 149 MAD.',
-              'جلابيب، خمارات وأطقم مصممة لتكون مريحة، محتشمة وجميلة. من 149 درهم.')}
+              'Jilbabs, khimars & ensembles conçus pour être confortables, couvrants et élégants. Dès 299 MAD.',
+              'Jilbabs, khimars & sets designed to be comfortable, modest and elegant. From 299 MAD.',
+              'جلابيب، خمارات وأطقم مصممة لتكون مريحة، محتشمة وجميلة. من 299 درهم.')}
           </p>
         </div>
       </section>

@@ -6,7 +6,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Espace Prière — Jilbabs & Khimars',
-  description: 'Tenues de prière élégantes et confortables : jilbabs, khimars et ensembles. Dès 149 MAD, livraison au Maroc.',
+  description: 'Tenues de prière élégantes et confortables : jilbabs, khimars et ensembles. Dès 299 MAD, livraison au Maroc.',
 };
 
 export default async function Page() {

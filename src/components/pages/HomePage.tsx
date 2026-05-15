@@ -26,11 +26,14 @@ export function HomePage({ products }: { products: Product[] }) {
                 <span className="mono" style={{ fontSize: 11, opacity: 0.5 }}>/ {pick(lang, 'Nouveau chaque semaine', 'New every week', 'جديد كل أسبوع')}</span>
               </div>
 
-              <h1 className="display hero-title reveal" style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24, transitionDelay: '0.1s' }}>
+              <h1
+                className={`display hero-title reveal ${lang === 'en' ? 'hero-title-en' : ''}`}
+                style={{ fontSize: 'clamp(40px, 6vw, 92px)', lineHeight: 0.98, letterSpacing: '-0.045em', marginBottom: 24, transitionDelay: '0.1s' }}
+              >
                 {lang === 'ar' ? (
                   <>أنــــاقة <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>مغــــربية</em><br />أصــــيلة.</>
                 ) : lang === 'en' ? (
-                  <><em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em><br />elegance.</>
+                  <><span style={{ whiteSpace: 'nowrap' }}>Authentic <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>Moroccan</em></span><br />elegance.</>
                 ) : (
                   <>Le style <em style={{ fontStyle: 'italic', color: 'var(--clay)' }}>marocain</em><br />au naturel.</>
                 )}
@@ -38,9 +41,9 @@ export function HomePage({ products }: { products: Product[] }) {
 
               <p className="hero-sub reveal" style={{ fontSize: 17, maxWidth: 460, lineHeight: 1.6, opacity: 0.72, marginBottom: 36, transitionDelay: '0.2s' }}>
                 {pick(lang,
-                  "Robes, ensembles & essentiels féminins — dès 149 MAD, livrés partout au Maroc en 24 à 48h.",
-                  'Dresses, sets & women\'s essentials — from 149 MAD, delivered all over Morocco in 24-48h.',
-                  'فساتين، أطقم وأساسيات نسائية — ابتداءً من 149 درهم، توصيل في كل المغرب خلال 24 إلى 48 ساعة.')}
+                  "Robes, ensembles & essentiels féminins — dès 299 MAD, livrés partout au Maroc en 24 à 48h.",
+                  'Dresses, sets & women\'s essentials — from 299 MAD, delivered all over Morocco in 24-48h.',
+                  'فساتين، أطقم وأساسيات نسائية — ابتداءً من 299 درهم، توصيل في كل المغرب خلال 24 إلى 48 ساعة.')}
               </p>
 
               <div className="reveal" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 44, transitionDelay: '0.3s' }}>
@@ -127,13 +130,13 @@ export function HomePage({ products }: { products: Product[] }) {
             </Link>
 
             <div className="cat-side">
-              <Link href="/shop" className="cat-small">
+              <Link href="/new" className="cat-small">
                 <Image src="/assets/4.jpg" alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>DENIM / 02</div>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'NOUVEAU', 'NEW', 'جديد')} / 02</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {pick(lang, 'Denim', 'Denim', 'جينز')}
+                    {pick(lang, 'Nouveautés', 'New arrivals', 'الجديد')}
                   </div>
                 </div>
               </Link>
@@ -141,9 +144,9 @@ export function HomePage({ products }: { products: Product[] }) {
                 <Image src="/assets/00.jpg" alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'CAFTANS', 'CAFTANS', 'قفطان')} / 03</div>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'TENDANCE', 'TRENDING', 'الرائج')} / 03</div>
                   <div className="display cat-title-sm" style={{ fontSize: 'clamp(24px, 2.6vw, 34px)', lineHeight: 1.05 }}>
-                    {pick(lang, 'Caftans', 'Caftans', 'قفطان')}
+                    {pick(lang, 'Best-sellers', 'Best-sellers', 'الأكثر طلباً')}
                   </div>
                 </div>
               </Link>
@@ -206,9 +209,9 @@ export function HomePage({ products }: { products: Product[] }) {
               </h2>
               <p style={{ fontSize: 15, maxWidth: 420, lineHeight: 1.7, opacity: 0.75, marginBottom: 28 }}>
                 {pick(lang,
-                  'Robes, ensembles, caftans & basics conçus pour la femme marocaine. Qualité, élégance et prix justes — dès 149 MAD.',
-                  'Dresses, sets, caftans & basics designed for the Moroccan woman. Quality, elegance and fair prices — from 149 MAD.',
-                  'فساتين، أطقم، قفطان وأساسيات مصممة للمرأة المغربية. جودة، أناقة وأثمان مناسبة — ابتداءً من 149 درهم.')}
+                  'Robes & ensembles raffinés, conçus pour la femme marocaine. Qualité, élégance et prix justes — dès 299 MAD.',
+                  'Refined dresses & sets, designed for the Moroccan woman. Quality, elegance and fair prices — from 299 MAD.',
+                  'فساتين وأطقم راقية، مصممة للمرأة المغربية. جودة، أناقة وأثمان مناسبة — ابتداءً من 299 درهم.')}
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Link href="/shop" className="btn2 btn2-clay btn2-lg">

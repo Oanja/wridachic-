@@ -87,7 +87,9 @@ export function AdminPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAF6F1', color: '#0F0E0D', padding: '24px 16px' }}>
+    // Force LTR on the admin regardless of the user's chosen UI language so
+    // form labels & tables don't flip when lang=ar.
+    <div dir="ltr" style={{ minHeight: '100vh', background: '#FAF6F1', color: '#0F0E0D', padding: '24px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

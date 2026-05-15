@@ -81,9 +81,9 @@ export function Footer() {
           <div>
             <h4>Follow</h4>
             <ul>
-              <li><a href="https://www.instagram.com/wrida_chic/" target="_blank" rel="noopener noreferrer">↗ Instagram</a></li>
+              <li><a href="https://www.instagram.com/wrida.chic/" target="_blank" rel="noopener noreferrer">↗ Instagram</a></li>
+              <li><a href="https://web.facebook.com/profile.php?id=61589508276595" target="_blank" rel="noopener noreferrer">↗ Facebook</a></li>
               <li><a>↗ TikTok</a></li>
-              <li><a>↗ Pinterest</a></li>
               <li><a href="https://wa.me/212773847986" target="_blank" rel="noopener noreferrer">↗ WhatsApp</a></li>
             </ul>
           </div>

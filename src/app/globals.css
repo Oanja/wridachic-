@@ -319,6 +319,10 @@ body.ar .wafloat2 { right: auto; left: 24px; }
      56px bottom margin = ~32px small-image overhang + 24px gap to the title. */
   .hero-grid { display: flex !important; flex-direction: column !important; gap: 0 !important; align-items: stretch !important; }
   .hero-text { padding-right: 0 !important; padding-left: 0 !important; }
+  /* The English headline is longer than FR/AR ("Authentic Moroccan" wraps
+     awkwardly on phones at the default 40px). Drop to 34px on narrow
+     viewports so it stays on two lines. */
+  .hero-title-en { font-size: clamp(34px, 9vw, 92px) !important; }
   .hero-collage {
     display: block !important;
     order: -1 !important;

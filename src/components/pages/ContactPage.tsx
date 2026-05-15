@@ -22,9 +22,9 @@ const CHANNELS = [
   {
     icon: 'arr' as const,
     label: { fr: 'Instagram', en: 'Instagram', ar: 'انستغرام' },
-    sub: { fr: '@wrida_chic', en: '@wrida_chic', ar: '@wrida_chic' },
-    href: 'https://www.instagram.com/wrida_chic/',
-    value: '@wrida_chic',
+    sub: { fr: '@wrida.chic', en: '@wrida.chic', ar: '@wrida.chic' },
+    href: 'https://www.instagram.com/wrida.chic/',
+    value: '@wrida.chic',
   },
 ];
 
