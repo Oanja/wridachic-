@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sendOrderWhatsAppConfirmation } from '@/lib/whatsapp';
 import { sendOrderTelegramNotification } from '@/lib/telegram';
+import { upsertOrderToSheet } from '@/lib/sheets';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -168,9 +169,9 @@ export async function POST(req: Request) {
       customerResult = await sendEmail(data.email, t.subject, customerHtml);
     }
 
-    // Fire WhatsApp template + Telegram admin alert in parallel — they're
-    // independent and neither should block the other.
-    const [whatsappResult, telegramResult] = await Promise.all([
+    // Fire WhatsApp template + Telegram admin alert + Google Sheets sync
+    // in parallel — they're independent and none should block the others.
+    const [whatsappResult, telegramResult, sheetsResult] = await Promise.all([
       sendOrderWhatsAppConfirmation({
         orderNumber: data.orderNumber,
         fullName: data.fullName,
@@ -187,6 +188,18 @@ export async function POST(req: Request) {
         city: data.city,
         total: data.total,
         items: data.items,
+      }),
+      upsertOrderToSheet({
+        orderNumber: data.orderNumber,
+        fullName: data.fullName,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        city: data.city,
+        total: data.total,
+        status: 'nouveau',
+        items: data.items,
+        created_at: new Date().toISOString(),
       }),
     ]);
 
@@ -211,12 +224,20 @@ export async function POST(req: Request) {
       });
     }
 
+    if (!sheetsResult.ok) {
+      console.error('[sheets] sync failed', {
+        orderNumber: data.orderNumber,
+        reason: sheetsResult.reason,
+      });
+    }
+
     return NextResponse.json({
       ok: true,
       admin: adminResult,
       customer: customerResult,
       whatsapp: whatsappResult,
       telegram: telegramResult,
+      sheets: sheetsResult,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : 'unknown' }, { status: 500 });
