@@ -25,7 +25,11 @@ export interface SheetsOrderPayload {
   status?: string;
   cancel_reason?: string | null;
   created_at?: string;
-  items: Array<{ name: string; qty: number; size: string; color: string }>;
+  items: Array<{ name: string; qty: number; size: string; color: string; price?: number; cost?: number | null }>;
+  /** Sum of (item.cost × qty) — products' purchase cost. */
+  cost_total?: number;
+  /** Delivery cost paid by the business (20 MAD Casablanca, 35 MAD elsewhere). */
+  delivery_cost?: number;
 }
 
 type SheetsResult = { ok: boolean; reason: string; details?: unknown };

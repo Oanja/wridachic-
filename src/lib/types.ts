@@ -25,6 +25,8 @@ export interface Product {
   mannequin?: string;
   /** Available units in stock. null/undefined = unlimited (no tracking). 0 = sold out. */
   stock?: number | null;
+  /** Unit cost (purchase price) — admin-only, used for profit calculation. */
+  cost?: number | null;
 }
 
 export interface Category {

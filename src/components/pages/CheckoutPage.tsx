@@ -107,6 +107,9 @@ export function CheckoutPage() {
     const itemsData = cart.map((it) => ({
       name: pickField(lang, it.name, it.nameEn, it.nameAr),
       qty: it.qty, size: it.size, color: it.color, price: it.price,
+      // Snapshot the product cost at order time so future price/cost edits
+      // don't retroactively change historical profit numbers.
+      cost: it.cost ?? null,
       image: it.imgFiles?.[0],
     }));
     try {

@@ -30,10 +30,27 @@ interface OrderRow {
   total: number;
   created_at: string;
   cancel_reason?: string | null;
-  items?: Array<{ name: string; qty: number; size: string; color: string }>;
+  items?: Array<{ name: string; qty: number; size: string; color: string; price?: number; cost?: number | null }>;
+}
+
+/**
+ * Delivery cost paid by *the business* (not the customer).
+ * Casablanca = 20 MAD, anywhere else = 35 MAD. Case-insensitive, accents-tolerant.
+ */
+function deliveryCostFor(city: string | null | undefined): number {
+  const c = (city ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  return c.includes('casablanca') || c.includes('casa') ? 20 : 35;
 }
 
 function toSheetsPayload(o: OrderRow): SheetsOrderPayload {
+  const items = o.items ?? [];
+  // Sum of (cost × qty) across all line items. Items without cost contribute 0
+  // — they simply don't have a known purchase price yet (legacy orders, or
+  // products without `cost` filled in by the admin).
+  const cost_total = items.reduce(
+    (sum, it) => sum + (typeof it.cost === 'number' ? it.cost * it.qty : 0),
+    0,
+  );
   return {
     orderNumber: o.order_number,
     fullName: o.full_name,
@@ -45,7 +62,9 @@ function toSheetsPayload(o: OrderRow): SheetsOrderPayload {
     status: o.status,
     cancel_reason: o.cancel_reason,
     created_at: o.created_at,
-    items: o.items ?? [],
+    items,
+    cost_total,
+    delivery_cost: deliveryCostFor(o.city),
   };
 }
 

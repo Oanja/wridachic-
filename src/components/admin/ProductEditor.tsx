@@ -22,6 +22,7 @@ interface ProductRow {
   sort_order?: number;
   active?: boolean;
   stock?: number | null;
+  cost?: number | null;
 }
 
 const DEFAULT_SIZES = ['XS','S','M','L','XL','XXL'];
@@ -59,6 +60,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
     sort_order: product?.sort_order ?? nextSortOrder,
     active: product?.active ?? true,
     stock: product?.stock ?? null as number | null,
+    cost: product?.cost ?? null as number | null,
   });
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -163,6 +165,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
       sort_order: Number(form.sort_order) || 0,
       active: form.active,
       stock: form.stock,
+      cost: form.cost,
       updated_at: new Date().toISOString(),
     };
     const res = isNew
@@ -377,6 +380,29 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
             />
             <div style={{ fontSize: 10, opacity: 0.5, marginTop: 6 }}>
               0 = rupture de stock · vide = pas de suivi (toujours disponible)
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(15,14,13,0.1)', paddingTop: 14 }}>
+            <label style={labelStyle}>💰 Prix d&apos;achat / Coût (MAD)</label>
+            <input
+              type="number" min={0} step={0.01}
+              style={inputStyle}
+              value={form.cost ?? ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                set('cost', v === '' ? null : Math.max(0, Number(v)));
+              }}
+              placeholder="Ex: 150 (combien il vous coûte)"
+            />
+            <div style={{ fontSize: 10, opacity: 0.5, marginTop: 6 }}>
+              Le coût est <strong>privé</strong> (admin uniquement). Sert à calculer le profit dans le dashboard.
+              {form.cost != null && form.price && Number(form.price) > 0 && (
+                <span style={{ display: 'block', marginTop: 4, color: 'var(--clay)' }}>
+                  → Marge: <strong>{(Number(form.price) - form.cost).toFixed(0)} MAD</strong>
+                  {' '}({(((Number(form.price) - form.cost) / Number(form.price)) * 100).toFixed(0)}%)
+                </span>
+              )}
             </div>
           </div>
 
