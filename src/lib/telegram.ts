@@ -25,6 +25,8 @@ export interface TelegramOrderPayload {
   address?: string;
   city?: string;
   total: number;
+  /** Site language the customer was browsing in — fr / en / ar. */
+  lang?: string;
   items: Array<{
     name: string;
     qty: number;
@@ -32,6 +34,12 @@ export interface TelegramOrderPayload {
     color: string;
   }>;
 }
+
+const LANG_FLAG: Record<string, string> = {
+  fr: '🇫🇷 FR',
+  en: '🇬🇧 EN',
+  ar: '🇲🇦 AR',
+};
 
 function escape(s: string) {
   // Telegram MarkdownV2 reserves: _ * [ ] ( ) ~ ` > # + - = | { } . !
@@ -72,10 +80,12 @@ export async function sendOrderTelegramNotification(order: TelegramOrderPayload)
     .map((it) => `📦 ${escape(it.name)} — ${escape(it.size)} / ${escape(it.color)} × ${it.qty}`)
     .join('\n');
 
+  const langBadge = order.lang && LANG_FLAG[order.lang] ? `   <i>${LANG_FLAG[order.lang]}</i>` : '';
+
   const text = [
     `🛍️ <b>NOUVELLE COMMANDE</b>`,
     `━━━━━━━━━━━━━━━━━`,
-    `<b>${escape(order.orderNumber)}</b>`,
+    `<b>${escape(order.orderNumber)}</b>${langBadge}`,
     ``,
     `👤 ${escape(order.fullName)}`,
     `📞 <a href="tel:${escape(order.phone)}">${escape(order.phone)}</a> · <a href="https://wa.me/${waPhone}">WhatsApp</a>`,

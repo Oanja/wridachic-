@@ -62,10 +62,20 @@ export function RecoveryDialog() {
 
   if (!open) return null;
 
-  const close = () => {
+  const close = async () => {
     setOpen(false);
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', window.location.pathname);
+    }
+    // If the user dismisses the recovery dialog WITHOUT setting a new
+    // password, terminate the temporary recovery session so they aren't
+    // left silently logged in to someone else's account. We only skip
+    // sign-out when the flow actually completed (done=true).
+    if (!done) {
+      try {
+        const sb = getSupabaseBrowser();
+        await sb.auth.signOut();
+      } catch {/* silent — close should always succeed */}
     }
   };
 

@@ -198,6 +198,7 @@ export async function POST(req: Request) {
         address: data.address,
         city: data.city,
         total: data.total,
+        lang: data.lang,
         items: data.items,
       }),
       upsertOrderToSheet({

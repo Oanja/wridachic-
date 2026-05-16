@@ -38,9 +38,19 @@ interface Order {
   city: string;
   total: number;
   created_at: string;
+  lang?: string | null;
   items?: Array<{ name: string; qty: number; size: string; color: string }>;
   cancel_reason?: string | null;
 }
+
+// Small flag/label shown next to the order number so the admin sees at
+// a glance which language the customer was browsing in — useful for
+// callbacks ("she was on the Arabic site, call in darija").
+const LANG_BADGE: Record<string, { flag: string; label: string; color: string }> = {
+  fr: { flag: '🇫🇷', label: 'FR', color: '#4A90D9' },
+  en: { flag: '🇬🇧', label: 'EN', color: '#7B68EE' },
+  ar: { flag: '🇲🇦', label: 'AR', color: '#C85C3F' },
+};
 
 // Auto-refresh interval (ms). 30s strikes a balance between fresh data and
 // Supabase rate-limit politeness. Set to 0 to disable.
@@ -420,7 +430,22 @@ export function AdminOrders() {
                         style={{ marginTop: 3, cursor: 'pointer' }}
                       />
                       <span>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--clay)' }}>{o.order_number}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--clay)' }}>{o.order_number}</div>
+                          {o.lang && LANG_BADGE[o.lang] && (
+                            <span
+                              title={`Cliente sur la version ${LANG_BADGE[o.lang].label}`}
+                              style={{
+                                fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
+                                background: LANG_BADGE[o.lang].color + '20',
+                                color: LANG_BADGE[o.lang].color,
+                                letterSpacing: '0.06em',
+                              }}
+                            >
+                              {LANG_BADGE[o.lang].flag} {LANG_BADGE[o.lang].label}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 10, opacity: 0.5, marginTop: 4 }}>{fmt(o.created_at)}</div>
                         <div style={{ display: 'inline-block', marginTop: 8, padding: '3px 10px', borderRadius: 999, fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', background: (STATUS_COLORS[o.status] ?? '#999') + '22', color: STATUS_COLORS[o.status] ?? '#999' }}>{o.status}</div>
                       </span>

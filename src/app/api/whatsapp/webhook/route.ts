@@ -95,7 +95,7 @@ export async function POST(req: Request) {
           .from('orders')
           .update(updatePayload)
           .eq('order_number', parsed.orderNumber)
-          .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at')
+          .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at, lang')
           .single();
 
         if (error) {
@@ -134,10 +134,13 @@ export async function POST(req: Request) {
           : parsed.action === 'edit'
             ? TELEGRAM_CHATS.modifications
             : TELEGRAM_CHATS.orders;
+        const langFlag = data.lang === 'ar' ? '🇲🇦 AR'
+          : data.lang === 'en' ? '🇬🇧 EN'
+          : data.lang === 'fr' ? '🇫🇷 FR' : '';
         await sendTelegramText(
           `${tgEmoji} ${tgLabel}\n` +
           `━━━━━━━━━━━━━━━━━\n` +
-          `<b>${data.order_number}</b>\n` +
+          `<b>${data.order_number}</b>${langFlag ? '   <i>' + langFlag + '</i>' : ''}\n` +
           `👤 ${data.full_name}\n` +
           `📞 ${data.phone} · <a href="${waLink}">WhatsApp</a>\n` +
           `💰 ${data.total} MAD` +
@@ -191,7 +194,7 @@ export async function POST(req: Request) {
         .from('orders')
         .update({ cancel_reason: text, awaiting_reply: null })
         .eq('id', pending.id)
-        .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at')
+        .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at, lang')
         .single();
 
       await sendWhatsAppText(from, CANCEL_REASON_THANK_YOU);

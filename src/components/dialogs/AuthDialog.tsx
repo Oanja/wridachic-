@@ -127,6 +127,31 @@ export function AuthDialog() {
           }
         }
       } else if (mode === 'reset') {
+        // Pre-flight: check the email is actually registered before
+        // pretending to send a code. Supabase silently no-ops on unknown
+        // emails (security), but that leaves the customer staring at an
+        // OTP screen waiting for an email that will never arrive.
+        try {
+          const check = await fetch('/api/auth/check-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          const result = await check.json();
+          // Only block if the server is sure the email doesn't exist
+          // (fallback=true means "couldn't check" → let the flow proceed).
+          if (result.exists === false && !result.fallback) {
+            throw new Error(pick(lang,
+              "Cet e-mail n'est pas enregistré. Crée un compte d'abord.",
+              "This e-mail isn't registered. Create an account first.",
+              'هاد الإيميل غير مسجل. أنشئي حساب أولا.'));
+          }
+        } catch (e) {
+          if (e instanceof Error && /enregistré|registered|مسجل/.test(e.message)) {
+            throw e;
+          }
+          // network glitch on the check → proceed silently
+        }
         // resetPasswordForEmail with no `redirectTo` makes Supabase send the
         // {{ .Token }} OTP code email (template-permitting). The redirectTo is
         // only used when the email contains {{ .ConfirmationURL }} link.
