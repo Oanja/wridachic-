@@ -9,8 +9,9 @@ import { AdminCoupons } from '@/components/admin/AdminCoupons';
 import { AdminNewsletter } from '@/components/admin/AdminNewsletter';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminSite } from '@/components/admin/AdminSite';
+import { AdminHealth } from '@/components/admin/AdminHealth';
 
-type Tab = 'orders' | 'products' | 'coupons' | 'newsletter' | 'users' | 'site';
+type Tab = 'orders' | 'products' | 'coupons' | 'newsletter' | 'users' | 'site' | 'health';
 
 export function AdminPage() {
   const sb = getSupabaseBrowser();
@@ -86,6 +87,7 @@ export function AdminPage() {
     { id: 'newsletter', label: 'Newsletter' },
     { id: 'users', label: 'Utilisateurs' },
     { id: 'site', label: '🎨 Site' },
+    { id: 'health', label: '🩺 Système' },
   ];
 
   return (
@@ -136,6 +138,7 @@ export function AdminPage() {
         {tab === 'newsletter' && <AdminNewsletter />}
         {tab === 'users' && <AdminUsers />}
         {tab === 'site' && <AdminSite />}
+        {tab === 'health' && <AdminHealth />}
       </div>
 
       {/* Floating "View site" button — sticks to the bottom-right corner so

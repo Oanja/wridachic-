@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { sendOrderWhatsAppConfirmation } from '@/lib/whatsapp';
 import { sendOrderTelegramNotification } from '@/lib/telegram';
 import { upsertOrderToSheet } from '@/lib/sheets';
+import { alertError, alertWarn } from '@/lib/alerts';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -215,6 +216,21 @@ export async function POST(req: Request) {
         phoneLast4: data.phone.replace(/\D/g, '').slice(-4),
         reason: whatsappResult.reason,
       });
+      // Only escalate to Telegram if WhatsApp is genuinely down. Skip the
+      // self-send edge case ("can't message own number") to avoid noise.
+      if (!/cannot message yourself|same phone/i.test(whatsappResult.reason)) {
+        alertWarn({
+          title: `Confirmation WhatsApp non envoyée — ${data.orderNumber}`,
+          body: 'La cliente ne recevra pas le message de confirmation automatique. Contacte-la manuellement.',
+          context: {
+            orderNumber: data.orderNumber,
+            customer: data.fullName,
+            phone: data.phone,
+            reason: whatsappResult.reason.slice(0, 400),
+          },
+          fingerprint: 'wa-confirm-failed',
+        });
+      }
     }
 
     if (!telegramResult.ok) {
@@ -222,12 +238,36 @@ export async function POST(req: Request) {
         orderNumber: data.orderNumber,
         reason: telegramResult.reason,
       });
+      // If Telegram is down we obviously can't alert via Telegram. Just log.
     }
 
     if (!sheetsResult.ok) {
       console.error('[sheets] sync failed', {
         orderNumber: data.orderNumber,
         reason: sheetsResult.reason,
+      });
+      alertWarn({
+        title: 'Google Sheets désynchronisé',
+        body: `Le Sheet ne reflète plus la base. Clique « Sync Sheets » dans l'admin pour rattraper.`,
+        context: { orderNumber: data.orderNumber, reason: sheetsResult.reason.slice(0, 400) },
+        fingerprint: 'sheets-sync-failed',
+      });
+    }
+
+    // If BOTH emails failed AND the customer has no Telegram backup, the
+    // admin literally has no async record beyond Supabase — alert hard.
+    if (!adminResult.ok && !telegramResult.ok) {
+      alertError({
+        title: `Aucune notification reçue pour ${data.orderNumber}`,
+        body: 'Email admin ET Telegram ont échoué. La commande EST bien dans Supabase (ouvre /admin) mais aucune notif n\'a été envoyée.',
+        context: {
+          orderNumber: data.orderNumber,
+          customer: data.fullName,
+          phone: data.phone,
+          adminEmailReason: adminResult.reason,
+          telegramReason: telegramResult.reason,
+        },
+        fingerprint: 'notify-total-failure',
       });
     }
 

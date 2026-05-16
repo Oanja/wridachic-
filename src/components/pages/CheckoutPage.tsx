@@ -24,6 +24,7 @@ export function CheckoutPage() {
   const [payment] = useState<'cod'>('cod');
   const [form, setForm] = useState({ fullName: '', phone: '', email: '', address: '', city: 'Casablanca' });
   const [saving, setSaving] = useState(false);
+  const [orderError, setOrderError] = useState('');
   const [orderNum, setOrderNum] = useState('');
   const [giftCode, setGiftCode] = useState('');
   const [giftCopied, setGiftCopied] = useState(false);
@@ -122,7 +123,37 @@ export function CheckoutPage() {
       if (user) payload.user_id = user.id;
       if (autoDiscount > 0) payload.auto_discount = autoDiscount;
       if (coupon) { payload.coupon_code = coupon.code; payload.discount = discount; }
-      const { data: inserted } = await sb.from('orders').insert(payload).select('id').single();
+      const { data: inserted, error: insertError } = await sb.from('orders').insert(payload).select('id').single();
+
+      // Hard failure path: the order DID NOT save. Tell the user clearly so
+      // they don't think the order went through, and ping the admin via the
+      // server-side alert API (Telegram).
+      if (insertError || !inserted) {
+        const reason = insertError?.message || 'unknown DB error';
+        console.error('[order] supabase insert failed', reason);
+        // Server-side alert — Supabase RLS failure is critical.
+        fetch('/api/notify-checkout-failure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderNumber: num,
+            fullName: form.fullName,
+            phone: form.phone,
+            email: form.email,
+            city: form.city,
+            address: form.address,
+            total,
+            items: itemsData,
+            reason,
+          }),
+        }).catch(() => {});
+        setSaving(false);
+        setOrderError(pick(lang,
+          "Désolée, une erreur s'est produite. Notre équipe a été notifiée et te contactera sur WhatsApp dans les minutes qui suivent. Tu peux aussi nous écrire directement.",
+          'Sorry, an error occurred. Our team has been notified and will contact you on WhatsApp shortly. You can also reach us directly.',
+          'عذراً، حدث خطأ. تم إخطار فريقنا وسيتواصل معك على واتساب قريباً. يمكنك أيضاً مراسلتنا مباشرة.'));
+        return;
+      }
 
       // Fire-and-forget: push the brand-new order to Google Sheets immediately
       // so the admin doesn't have to hit "Sync Sheets" manually for every new
@@ -170,7 +201,32 @@ export function CheckoutPage() {
       }).catch(() => { /* silent — email is non-critical */ });
 
       trackMetaEvent('Purchase', cartPayload(cart, total));
-    } catch (e) { console.error('Supabase:', e); }
+    } catch (e) {
+      console.error('[order] unexpected throw', e);
+      // Catch-all: network or runtime failure. Don't lose the customer.
+      const reason = e instanceof Error ? e.message : 'unknown error';
+      fetch('/api/notify-checkout-failure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: num,
+          fullName: form.fullName,
+          phone: form.phone,
+          email: form.email,
+          city: form.city,
+          address: form.address,
+          total,
+          items: itemsData,
+          reason: 'CLIENT_THROW: ' + reason,
+        }),
+      }).catch(() => {});
+      setSaving(false);
+      setOrderError(pick(lang,
+        "Désolée, une erreur s'est produite. Notre équipe a été notifiée et te contactera sur WhatsApp dans les minutes qui suivent. Tu peux aussi nous écrire directement.",
+        'Sorry, an error occurred. Our team has been notified and will contact you on WhatsApp shortly. You can also reach us directly.',
+        'عذراً، حدث خطأ. تم إخطار فريقنا وسيتواصل معك على واتساب قريباً. يمكنك أيضاً مراسلتنا مباشرة.'));
+      return;
+    }
     // Empty the cart immediately so navigating away (or back to /cart)
     // shows the right state, even if the customer never clicks "Retour".
     clearCart();
@@ -414,10 +470,29 @@ export function CheckoutPage() {
                   <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{pick(lang, 'Paiement', 'Payment', 'الدفع')}</div>
                   <div>{t.checkout.cod}</div>
                 </div>
+                {orderError && (
+                  <div style={{ background: 'rgba(255,138,128,0.12)', border: '1px solid rgba(198,40,40,0.3)', color: '#C62828', padding: 14, borderRadius: 12, marginTop: 16, marginBottom: 4, fontSize: 13, lineHeight: 1.6 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>⚠ {pick(lang, 'Problème technique', 'Technical issue', 'مشكل تقني')}</div>
+                    <div style={{ marginBottom: 10 }}>{orderError}</div>
+                    <a
+                      href={`https://wa.me/212773847986?text=${encodeURIComponent(
+                        pick(lang,
+                          `Bonjour, j'ai eu un problème pour passer ma commande sur le site (panier de ${total} MAD).`,
+                          `Hi, I had an issue placing my order on the site (cart of ${total} MAD).`,
+                          `السلام، عندي مشكل فإتمام الطلب فالسيت (سلة ${total} درهم).`)
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#25D366', color: '#fff', padding: '8px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}
+                    >
+                      📱 {pick(lang, 'Nous contacter sur WhatsApp', 'Contact us on WhatsApp', 'تواصلي معنا واتساب')}
+                    </a>
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                  <button className="btn2 btn2-outline" onClick={() => setStep(1)}>← {pick(lang, 'Retour', 'Back', 'رجوع')}</button>
-                  <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={placeOrder} disabled={saving}>
-                    {saving ? '...' : t.checkout.place + ' ✨'}
+                  <button className="btn2 btn2-outline" onClick={() => { setOrderError(''); setStep(1); }}>← {pick(lang, 'Retour', 'Back', 'رجوع')}</button>
+                  <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={() => { setOrderError(''); placeOrder(); }} disabled={saving}>
+                    {saving ? '...' : (orderError ? pick(lang, 'Réessayer', 'Retry', 'إعادة المحاولة') : t.checkout.place + ' ✨')}
                   </button>
                 </div>
               </div>
