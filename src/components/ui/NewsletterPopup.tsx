@@ -1,12 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useApp } from '@/store/AppContext';
 import { pick } from '@/lib/i18n';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 
+// Routes where the newsletter popup MUST NEVER appear — the user is in the
+// middle of a purchase (cart / checkout) or already inside their account
+// area, and a full-screen overlay there would just kill the conversion.
+const SUPPRESS_ON = ['/cart', '/checkout', '/account', '/admin'];
+
 export function NewsletterPopup() {
   const { lang } = useApp();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -16,17 +23,30 @@ export function NewsletterPopup() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (localStorage.getItem('wc2-newsletter-seen')) return;
+    if (pathname && SUPPRESS_ON.some((p) => pathname.startsWith(p))) return;
     const onScroll = () => {
       const scrolled = window.scrollY + window.innerHeight;
       const total = document.documentElement.scrollHeight;
-      if (scrolled / total >= 0.5) {
+      // Need BOTH a meaningful scroll (≥ 200 px) AND being past the half
+      // point. Without the scroll-distance guard, a short page where the
+      // initial viewport already covers >50% triggers the popup on first
+      // load — which is what was hiding /checkout on mobile.
+      if (window.scrollY >= 200 && scrolled / total >= 0.5) {
         setOpen(true);
         window.removeEventListener('scroll', onScroll);
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [pathname]);
+
+  // If the user navigates INTO a suppressed route while the popup is open,
+  // close it. Prevents an open popup from following them to /checkout.
+  useEffect(() => {
+    if (open && pathname && SUPPRESS_ON.some((p) => pathname.startsWith(p))) {
+      setOpen(false);
+    }
+  }, [pathname, open]);
 
   const close = () => {
     localStorage.setItem('wc2-newsletter-seen', '1');
