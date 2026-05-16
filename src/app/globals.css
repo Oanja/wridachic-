@@ -455,36 +455,21 @@ body.ar .wafloat2 { right: auto; left: 24px; }
 }
 
 /* ======= CHECKOUT GRID ======= */
-/* Mobile-first: stacked column. The aside (dark summary) sits on top via
-   `order: -1` so the user sees what she's about to pay for before filling
-   the form. RTL/LTR have identical behaviour here — `flex-direction: column`
-   is direction-agnostic. */
-.checkout-grid {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 24px !important;
-  align-items: stretch !important;
-  width: 100% !important;
-}
-.checkout-grid > aside {
-  order: -1 !important;
-  width: 100% !important;
-  display: block !important;
-  visibility: visible !important;
-}
-.checkout-grid > .checkout-main {
-  width: 100% !important;
-  display: block !important;
-  visibility: visible !important;
-}
+/* Mobile (default): plain block flow. The <aside> is FIRST in the JSX so it
+   naturally renders above the form — no flex/grid tricks needed.
+   Desktop (>=901px): switch to grid; `order` flips them so the form sits on
+   the left and the dark summary on the right. */
+.checkout-grid { display: block; }
+.checkout-grid > aside { margin-bottom: 24px; }
 @media (min-width: 901px) {
   .checkout-grid {
-    flex-direction: row !important;
-    gap: 40px !important;
-    align-items: flex-start !important;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 40px;
+    align-items: start;
   }
-  .checkout-grid > .checkout-main { flex: 1 1 auto !important; min-width: 0 !important; order: 0 !important; }
-  .checkout-grid > aside { flex: 0 0 340px !important; width: 340px !important; order: 0 !important; }
+  .checkout-grid > aside        { order: 2; margin-bottom: 0; }
+  .checkout-grid > .checkout-main { order: 1; }
 }
 
 /* ======= ADMIN — responsive grid ======= */

@@ -256,6 +256,80 @@ export function CheckoutPage() {
         </div>
 
         <div className="checkout-grid">
+          {/* Aside is rendered FIRST so it naturally shows on top on mobile
+              (block layout). On desktop the CSS grid swaps the order back. */}
+          <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
+            <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {pick(lang, 'articles', 'items', 'قطعة')}</div>
+            {cart.map((item, i) => {
+              const src = item.imgFiles?.[0];
+              return (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13, alignItems: 'center' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
+                    {src && (
+                      <Image src={src} alt="" fill sizes="48px" style={{ objectFit: 'cover' }} unoptimized={src.startsWith('http')} />
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
+                    <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 2 }}>{item.size} · x{item.qty}</div>
+                  </div>
+                  <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty} MAD</div>
+                </div>
+              );
+            })}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
+                <span style={{ opacity: 0.5 }}>subtotal</span>
+                <span>{subtotal} MAD</span>
+              </div>
+              {autoDiscount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: '#3D7A2C', fontWeight: 500 }} className="mono">
+                  <span>2+ articles (−{AUTO_DISCOUNT_PCT}%)</span>
+                  <span>−{autoDiscount} MAD</span>
+                </div>
+              )}
+              {coupon && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--clay)' }} className="mono">
+                  <span style={{ opacity: 0.85 }}>
+                    code ({coupon.code})
+                    <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 9, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
+                  </span>
+                  <span>−{discount} MAD</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
+                <span style={{ opacity: 0.5 }}>delivery</span>
+                <span>{delivery === 0 ? 'free' : `${delivery} MAD`}</span>
+              </div>
+
+              {!coupon && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(255,255,255,0.15)' }}>
+                  <div className="mono" style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    {pick(lang, 'Code promo', 'Promo code', 'كود الخصم')}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      value={codeInput}
+                      onChange={(e) => setCodeInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                      placeholder={pick(lang, 'EX: GIFT-A8K3', 'EX: GIFT-A8K3', 'مثال: GIFT-A8K3')}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: 'var(--paper)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
+                    />
+                    <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '7px 12px', borderRadius: 999, background: 'var(--paper)', color: 'var(--ink)', fontSize: 11, fontWeight: 600, opacity: couponBusy || !codeInput.trim() ? 0.5 : 1 }}>
+                      {couponBusy ? '…' : 'OK'}
+                    </button>
+                  </div>
+                  {couponMsg && <div className="mono" style={{ fontSize: 10, marginTop: 5, color: couponMsg.startsWith('✓') ? '#4CAF50' : 'var(--clay)' }}>{couponMsg}</div>}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 12 }}>
+                <span className="display" style={{ fontSize: 20 }}>total</span>
+                <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
+              </div>
+            </div>
+          </aside>
+
           <div className="checkout-main">
             {step === 1 && (
               <div>
@@ -329,78 +403,6 @@ export function CheckoutPage() {
               </div>
             )}
           </div>
-
-          <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
-            <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {pick(lang, 'articles', 'items', 'قطعة')}</div>
-            {cart.map((item, i) => {
-              const src = item.imgFiles?.[0];
-              return (
-                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13, alignItems: 'center' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
-                    {src && (
-                      <Image src={src} alt="" fill sizes="48px" style={{ objectFit: 'cover' }} unoptimized={src.startsWith('http')} />
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
-                    <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 2 }}>{item.size} · x{item.qty}</div>
-                  </div>
-                  <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty} MAD</div>
-                </div>
-              );
-            })}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
-                <span style={{ opacity: 0.5 }}>subtotal</span>
-                <span>{subtotal} MAD</span>
-              </div>
-              {autoDiscount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: '#3D7A2C', fontWeight: 500 }} className="mono">
-                  <span>2+ articles (−{AUTO_DISCOUNT_PCT}%)</span>
-                  <span>−{autoDiscount} MAD</span>
-                </div>
-              )}
-              {coupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--clay)' }} className="mono">
-                  <span style={{ opacity: 0.85 }}>
-                    code ({coupon.code})
-                    <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 9, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
-                  </span>
-                  <span>−{discount} MAD</span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
-                <span style={{ opacity: 0.5 }}>delivery</span>
-                <span>{delivery === 0 ? 'free' : `${delivery} MAD`}</span>
-              </div>
-
-              {!coupon && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(255,255,255,0.15)' }}>
-                  <div className="mono" style={{ fontSize: 9, opacity: 0.5, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {pick(lang, 'Code promo', 'Promo code', 'كود الخصم')}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input
-                      value={codeInput}
-                      onChange={(e) => setCodeInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                      placeholder={pick(lang, 'EX: GIFT-A8K3', 'EX: GIFT-A8K3', 'مثال: GIFT-A8K3')}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: 'var(--paper)', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase' }}
-                    />
-                    <button onClick={applyCoupon} disabled={couponBusy || !codeInput.trim()} style={{ padding: '7px 12px', borderRadius: 999, background: 'var(--paper)', color: 'var(--ink)', fontSize: 11, fontWeight: 600, opacity: couponBusy || !codeInput.trim() ? 0.5 : 1 }}>
-                      {couponBusy ? '…' : 'OK'}
-                    </button>
-                  </div>
-                  {couponMsg && <div className="mono" style={{ fontSize: 10, marginTop: 5, color: couponMsg.startsWith('✓') ? '#4CAF50' : 'var(--clay)' }}>{couponMsg}</div>}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 12 }}>
-                <span className="display" style={{ fontSize: 20 }}>total</span>
-                <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>
