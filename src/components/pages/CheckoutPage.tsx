@@ -122,7 +122,19 @@ export function CheckoutPage() {
       if (user) payload.user_id = user.id;
       if (autoDiscount > 0) payload.auto_discount = autoDiscount;
       if (coupon) { payload.coupon_code = coupon.code; payload.discount = discount; }
-      await sb.from('orders').insert(payload);
+      const { data: inserted } = await sb.from('orders').insert(payload).select('id').single();
+
+      // Fire-and-forget: push the brand-new order to Google Sheets immediately
+      // so the admin doesn't have to hit "Sync Sheets" manually for every new
+      // checkout. Failure is silent — the order is already saved in Supabase
+      // and the next admin sync will pick it up regardless.
+      if (inserted?.id) {
+        fetch('/api/sync-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: [inserted.id] }),
+        }).catch(() => { /* silent */ });
+      }
 
       if (coupon) {
         try { await sb.rpc('consume_coupon', { p_code: coupon.code, p_phone: form.phone, p_order: num }); } catch {}
