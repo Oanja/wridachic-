@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { parseWhatsAppPayload, sendWhatsAppText, normalizeWhatsAppPhone } from '@/lib/whatsapp';
 import { upsertOrderToSheet } from '@/lib/sheets';
+import { sendTelegramText } from '@/lib/telegram';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const ADMIN_PHONE = process.env.WHATSAPP_ADMIN_PHONE;
@@ -111,6 +112,31 @@ export async function POST(req: Request) {
           );
         }
 
+        // Push a richer notification to the Telegram orders chat so the
+        // admin sees the customer's choice on the phone she actually
+        // checks. Different icon per action + WhatsApp deep-link.
+        const waLink = `https://wa.me/${data.phone.replace(/^0/, '212').replace(/\D/g, '')}`;
+        const tgEmoji = parsed.action === 'confirm' ? '✅' : parsed.action === 'cancel' ? '❌' : '✏️';
+        const tgLabel = parsed.action === 'confirm'
+          ? '<b>CONFIRMÉ</b> par la cliente'
+          : parsed.action === 'cancel'
+            ? '<b>ANNULÉ</b> par la cliente'
+            : '<b>MODIFICATION DEMANDÉE</b>';
+        const tgAction = parsed.action === 'edit'
+          ? `\n\n📞 <b>Appelle-la dans la journée</b> pour comprendre la modification souhaitée.`
+          : parsed.action === 'cancel'
+            ? `\n\n💬 La raison de l'annulation arrivera quand elle répondra au message WhatsApp.`
+            : `\n\n🚚 Prépare la commande pour expédition.`;
+        await sendTelegramText(
+          `${tgEmoji} ${tgLabel}\n` +
+          `━━━━━━━━━━━━━━━━━\n` +
+          `<b>${data.order_number}</b>\n` +
+          `👤 ${data.full_name}\n` +
+          `📞 ${data.phone} · <a href="${waLink}">WhatsApp</a>\n` +
+          `💰 ${data.total} MAD` +
+          tgAction
+        );
+
         // Mirror the status change into the Google Sheet. Failure here is
         // logged but never blocks the reply to the customer.
         const sheetSync = await upsertOrderToSheet({
@@ -168,6 +194,19 @@ export async function POST(req: Request) {
           `Raison d'annulation reçue\nCommande: ${pending.order_number}\nClient: ${pending.full_name}\nMessage: "${text}"`
         );
       }
+
+      // Telegram notification with the raw reason, so the admin can
+      // decide whether to try to save the sale (e.g. offer a discount).
+      const waLink = `https://wa.me/${pending.phone.replace(/^0/, '212').replace(/\D/g, '')}`;
+      await sendTelegramText(
+        `💬 <b>RAISON D'ANNULATION REÇUE</b>\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `<b>${pending.order_number}</b>\n` +
+        `👤 ${pending.full_name}\n` +
+        `📞 ${pending.phone} · <a href="${waLink}">WhatsApp</a>\n\n` +
+        `<i>"${text.slice(0, 300)}"</i>\n\n` +
+        `💡 Tu peux essayer de récupérer la vente (remise, échange…).`
+      );
 
       if (updated) {
         const sheetSync = await upsertOrderToSheet({

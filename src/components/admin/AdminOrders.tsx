@@ -118,10 +118,38 @@ export function AdminOrders() {
     });
   }, [statsOrders, statusFilter, search]);
 
+  // When marking an order as "expédié" we collect livreur info via a modal
+  // and route through the dedicated /api/orders/mark-shipped endpoint
+  // (which also fires the WhatsApp shipped template). Other statuses use
+  // the direct Supabase update path.
+  const [shippingOrderId, setShippingOrderId] = useState<string | null>(null);
+
   const updateStatus = async (id: string, status: string) => {
+    if (status === 'expédié') {
+      setShippingOrderId(id);
+      return;
+    }
     await sb.from('orders').update({ status }).eq('id', id);
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
     syncToSheet([id]);
+  };
+
+  const submitShipping = async (livreurName: string, livreurPhone: string) => {
+    if (!shippingOrderId) return;
+    const res = await fetch('/api/orders/mark-shipped', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: shippingOrderId, livreurName, livreurPhone }),
+    });
+    const json = await res.json();
+    if (!json.ok) {
+      alert('Erreur : ' + (json.error || 'inconnue'));
+      return;
+    }
+    setOrders((prev) =>
+      prev.map((o) => (o.id === shippingOrderId ? { ...o, status: 'expédié' } : o))
+    );
+    setShippingOrderId(null);
   };
 
   const deleteOrder = async (id: string) => {
@@ -209,6 +237,15 @@ export function AdminOrders() {
 
   return (
     <>
+      {/* Shipping modal — opened when admin clicks "expédié" */}
+      {shippingOrderId && (
+        <ShippingModal
+          order={orders.find((o) => o.id === shippingOrderId)}
+          onCancel={() => setShippingOrderId(null)}
+          onSubmit={submitShipping}
+        />
+      )}
+
       {/* ────────── TOP BAR: période + refresh ────────── */}
       <div className="adm-topbar">
         <div className="adm-period-row">
@@ -441,6 +478,108 @@ export function AdminOrders() {
         </>
       )}
     </>
+  );
+}
+
+/**
+ * Modal asking the admin for the courier name + phone before flipping
+ * an order to "expédié". The submit handler in the parent fires the
+ * WhatsApp shipped-template send.
+ */
+function ShippingModal({
+  order,
+  onCancel,
+  onSubmit,
+}: {
+  order?: Order;
+  onCancel: () => void;
+  onSubmit: (livreurName: string, livreurPhone: string) => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const submit = async () => {
+    setErr('');
+    if (!name.trim()) { setErr('Nom du livreur requis'); return; }
+    if (!/^\d{9,10}$/.test(phone.replace(/\D/g, ''))) { setErr('Téléphone invalide (9–10 chiffres)'); return; }
+    setBusy(true);
+    try {
+      await onSubmit(name.trim(), phone.trim());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erreur inconnue');
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div
+      onClick={busy ? undefined : onCancel}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,13,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 380, fontFamily: 'inherit' }}
+      >
+        <div style={{ fontSize: 22, marginBottom: 4 }}>🚚 Marquer expédié</div>
+        {order && (
+          <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 16 }}>
+            <strong style={{ color: 'var(--clay)' }}>{order.order_number}</strong> · {order.full_name} · {order.total} MAD
+          </div>
+        )}
+
+        <label style={{ fontSize: 11, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+          Nom du livreur *
+        </label>
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ex: Hassan (Amana)"
+          style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(15,14,13,0.15)', fontSize: 14, marginTop: 6, marginBottom: 12, fontFamily: 'inherit' }}
+        />
+
+        <label style={{ fontSize: 11, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+          Téléphone du livreur *
+        </label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="0612345678"
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(15,14,13,0.15)', fontSize: 14, marginTop: 6, marginBottom: 4, fontFamily: 'inherit', direction: 'ltr', textAlign: 'left' }}
+        />
+
+        <div style={{ fontSize: 11, opacity: 0.55, lineHeight: 1.5, marginBottom: 16, marginTop: 6 }}>
+          La cliente recevra automatiquement un message WhatsApp avec ces infos pour qu&apos;elle puisse contacter le livreur.
+        </div>
+
+        {err && (
+          <div style={{ background: 'rgba(255,138,128,0.12)', border: '1px solid rgba(198,40,40,0.3)', color: '#C62828', padding: 10, borderRadius: 8, fontSize: 12, marginBottom: 12 }}>
+            ⚠ {err}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            style={{ flex: 1, padding: '10px 16px', borderRadius: 8, background: '#fff', border: '1px solid rgba(15,14,13,0.18)', fontSize: 13, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.5 : 1 }}
+          >
+            Annuler
+          </button>
+          <button
+            onClick={submit}
+            disabled={busy}
+            style={{ flex: 2, padding: '10px 16px', borderRadius: 8, background: 'var(--clay)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1 }}
+          >
+            {busy ? 'Envoi...' : '🚚 Confirmer & envoyer'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

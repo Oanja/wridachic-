@@ -22,6 +22,8 @@ const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const TEMPLATE_NAME = process.env.WHATSAPP_ORDER_TEMPLATE_NAME;
 const TEMPLATE_LANG = process.env.WHATSAPP_ORDER_TEMPLATE_LANG || 'fr';
+const SHIPPED_TEMPLATE_NAME = process.env.WHATSAPP_SHIPPED_TEMPLATE_NAME || 'wridachic_order_shipped';
+const SHIPPED_TEMPLATE_LANG = process.env.WHATSAPP_SHIPPED_TEMPLATE_LANG || TEMPLATE_LANG;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://wridachic.com';
 
 export function normalizeWhatsAppPhone(phone: string) {
@@ -158,6 +160,72 @@ export async function sendOrderWhatsAppConfirmation(order: WhatsAppOrderPayload)
       return { ok: true, reason: `sent (lang fallback: ${fallbackLang})` };
     }
     return { ok: false, reason: `primary[${TEMPLATE_LANG}]: ${primary.reason} | retry[${fallbackLang}]: ${retry.reason}` };
+  }
+
+  return primary;
+}
+
+/**
+ * Sends the "Order Shipped" template to the customer when the admin marks
+ * an order as expédié. The template takes 4 body variables:
+ *   {{1}} = customer first name
+ *   {{2}} = order number
+ *   {{3}} = livreur (courier) name
+ *   {{4}} = livreur phone
+ *
+ * Uses the same fr / fr_MA fallback dance as the confirmation template so
+ * a mis-set lang env var doesn't break shipping notifications.
+ */
+export interface ShippedPayload {
+  orderNumber: string;
+  fullName: string;
+  phone: string;
+  livreurName: string;
+  livreurPhone: string;
+}
+
+export async function sendOrderShippedWhatsApp(payload: ShippedPayload) {
+  if (!SHIPPED_TEMPLATE_NAME) {
+    return { ok: false, reason: 'missing-shipped-template-name' };
+  }
+
+  const to = normalizeWhatsAppPhone(payload.phone);
+
+  const components: Array<Record<string, unknown>> = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: payload.fullName.split(' ')[0] || payload.fullName },
+        { type: 'text', text: payload.orderNumber },
+        { type: 'text', text: payload.livreurName },
+        { type: 'text', text: payload.livreurPhone },
+      ],
+    },
+  ];
+
+  const sendWithLang = (code: string) =>
+    sendWhatsAppMessage(to, {
+      type: 'template',
+      template: {
+        name: SHIPPED_TEMPLATE_NAME,
+        language: { code },
+        components,
+      },
+    });
+
+  const primary = await sendWithLang(SHIPPED_TEMPLATE_LANG);
+  if (primary.ok) return primary;
+
+  const looksLikeLangError = /language|translation|does not exist|132001|132000/i.test(
+    primary.reason,
+  );
+  const fallbackLang = SHIPPED_TEMPLATE_LANG === 'fr' ? 'fr_MA' : 'fr';
+  if (looksLikeLangError && fallbackLang !== SHIPPED_TEMPLATE_LANG) {
+    const retry = await sendWithLang(fallbackLang);
+    if (retry.ok) {
+      return { ok: true, reason: `sent (lang fallback: ${fallbackLang})` };
+    }
+    return { ok: false, reason: `primary[${SHIPPED_TEMPLATE_LANG}]: ${primary.reason} | retry[${fallbackLang}]: ${retry.reason}` };
   }
 
   return primary;
