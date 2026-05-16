@@ -42,12 +42,12 @@ function escape(s: string) {
     .replace(/>/g, '&gt;');
 }
 
-async function sendOnce(text: string) {
+async function sendOnce(text: string, chatId: string) {
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      chat_id: CHAT_ID,
+      chat_id: chatId,
       text,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
@@ -58,11 +58,12 @@ async function sendOnce(text: string) {
   return { ok: false, reason: `HTTP ${res.status}: ${body.slice(0, 200)}` };
 }
 
-async function send(text: string) {
-  if (!BOT_TOKEN || !CHAT_ID) {
+async function send(text: string, chatId?: string) {
+  const targetChat = chatId || CHAT_ID;
+  if (!BOT_TOKEN || !targetChat) {
     return { ok: false, reason: 'missing-telegram-env' };
   }
-  return withRetry(() => sendOnce(text), { attempts: 3, baseDelayMs: 300, label: 'telegram' });
+  return withRetry(() => sendOnce(text, targetChat), { attempts: 3, baseDelayMs: 300, label: 'telegram' });
 }
 
 export async function sendOrderTelegramNotification(order: TelegramOrderPayload) {
@@ -95,6 +96,21 @@ export async function sendOrderTelegramNotification(order: TelegramOrderPayload)
   return send(text);
 }
 
-export async function sendTelegramText(text: string) {
-  return send(text);
+/**
+ * Send a free-form Telegram message. Defaults to the orders chat
+ * (TELEGRAM_CHAT_ID). Pass a different `chatId` to route to a dedicated
+ * group like the cancellations or modifications channels.
+ */
+export async function sendTelegramText(text: string, chatId?: string) {
+  return send(text, chatId);
 }
+
+// Specialised chat IDs for grouping notifications by intent. All fall
+// back to the main orders chat if unset, so adding/removing groups is a
+// pure env-var change with no code redeploy.
+export const TELEGRAM_CHATS = {
+  orders: process.env.TELEGRAM_CHAT_ID,
+  alerts: process.env.TELEGRAM_ALERTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+  cancellations: process.env.TELEGRAM_CANCEL_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+  modifications: process.env.TELEGRAM_MODIFY_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+};

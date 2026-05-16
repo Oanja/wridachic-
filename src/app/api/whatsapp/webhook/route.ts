@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { parseWhatsAppPayload, sendWhatsAppText, normalizeWhatsAppPhone } from '@/lib/whatsapp';
 import { upsertOrderToSheet } from '@/lib/sheets';
-import { sendTelegramText } from '@/lib/telegram';
+import { sendTelegramText, TELEGRAM_CHATS } from '@/lib/telegram';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const ADMIN_PHONE = process.env.WHATSAPP_ADMIN_PHONE;
@@ -112,9 +112,11 @@ export async function POST(req: Request) {
           );
         }
 
-        // Push a richer notification to the Telegram orders chat so the
-        // admin sees the customer's choice on the phone she actually
-        // checks. Different icon per action + WhatsApp deep-link.
+        // Route the notification to the right Telegram group so the
+        // admin's main "orders" feed stays focused on positive actions.
+        //   confirm → orders chat (continuation of the order lifecycle)
+        //   cancel  → cancellations chat (paired later with the reason)
+        //   edit    → modifications chat (needs a callback)
         const waLink = `https://wa.me/${data.phone.replace(/^0/, '212').replace(/\D/g, '')}`;
         const tgEmoji = parsed.action === 'confirm' ? '✅' : parsed.action === 'cancel' ? '❌' : '✏️';
         const tgLabel = parsed.action === 'confirm'
@@ -125,8 +127,13 @@ export async function POST(req: Request) {
         const tgAction = parsed.action === 'edit'
           ? `\n\n📞 <b>Appelle-la dans la journée</b> pour comprendre la modification souhaitée.`
           : parsed.action === 'cancel'
-            ? `\n\n💬 La raison de l'annulation arrivera quand elle répondra au message WhatsApp.`
+            ? `\n\n💬 La raison de l'annulation arrivera ici quand elle répondra au message WhatsApp.`
             : `\n\n🚚 Prépare la commande pour expédition.`;
+        const tgChat = parsed.action === 'cancel'
+          ? TELEGRAM_CHATS.cancellations
+          : parsed.action === 'edit'
+            ? TELEGRAM_CHATS.modifications
+            : TELEGRAM_CHATS.orders;
         await sendTelegramText(
           `${tgEmoji} ${tgLabel}\n` +
           `━━━━━━━━━━━━━━━━━\n` +
@@ -134,7 +141,8 @@ export async function POST(req: Request) {
           `👤 ${data.full_name}\n` +
           `📞 ${data.phone} · <a href="${waLink}">WhatsApp</a>\n` +
           `💰 ${data.total} MAD` +
-          tgAction
+          tgAction,
+          tgChat,
         );
 
         // Mirror the status change into the Google Sheet. Failure here is
@@ -195,8 +203,8 @@ export async function POST(req: Request) {
         );
       }
 
-      // Telegram notification with the raw reason, so the admin can
-      // decide whether to try to save the sale (e.g. offer a discount).
+      // Route the reason follow-up to the cancellations chat so it
+      // pairs up with the original cancel notification in one place.
       const waLink = `https://wa.me/${pending.phone.replace(/^0/, '212').replace(/\D/g, '')}`;
       await sendTelegramText(
         `💬 <b>RAISON D'ANNULATION REÇUE</b>\n` +
@@ -205,7 +213,8 @@ export async function POST(req: Request) {
         `👤 ${pending.full_name}\n` +
         `📞 ${pending.phone} · <a href="${waLink}">WhatsApp</a>\n\n` +
         `<i>"${text.slice(0, 300)}"</i>\n\n` +
-        `💡 Tu peux essayer de récupérer la vente (remise, échange…).`
+        `💡 Tu peux essayer de récupérer la vente (remise, échange…).`,
+        TELEGRAM_CHATS.cancellations,
       );
 
       if (updated) {
