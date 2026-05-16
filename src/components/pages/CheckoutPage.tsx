@@ -361,7 +361,12 @@ export function CheckoutPage() {
                       {CITIES.map((c) => <option key={c}>{c}</option>)}
                     </select>
                   </div>
-                  <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 'auto', width: 1, height: 1, overflow: 'hidden' }}>
+                  {/* Honeypot trap for bots. We use the standard a11y
+                      "visually-hidden" technique instead of `left:-9999px`
+                      because in RTL mode the latter creates a 10000-px
+                      wide overflow box, which forces mobile browsers to
+                      scale the entire page down to fit. */}
+                  <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }}>
                     <label>Site web (laisser vide)</label>
                     <input type="text" tabIndex={-1} autoComplete="off" value={hp} onChange={(e) => setHp(e.target.value)} />
                   </div>
