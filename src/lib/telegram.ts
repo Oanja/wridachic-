@@ -12,6 +12,8 @@
  *   TELEGRAM_CHAT_ID    — private chat id (positive) or group id (negative)
  */
 
+import { withRetry } from './retry';
+
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -40,29 +42,27 @@ function escape(s: string) {
     .replace(/>/g, '&gt;');
 }
 
+async function sendOnce(text: string) {
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    }),
+  });
+  if (res.ok) return { ok: true, reason: 'sent' };
+  const body = await res.text();
+  return { ok: false, reason: `HTTP ${res.status}: ${body.slice(0, 200)}` };
+}
+
 async function send(text: string) {
   if (!BOT_TOKEN || !CHAT_ID) {
     return { ok: false, reason: 'missing-telegram-env' };
   }
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      return { ok: false, reason: body };
-    }
-    return { ok: true, reason: 'sent' };
-  } catch (e) {
-    return { ok: false, reason: e instanceof Error ? e.message : 'unknown' };
-  }
+  return withRetry(() => sendOnce(text), { attempts: 3, baseDelayMs: 300, label: 'telegram' });
 }
 
 export async function sendOrderTelegramNotification(order: TelegramOrderPayload) {

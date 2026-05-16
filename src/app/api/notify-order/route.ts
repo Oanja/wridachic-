@@ -3,6 +3,7 @@ import { sendOrderWhatsAppConfirmation } from '@/lib/whatsapp';
 import { sendOrderTelegramNotification } from '@/lib/telegram';
 import { upsertOrderToSheet } from '@/lib/sheets';
 import { alertError, alertWarn } from '@/lib/alerts';
+import { withRetry } from '@/lib/retry';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -46,15 +47,24 @@ const RESEND_TO = process.env.RESEND_TO;
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) return { ok: false, reason: 'no-api-key' };
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
+  // Wrap in retry so Resend's occasional 5xx hiccups (or our own network
+  // glitches) don't lose a confirmation email.
+  return withRetry(
+    async () => {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ from: RESEND_FROM, to, subject, html }),
+      });
+      if (res.ok) return { ok: true, reason: 'sent' };
+      const body = await res.text();
+      return { ok: false, reason: `HTTP ${res.status}: ${body.slice(0, 200)}` };
     },
-    body: JSON.stringify({ from: RESEND_FROM, to, subject, html }),
-  });
-  return { ok: res.ok, reason: res.ok ? 'sent' : await res.text() };
+    { attempts: 3, baseDelayMs: 400, label: 'resend' },
+  );
 }
 
 function renderItemsTable(items: OrderItem[]) {
