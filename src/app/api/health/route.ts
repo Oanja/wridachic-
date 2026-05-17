@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { blockIfNotAdminOrCron } from '@/lib/auth-guard';
 
 /**
  * Lightweight health check — used by the admin dashboard "System status"
@@ -77,7 +78,9 @@ async function checkWhatsApp(): Promise<ServiceStatus> {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const block = await blockIfNotAdminOrCron(req);
+  if (block) return block;
   const [supabase, resend, telegram, whatsapp] = await Promise.all([
     checkSupabase(),
     checkResend(),

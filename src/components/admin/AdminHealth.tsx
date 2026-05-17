@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 interface ServiceStatus { ok: boolean; latencyMs?: number; detail?: string }
-interface Quota { used: number; limit?: number; usedMb?: number; limitMb?: number; pct: number; ok: boolean }
+interface Quota { used: number; limit?: number; usedMb?: number; limitMb?: number; pct: number; ok: boolean; source?: 'resend-api' | 'meta-api' | 'supabase-rpc' | 'estimate' }
 
 interface HealthData {
   ok: boolean;
@@ -23,10 +23,23 @@ const SERVICE_LABELS: Record<string, string> = {
   whatsapp: 'WhatsApp Cloud API',
 };
 
+// Quota labels include a hint at what's actually being measured. WhatsApp
+// in particular is an *estimate* (1 conversation per order) because we
+// don't poll the Meta Graph API — the user can cross-check the real
+// number at business.facebook.com/wa/manage/phone-numbers.
 const QUOTA_LABELS: Record<string, { label: string; note?: string }> = {
-  resendEmailsToday: { label: 'E-mails Resend (aujourd\'hui)', note: 'limite : 100/jour' },
-  whatsappConvosThisMonth: { label: 'Conversations WhatsApp (ce mois)', note: 'limite : 1 000/mois' },
-  supabaseDb: { label: 'Base de données (Supabase)', note: 'limite : 500 MB' },
+  resendEmailsToday: {
+    label: '📧 E-mails envoyés (24h)',
+    note: 'Plan Resend free : 100/jour · Compte réel depuis Resend API',
+  },
+  whatsappConvosThisMonth: {
+    label: '📱 WhatsApp — conversations (ce mois)',
+    note: '1 000/mois gratuites · Compte réel depuis Meta Graph API',
+  },
+  supabaseDb: {
+    label: '🗄️ Base de données — taille réelle',
+    note: 'Plan Supabase free : 500 MB · pg_database_size() live',
+  },
 };
 
 export function AdminHealth() {
@@ -103,7 +116,18 @@ export function AdminHealth() {
             <div key={key} style={{ background: '#fff', border: '1px solid rgba(15,14,13,0.1)', borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{labelInfo.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {labelInfo.label}
+                    {(q.source === 'resend-api' || q.source === 'meta-api' || q.source === 'supabase-rpc') && (
+                      <span title={
+                        q.source === 'resend-api' ? 'Chiffre temps réel via Resend API'
+                        : q.source === 'meta-api' ? 'Chiffre temps réel via Meta WhatsApp Graph API'
+                        : 'Chiffre temps réel via Supabase RPC (pg_database_size)'
+                      } style={{ fontSize: 9, padding: '2px 6px', borderRadius: 999, background: 'rgba(76,175,80,0.15)', color: '#2E7D32', fontWeight: 700, letterSpacing: '0.04em' }}>
+                        ● LIVE
+                      </span>
+                    )}
+                  </div>
                   {labelInfo.note && <div style={{ fontSize: 10, opacity: 0.55, marginTop: 2 }}>{labelInfo.note}</div>}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700, color }}>{q.pct}%</div>
@@ -142,8 +166,19 @@ export function AdminHealth() {
         </>
       )}
 
-      <div style={{ fontSize: 11, opacity: 0.45, textAlign: 'center', marginTop: 20 }}>
-        Surveillance automatique toutes les 6h via Vercel Cron — tu reçois une alerte Telegram dès qu&apos;un service tombe ou qu&apos;un quota dépasse 80%.
+      {/* Quick links to external dashboards for the "real" numbers we
+          can't fetch ourselves without extra API tokens. */}
+      <div style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 10, padding: 12, marginTop: 20, fontSize: 12, lineHeight: 1.6 }}>
+        💡 <strong>Pour les chiffres exacts</strong> (au lieu des estimations) :
+        <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+          <li>WhatsApp : <a href="https://business.facebook.com/wa/manage/phone-numbers/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--clay)', textDecoration: 'underline' }}>Meta WhatsApp Manager → Insights</a></li>
+          <li>E-mails : <a href="https://resend.com/emails" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--clay)', textDecoration: 'underline' }}>Resend → Emails</a></li>
+          <li>Base de données : <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--clay)', textDecoration: 'underline' }}>Supabase → Settings → Usage</a></li>
+        </ul>
+      </div>
+
+      <div style={{ fontSize: 11, opacity: 0.45, textAlign: 'center', marginTop: 16 }}>
+        Surveillance automatique chaque jour à 9 h via Vercel Cron — tu reçois une alerte Telegram dès qu&apos;un service tombe ou qu&apos;un quota dépasse 80 %.
       </div>
     </div>
   );

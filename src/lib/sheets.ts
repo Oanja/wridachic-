@@ -30,6 +30,8 @@ export interface SheetsOrderPayload {
   cost_total?: number;
   /** Delivery cost paid by the business (20 MAD Casablanca, 35 MAD elsewhere). */
   delivery_cost?: number;
+  /** Site language used by the customer at checkout — fr / en / ar. */
+  lang?: string | null;
 }
 
 type SheetsResult = { ok: boolean; reason: string; details?: unknown };

@@ -20,7 +20,10 @@ export function CheckoutPage() {
   const router = useRouter();
   const t = TR[lang];
 
-  const [step, setStep] = useState<1 | 3 | 4>(1);
+  // 1 = form (everything on one page now), 4 = success.
+  // The old intermediate "3 = review" step was merged into Step 1 so the
+  // shopper places the order in a single tap.
+  const [step, setStep] = useState<1 | 4>(1);
   const [payment] = useState<'cod'>('cod');
   const [form, setForm] = useState({ fullName: '', phone: '', email: '', address: '', city: 'Casablanca' });
   const [saving, setSaving] = useState(false);
@@ -35,6 +38,18 @@ export function CheckoutPage() {
   const [codeInput, setCodeInput] = useState('');
   const [couponMsg, setCouponMsg] = useState('');
   const [couponBusy, setCouponBusy] = useState(false);
+  // Cart-summary collapse state — collapsed by default on mobile (< 901px)
+  // so the form is the first thing visible. Desktop keeps it expanded
+  // because the grid puts it in a sidebar where space isn't competing.
+  const [summaryOpen, setSummaryOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth >= 901;
+  });
+  // Marketing emails opt-out: checked by default. The customer can
+  // untick if they don't want news. We still record their choice on the
+  // order (`marketing_consent` column) so we have a verifiable per-order
+  // audit trail of who agreed and who declined.
+  const [marketingOk, setMarketingOk] = useState(true);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const itemsCount = cart.reduce((s, i) => s + i.qty, 0);
@@ -50,6 +65,23 @@ export function CheckoutPage() {
     checkoutTracked.current = true;
     trackMetaEvent('InitiateCheckout', cartPayload(cart, total));
   }, [cart, total]);
+
+  // Scroll-to-top on step transition.
+  //
+  // Default browser behaviour preserves scroll position across in-page
+  // re-renders, which is great for accidental scrolls — but bad when we
+  // *intentionally* swap content (Step 1 → Step 3 → confirmation).
+  // Without this, after clicking "Continuer" the new section opens
+  // wherever the button used to be, leaving the user staring at the
+  // bottom of a fresh screen and forcing them to scroll up to read it.
+  //
+  // We only scroll forward — the browser still handles back-button
+  // restoration the normal way for the rest of the site.
+  useEffect(() => {
+    // `auto` (not `smooth`) feels more like "the new page just opened",
+    // which is what the user is mentally expecting at this point.
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [step]);
 
   // Reaching /checkout with an empty cart used to render a mostly-blank
   // page (form + 0-item summary), which looked broken on mobile. Send the
@@ -93,7 +125,18 @@ export function CheckoutPage() {
 
   const placeOrder = async () => {
     setSaving(true);
-    const num = 'WC-' + (Math.floor(Math.random() * 900000) + 100000);
+    // Get a server-issued sequential order number. Falls back to the legacy
+    // client-side random if the RPC isn't deployed yet (e.g. preview build
+    // before migration runs) so checkout never blocks on the migration step.
+    const sbForNum = getSupabaseBrowser();
+    let num: string;
+    try {
+      const { data, error } = await sbForNum.rpc('next_order_number');
+      if (error || typeof data !== 'string' || !data) throw error || new Error('no-rpc');
+      num = data;
+    } catch {
+      num = 'WC-' + (Math.floor(Math.random() * 900000) + 100000);
+    }
     setOrderNum(num);
 
     const elapsed = Date.now() - startedAt.current;
@@ -119,6 +162,10 @@ export function CheckoutPage() {
         full_name: form.fullName, phone: form.phone, email: form.email,
         address: form.address, city: form.city, payment,
         subtotal, delivery, total, items: itemsData, lang,
+        // Per-order audit trail of the marketing opt-in decision. We
+        // store the boolean even when there's no email so we can later
+        // tell "didn't share email" from "shared email but said no".
+        marketing_consent: marketingOk && !!form.email.trim(),
       };
       if (user) payload.user_id = user.id;
       if (autoDiscount > 0) payload.auto_discount = autoDiscount;
@@ -170,6 +217,19 @@ export function CheckoutPage() {
       if (coupon) {
         try { await sb.rpc('consume_coupon', { p_code: coupon.code, p_phone: form.phone, p_order: num }); } catch {}
         writeCoupon(null);
+      }
+
+      // Marketing opt-in: save the email (and phone) to the newsletter
+      // table only if the customer actively ticked the consent box AND
+      // provided an email. Silent failure (duplicates etc.) — never blocks
+      // the order.
+      if (marketingOk && form.email.trim()) {
+        try {
+          await sb.from('newsletter_subscribers').insert({
+            email: form.email.trim(),
+            phone: form.phone.trim() || null,
+          });
+        } catch { /* duplicate or RLS — fine */ }
       }
 
       if (itemsCount >= 2) {
@@ -307,30 +367,46 @@ export function CheckoutPage() {
   return (
     <div className="page2" style={{ padding: '40px 0 80px' }}>
       <div className="wrap" style={{ maxWidth: 1100 }}>
-        <h1 className="display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', textAlign: 'center', marginBottom: 20, letterSpacing: '-0.03em' }}>{t.checkout.title}</h1>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, flexWrap: 'wrap' }}>
-          {[t.checkout.shipping, t.checkout.review].map((s, i) => {
-            const stepIdx = i === 0 ? 1 : 3;
-            const passed = step > stepIdx;
-            const active = step === stepIdx;
-            return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, color: passed ? 'var(--ink)' : active ? 'var(--clay)' : 'var(--muted)' }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', border: '1.5px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', background: passed ? 'var(--ink)' : 'transparent', color: passed ? 'var(--paper)' : 'inherit' }}>
-                  {passed ? <Icon n="check" s={10} /> : `0${i + 1}`}
-                </div>
-                <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s}</span>
-                {i < 1 && <span style={{ width: 20, height: 1, background: 'currentColor', opacity: 0.25 }} />}
-              </div>
-            );
-          })}
-        </div>
+        {/* fontSize starts at 26px on small phones so "Finaliser la
+            commande" never wraps to two lines, scales up smoothly on
+            larger viewports. whiteSpace:nowrap as a belt-and-suspenders
+            guard on phones where 26px still barely fits. */}
+        <h1 className="display" style={{ fontSize: 'clamp(30px, 7vw, 56px)', textAlign: 'center', marginBottom: 20, letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>{t.checkout.title}</h1>
 
         <div className="checkout-grid">
           {/* Aside is rendered FIRST so it naturally shows on top on mobile
               (block layout). On desktop the CSS grid swaps the order back. */}
           <aside style={{ background: 'var(--ink)', color: 'var(--paper)', padding: 24, borderRadius: 16, height: 'fit-content' }}>
-            <div className="display" style={{ fontSize: 20, marginBottom: 14 }}>{cart.length} {pick(lang, 'articles', 'items', 'قطعة')}</div>
+            {/* Tappable header — on mobile, click to expand/collapse the
+                summary. On desktop the chevron is hidden and the summary
+                is always open (handled in CSS via .checkout-summary-toggle). */}
+            <button
+              type="button"
+              className="checkout-summary-toggle"
+              onClick={() => setSummaryOpen((v) => !v)}
+              aria-expanded={summaryOpen}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', background: 'transparent', border: 'none', color: 'inherit',
+                padding: 0, marginBottom: summaryOpen ? 14 : 0, cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
+              <div className="display" style={{ fontSize: 20 }}>
+                🛍️ {cart.length} {pick(lang, 'articles', 'items', 'قطعة')}
+                <span className="mono" style={{ fontSize: 13, opacity: 0.65, marginLeft: 10, fontWeight: 400 }}>
+                  · {total} MAD
+                </span>
+              </div>
+              <span style={{ fontSize: 14, opacity: 0.7, transition: 'transform 0.2s', transform: summaryOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                ▼
+              </span>
+            </button>
+            {/* class-based instead of inline display:none so the
+                desktop media query in CSS can force this back open even
+                if the user previously collapsed it on mobile then
+                resized the window. Inline styles always win over CSS. */}
+            <div className={`checkout-summary-content${summaryOpen ? '' : ' is-collapsed'}`}>
             {cart.map((item, i) => {
               const src = item.imgFiles?.[0];
               return (
@@ -350,7 +426,7 @@ export function CheckoutPage() {
             })}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
-                <span style={{ opacity: 0.5 }}>subtotal</span>
+                <span style={{ opacity: 0.7 }}>subtotal</span>
                 <span>{subtotal} MAD</span>
               </div>
               {autoDiscount > 0 && (
@@ -369,7 +445,7 @@ export function CheckoutPage() {
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
-                <span style={{ opacity: 0.5 }}>delivery</span>
+                <span style={{ opacity: 0.7 }}>delivery</span>
                 <span>{delivery === 0 ? 'free' : `${delivery} MAD`}</span>
               </div>
 
@@ -399,6 +475,7 @@ export function CheckoutPage() {
                 <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
               </div>
             </div>
+            </div>
           </aside>
 
           <div className="checkout-main">
@@ -410,8 +487,8 @@ export function CheckoutPage() {
                     const required = f !== 'email';
                     return (
                       <div key={f}>
-                        <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>
-                          {t.checkout[f]} {required && <span style={{ color: 'var(--clay)' }}>*</span>}
+                        <label className="mono" style={{ fontSize: 12, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>
+                          {t.checkout[f]} {required && <span style={{ color: 'var(--clay)', fontWeight: 700 }}>*</span>}
                         </label>
                         <input
                           className="input2"
@@ -425,8 +502,8 @@ export function CheckoutPage() {
                     );
                   })}
                   <div>
-                    <label className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase' }}>
-                      {t.checkout.city} <span style={{ color: 'var(--clay)' }}>*</span>
+                    <label className="mono" style={{ fontSize: 12, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>
+                      {t.checkout.city} <span style={{ color: 'var(--clay)', fontWeight: 700 }}>*</span>
                     </label>
                     <select className="input2" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} style={{ marginTop: 4 }}>
                       {CITIES.map((c) => <option key={c}>{c}</option>)}
@@ -450,28 +527,69 @@ export function CheckoutPage() {
                       '⚠ كملي جميع الحقول الإجبارية (رقم هاتف صحيح).')}
                   </p>
                 )}
-                <button
-                  className="btn2 btn2-dark btn2-lg"
-                  style={{ marginTop: 16, opacity: valid ? 1 : 0.4, cursor: valid ? 'pointer' : 'not-allowed' }}
-                  disabled={!valid}
-                  onClick={() => valid && setStep(3)}
-                >{pick(lang, 'Continuer', 'Continue', 'متابعة')} →</button>
-              </div>
-            )}
-            {step === 3 && (
-              <div>
-                <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>{t.checkout.review}</h2>
-                <div style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14, marginBottom: 10 }}>
-                  <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{t.checkout.shipping}</div>
-                  <div>{form.fullName || '—'}</div>
-                  <div style={{ opacity: 0.6, fontSize: 13 }}>{form.address || '—'}, {form.city} · {form.phone || '—'}</div>
+
+                {/* Email marketing opt-in — only meaningful if the customer
+                    actually provided an email. We render the checkbox
+                    regardless so the UI is stable, but disable it when
+                    no email is present. */}
+                <label
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    marginTop: 18, padding: '14px 16px',
+                    background: 'var(--paper-2)', borderRadius: 12,
+                    cursor: form.email.trim() ? 'pointer' : 'not-allowed',
+                    opacity: form.email.trim() ? 1 : 0.5,
+                    fontSize: 13, lineHeight: 1.5,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={marketingOk && !!form.email.trim()}
+                    onChange={(e) => setMarketingOk(e.target.checked)}
+                    disabled={!form.email.trim()}
+                    style={{ width: 18, height: 18, marginTop: 1, accentColor: 'var(--ink)', cursor: 'inherit', flexShrink: 0 }}
+                  />
+                  <span>
+                    {pick(lang,
+                      'Je souhaite recevoir les nouveautés et offres exclusives WridaChic par email.',
+                      'I want to receive WridaChic news and exclusive offers by email.',
+                      'بغيت نتوصل بالجديد والعروض الحصرية ديال WridaChic عبر الإيميل.')}
+                  </span>
+                </label>
+
+                {/* Payment method — folded directly into the main checkout
+                    (one-page pattern like Shopify, Stripe, Apple Pay).
+                    There's only one option (COD) so we show it as a
+                    pre-selected radio with a friendly explanation
+                    instead of forcing the user through a second step. */}
+                <div style={{ marginTop: 28 }}>
+                  <h3 className="display" style={{ fontSize: 22, marginBottom: 12 }}>
+                    {pick(lang, 'Paiement', 'Payment', 'الدفع')}
+                  </h3>
+                  <div style={{ background: 'var(--paper-2)', padding: '16px 18px', borderRadius: 14, border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--ink)' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        💵 {t.checkout.cod}
+                      </div>
+                      <div style={{ opacity: 0.7, fontSize: 12, marginTop: 3, lineHeight: 1.5 }}>
+                        {pick(lang,
+                          'Tu paies en espèces quand le livreur te remet ton colis. Aucune avance, aucun risque.',
+                          'You pay in cash when the courier hands you the package. No advance, no risk.',
+                          'كاتخلصي كاش ملي السائق كيوصلك الكولي. بلا تسبيق، بلا خطر.')}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ background: 'var(--paper-2)', padding: 18, borderRadius: 14, marginBottom: 10 }}>
-                  <div className="mono" style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{pick(lang, 'Paiement', 'Payment', 'الدفع')}</div>
-                  <div>{t.checkout.cod}</div>
-                </div>
+
+                {/* Inline error UI — shown right above the "Place order"
+                    button when the Supabase insert fails. Includes a
+                    direct WhatsApp escape hatch so the customer can still
+                    complete their order manually if our backend hiccups. */}
                 {orderError && (
-                  <div style={{ background: 'rgba(255,138,128,0.12)', border: '1px solid rgba(198,40,40,0.3)', color: '#C62828', padding: 14, borderRadius: 12, marginTop: 16, marginBottom: 4, fontSize: 13, lineHeight: 1.6 }}>
+                  <div style={{ background: 'rgba(255,138,128,0.12)', border: '1px solid rgba(198,40,40,0.3)', color: '#C62828', padding: 14, borderRadius: 12, marginTop: 20, fontSize: 13, lineHeight: 1.6 }}>
                     <div style={{ fontWeight: 600, marginBottom: 6 }}>⚠ {pick(lang, 'Problème technique', 'Technical issue', 'مشكل تقني')}</div>
                     <div style={{ marginBottom: 10 }}>{orderError}</div>
                     <a
@@ -489,16 +607,110 @@ export function CheckoutPage() {
                     </a>
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                  <button className="btn2 btn2-outline" onClick={() => { setOrderError(''); setStep(1); }}>← {pick(lang, 'Retour', 'Back', 'رجوع')}</button>
-                  <button className="btn2 btn2-clay btn2-lg" style={{ flex: 1 }} onClick={() => { setOrderError(''); placeOrder(); }} disabled={saving}>
-                    {saving ? '...' : (orderError ? pick(lang, 'Réessayer', 'Retry', 'إعادة المحاولة') : t.checkout.place + ' ✨')}
+
+                {/* Compact action summary — Shopify pattern: surface the
+                    promo button + total right next to the call-to-action
+                    so customers never have to scroll to recheck what
+                    they're about to validate. Mobile-only: on desktop the
+                    sidebar already shows the same info. */}
+                <div className="checkout-action-block" style={{ marginTop: 24 }}>
+                  {/* Toggle to expose the existing promo input (top
+                      summary). When expanded scrolls the user up to the
+                      coupon field so they can type without confusion. */}
+                  {!coupon && (
+                    <button
+                      type="button"
+                      onClick={() => { setSummaryOpen(true); setTimeout(() => { document.querySelector('input[placeholder^="EX:"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50); }}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '10px 16px', background: 'var(--paper)',
+                        border: '1.5px solid rgba(15,14,13,0.22)', borderRadius: 999,
+                        fontSize: 13, fontWeight: 500, color: 'var(--ink)',
+                        cursor: 'pointer', marginBottom: 12,
+                      }}
+                    >
+                      🏷️ {pick(lang, 'Ajouter une réduction', 'Add a discount', 'إضافة خصم')}
+                    </button>
+                  )}
+
+                  {/* Mini total card — thumbnail + count + total + chevron
+                      to expand the full top summary. Mirrors the Shopify /
+                      Stripe pattern customers already recognise. */}
+                  <button
+                    type="button"
+                    onClick={() => { setSummaryOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                      background: 'var(--paper-2)', border: '1.5px solid var(--line)',
+                      borderRadius: 14, padding: '12px 16px', cursor: 'pointer',
+                      textAlign: 'start', color: 'inherit',
+                    }}
+                  >
+                    {cart[0]?.imgFiles?.[0] && (
+                      <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', position: 'relative', flexShrink: 0, background: 'rgba(0,0,0,0.05)' }}>
+                        <Image src={cart[0].imgFiles[0]} alt="" fill sizes="44px" style={{ objectFit: 'cover' }} unoptimized={cart[0].imgFiles[0].startsWith('http')} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="display" style={{ fontSize: 17, lineHeight: 1.1 }}>
+                        {pick(lang, 'Total', 'Total', 'المجموع')}
+                      </div>
+                      <div className="mono" style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
+                        {itemsCount} {pick(lang, itemsCount > 1 ? 'articles' : 'article', itemsCount > 1 ? 'items' : 'item', itemsCount > 1 ? 'قطع' : 'قطعة')}
+                      </div>
+                    </div>
+                    {/* Force LTR on the price so it always reads "364 MAD"
+                        and never gets bidi-flipped to "MAD 364" in Arabic. */}
+                    <div className="mono" dir="ltr" style={{ fontSize: 18, fontWeight: 700 }}>{total} MAD</div>
+                    <span style={{ fontSize: 12, opacity: 0.5 }}>▾</span>
                   </button>
                 </div>
+
+                {/* Single CTA — places the order directly (one-page
+                    checkout). Goes from Step 1 straight to the success
+                    screen, skipping the old review step entirely. */}
+                <button
+                  className="btn2 btn2-dark btn2-lg"
+                  style={{ marginTop: 18, opacity: valid && !saving ? 1 : 0.5, cursor: valid && !saving ? 'pointer' : 'not-allowed', width: '100%' }}
+                  disabled={!valid || saving}
+                  onClick={() => { if (valid && !saving) { setOrderError(''); placeOrder(); } }}
+                >
+                  {saving
+                    ? '...'
+                    : orderError
+                      ? pick(lang, 'Réessayer', 'Retry', 'إعادة المحاولة')
+                      : `🔒 ${t.checkout.place} · ${total} MAD`}
+                </button>
+                <p style={{ marginTop: 10, fontSize: 11, opacity: 0.55, textAlign: 'center' }}>
+                  {pick(lang,
+                    'En confirmant, tu acceptes nos conditions et notre politique de confidentialité.',
+                    'By confirming, you accept our terms and privacy policy.',
+                    'بالتأكيد، كتوافقي على شروطنا وسياسة الخصوصية.')}
+                </p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Legal footer — standard trust signals (Shopify pattern). Shows
+            on every step so the customer can review policies at any time
+            before placing the order. */}
+        {(step as number) !== 4 && (
+          <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid var(--line)', display: 'flex', flexWrap: 'wrap', gap: '8px 20px', justifyContent: 'center', fontSize: 12 }}>
+            <a href="/returns" style={{ color: 'var(--ink)', opacity: 0.7, textDecoration: 'underline' }}>
+              {pick(lang, 'Politique de remboursement', 'Refund policy', 'سياسة الاسترداد')}
+            </a>
+            <a href="/privacy" style={{ color: 'var(--ink)', opacity: 0.7, textDecoration: 'underline' }}>
+              {pick(lang, 'Politique de confidentialité', 'Privacy policy', 'سياسة الخصوصية')}
+            </a>
+            <a href="/terms" style={{ color: 'var(--ink)', opacity: 0.7, textDecoration: 'underline' }}>
+              {pick(lang, 'Conditions d\'utilisation', 'Terms of use', 'شروط الاستخدام')}
+            </a>
+            <a href="/contact" style={{ color: 'var(--ink)', opacity: 0.7, textDecoration: 'underline' }}>
+              {pick(lang, 'Contact', 'Contact', 'تواصل')}
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

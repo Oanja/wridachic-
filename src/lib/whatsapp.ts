@@ -98,7 +98,17 @@ export async function sendOrderWhatsAppConfirmation(order: WhatsAppOrderPayload)
 
   const productLabel = `${item.name} (${item.color} / ${item.size}) x ${item.qty}`;
   const to = normalizeWhatsAppPhone(order.phone);
-  const headerImage = absoluteUrl(item.image);
+  // Fallback image when the order item has no product photo. Meta's
+  // template REQUIRES an IMAGE header — if we send no header it returns
+  // "header: Format mismatch, expected IMAGE, received UNKNOWN" and the
+  // confirmation never reaches the customer. The fallback is the brand
+  // logo (converted from SVG → PNG in scripts/convert-logo.mjs) so the
+  // message still feels on-brand even when the product photo is missing.
+  // Overridable via WHATSAPP_FALLBACK_IMAGE_URL if we ever want to use a
+  // different asset (e.g. a seasonal hero image) without redeploying.
+  const FALLBACK_IMAGE = process.env.WHATSAPP_FALLBACK_IMAGE_URL
+    || absoluteUrl('/wa-logo.png');
+  const headerImage = absoluteUrl(item.image) || FALLBACK_IMAGE;
 
   const components: Array<Record<string, unknown>> = [];
   if (headerImage) {

@@ -1,7 +1,39 @@
 import { NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { parseWhatsAppPayload, sendWhatsAppText, normalizeWhatsAppPhone } from '@/lib/whatsapp';
 import { upsertOrderToSheet } from '@/lib/sheets';
+
+const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
+
+/**
+ * Verify the x-hub-signature-256 header Meta sends with every webhook POST.
+ * Without this anyone who finds our URL can spam fake button-clicks and
+ * mutate order statuses. Returns true if the signature matches OR if we
+ * haven't configured APP_SECRET yet (fail-open during rollout — flip to
+ * fail-closed once the env var is set in prod).
+ */
+function verifyMetaSignature(rawBody: string, header: string | null): boolean {
+  if (!APP_SECRET) return true; // not configured → don't block legitimate traffic
+  if (!header || !header.startsWith('sha256=')) return false;
+  const expected = crypto
+    .createHmac('sha256', APP_SECRET)
+    .update(rawBody, 'utf8')
+    .digest('hex');
+  const provided = header.slice('sha256='.length);
+  // timingSafeEqual requires equal-length buffers — guard against bad input.
+  if (expected.length !== provided.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(provided, 'hex'));
+}
+
+// 20 MAD Casablanca, 35 MAD elsewhere — business-borne delivery cost.
+function deliveryCostFor(city: string | null | undefined): number {
+  const c = (city ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  return c.includes('casablanca') || c.includes('casa') ? 20 : 35;
+}
+function costTotalFor(items: Array<{ qty: number; cost?: number | null }>): number {
+  return items.reduce((s, it) => s + (typeof it.cost === 'number' ? it.cost * it.qty : 0), 0);
+}
 import { sendTelegramText, TELEGRAM_CHATS } from '@/lib/telegram';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
@@ -64,7 +96,15 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const payload = await req.json();
+    // Read raw body once — we need it for both signature verification AND
+    // JSON parsing. (req.json() consumes the body, so we can't use it after.)
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-hub-signature-256');
+    if (!verifyMetaSignature(rawBody, signature)) {
+      console.warn('[whatsapp-webhook] invalid signature, rejecting');
+      return new Response('Invalid signature', { status: 403 });
+    }
+    const payload = JSON.parse(rawBody);
     const messages: WhatsAppWebhookMessage[] =
       payload?.entry?.flatMap((entry: any) =>
         entry?.changes?.flatMap((change: any) => change?.value?.messages ?? []) ?? []
@@ -133,7 +173,7 @@ export async function POST(req: Request) {
           ? TELEGRAM_CHATS.cancellations
           : parsed.action === 'edit'
             ? TELEGRAM_CHATS.modifications
-            : TELEGRAM_CHATS.orders;
+            : TELEGRAM_CHATS.confirmations;
         const langFlag = data.lang === 'ar' ? '🇲🇦 AR'
           : data.lang === 'en' ? '🇬🇧 EN'
           : data.lang === 'fr' ? '🇫🇷 FR' : '';
@@ -162,6 +202,9 @@ export async function POST(req: Request) {
           cancel_reason: data.cancel_reason,
           created_at: data.created_at,
           items: data.items ?? [],
+          lang: data.lang,
+          cost_total: costTotalFor(data.items ?? []),
+          delivery_cost: deliveryCostFor(data.city),
         });
         if (!sheetSync.ok) console.error('[sheets] webhook sync failed', sheetSync.reason);
         continue;
@@ -233,6 +276,9 @@ export async function POST(req: Request) {
           cancel_reason: updated.cancel_reason,
           created_at: updated.created_at,
           items: updated.items ?? [],
+          lang: updated.lang,
+          cost_total: costTotalFor(updated.items ?? []),
+          delivery_cost: deliveryCostFor(updated.city),
         });
         if (!sheetSync.ok) console.error('[sheets] cancel-reason sync failed', sheetSync.reason);
       }

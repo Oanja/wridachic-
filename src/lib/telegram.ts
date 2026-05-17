@@ -123,4 +123,5 @@ export const TELEGRAM_CHATS = {
   alerts: process.env.TELEGRAM_ALERTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
   cancellations: process.env.TELEGRAM_CANCEL_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
   modifications: process.env.TELEGRAM_MODIFY_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+  confirmations: process.env.TELEGRAM_CONFIRM_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
 };

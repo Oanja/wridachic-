@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { blockIfNotAdmin } from '@/lib/auth-guard';
 import {
   upsertOrderToSheet,
   bulkUpsertOrdersToSheet,
@@ -30,6 +31,7 @@ interface OrderRow {
   total: number;
   created_at: string;
   cancel_reason?: string | null;
+  lang?: string | null;
   items?: Array<{ name: string; qty: number; size: string; color: string; price?: number; cost?: number | null }>;
 }
 
@@ -65,11 +67,14 @@ function toSheetsPayload(o: OrderRow): SheetsOrderPayload {
     items,
     cost_total,
     delivery_cost: deliveryCostFor(o.city),
+    lang: o.lang,
   };
 }
 
 export async function POST(req: Request) {
   try {
+    const block = await blockIfNotAdmin();
+    if (block) return block;
     const body = (await req.json()) as { ids?: string[]; delete?: string[] };
     const sb = getSupabaseAdmin();
 
@@ -79,7 +84,7 @@ export async function POST(req: Request) {
     if (body.ids && body.ids.length > 0) {
       const { data, error } = await sb
         .from('orders')
-        .select('order_number,status,full_name,phone,email,address,city,total,created_at,cancel_reason,items')
+        .select('order_number,status,full_name,phone,email,address,city,total,created_at,cancel_reason,items,lang')
         .in('id', body.ids);
 
       if (error) {

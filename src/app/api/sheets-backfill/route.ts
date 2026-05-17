@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { blockIfNotAdmin } from '@/lib/auth-guard';
 import { bulkUpsertOrdersToSheet, setupSheetsDashboard } from '@/lib/sheets';
 
 /**
@@ -33,10 +34,12 @@ function deliveryCostFor(city: string | null | undefined): number {
 
 export async function POST() {
   try {
+    const block = await blockIfNotAdmin();
+    if (block) return block;
     const sb = getSupabaseAdmin();
     const { data, error } = await sb
       .from('orders')
-      .select('order_number,status,full_name,phone,email,address,city,total,created_at,cancel_reason,items')
+      .select('order_number,status,full_name,phone,email,address,city,total,created_at,cancel_reason,items,lang')
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -63,6 +66,7 @@ export async function POST() {
         items,
         cost_total,
         delivery_cost: deliveryCostFor(o.city),
+        lang: o.lang,
       };
     });
 

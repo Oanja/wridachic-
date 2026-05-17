@@ -4,6 +4,7 @@ import { sendOrderTelegramNotification } from '@/lib/telegram';
 import { upsertOrderToSheet } from '@/lib/sheets';
 import { alertError, alertWarn } from '@/lib/alerts';
 import { withRetry } from '@/lib/retry';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -101,34 +102,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'bad-payload' }, { status: 400 });
     }
 
-    // 1) Email to admin — always.
-    const adminHtml = `
-      <div style="font-family:system-ui,sans-serif;color:#0F0E0D;max-width:600px;margin:0 auto;padding:24px;background:#FAF6F1">
-        <h1 style="font-size:22px;margin:0 0 6px">🛍️ Nouvelle commande</h1>
-        <p style="font-family:monospace;color:#C85C3F;font-size:14px;margin:0 0 18px">${data.orderNumber}</p>
+    // Anti-abuse: confirm the order actually exists in Supabase before
+    // burning Resend/WhatsApp/Telegram quotas. Without this, anyone who
+    // finds the endpoint URL can spam fake orders and exhaust our budgets.
+    try {
+      const sb = getSupabaseAdmin();
+      const { data: row, error } = await sb
+        .from('orders')
+        .select('order_number')
+        .eq('order_number', data.orderNumber)
+        .maybeSingle();
+      if (error || !row) {
+        return NextResponse.json({ ok: false, error: 'order-not-found' }, { status: 404 });
+      }
+    } catch (e) {
+      // If we can't verify (DB blip), fail closed — don't let blind spam through.
+      return NextResponse.json({ ok: false, error: 'verify-failed' }, { status: 503 });
+    }
 
-        <h2 style="font-size:14px;margin:18px 0 6px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.6">Client</h2>
-        <p style="margin:0;line-height:1.7">
-          <strong>${data.fullName}</strong><br>
-          📞 <a href="tel:${data.phone}">${data.phone}</a>${data.email ? `<br>✉ <a href="mailto:${data.email}">${data.email}</a>` : ''}<br>
-          📍 ${data.address}, ${data.city}
-        </p>
-
-        <h2 style="font-size:14px;margin:24px 0 6px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.6">Articles</h2>
-        ${renderItemsTable(data.items)}
-
-        <div style="margin-top:18px;padding-top:12px;border-top:2px solid #0F0E0D;display:flex;justify-content:space-between;font-size:16px;font-weight:600">
-          <span>Total</span>
-          <span>${data.total} MAD</span>
-        </div>
-
-        <p style="margin-top:24px;font-size:12px;opacity:0.5">Connecte-toi à l'admin pour confirmer la commande.</p>
-      </div>
-    `;
-
-    const adminResult = RESEND_TO
-      ? await sendEmail(RESEND_TO, `🛍️ Commande ${data.orderNumber} — ${data.fullName}`, adminHtml)
-      : { ok: false, reason: 'no-recipient' };
+    // 1) Admin email DISABLED — we now rely on Telegram for instant admin
+    // notifications. This halves Resend usage (140 → 70 emails for 70 orders
+    // per day) so we stay within the 100/day free tier. The customer still
+    // gets a confirmation email below — that's the one that matters for
+    // trust and proof-of-purchase.
+    const adminResult: { ok: boolean; reason: string } = { ok: true, reason: 'admin-email-disabled' };
 
     // 2) Email to customer if they provided one — friendly confirmation.
     let customerResult: { ok: boolean; reason: string } = { ok: false, reason: 'skipped' };
@@ -212,6 +209,7 @@ export async function POST(req: Request) {
         status: 'nouveau',
         items: data.items,
         created_at: new Date().toISOString(),
+        lang: data.lang,
       }),
     ]);
 

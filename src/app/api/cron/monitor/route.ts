@@ -24,7 +24,10 @@ export async function GET(req: Request) {
 
   // Health check
   try {
-    const r = await fetch(`${SITE_URL}/api/health`, { cache: 'no-store' });
+    const r = await fetch(`${SITE_URL}/api/health`, {
+      cache: 'no-store',
+      headers: { 'x-cron-secret': process.env.CRON_SECRET || '' },
+    });
     const data = await r.json();
     results.health = data;
 
@@ -44,7 +47,10 @@ export async function GET(req: Request) {
 
   // Usage check
   try {
-    const r = await fetch(`${SITE_URL}/api/usage-stats`, { cache: 'no-store' });
+    const r = await fetch(`${SITE_URL}/api/usage-stats`, {
+      cache: 'no-store',
+      headers: { 'x-cron-secret': process.env.CRON_SECRET || '' },
+    });
     const data = await r.json();
     results.usage = data;
 

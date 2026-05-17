@@ -303,8 +303,33 @@ body.ar .wafloat2 { right: auto; left: 24px; }
 .sticker-clay { background: var(--clay); color: var(--cream); }
 .sticker-sky { background: var(--sky); }
 
-.input2 { width: 100%; padding: 14px 18px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 999px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; }
-.input2:focus { border-color: var(--ink); }
+/* Input font-size = 16px to prevent iOS Safari auto-zoom on focus
+   (it always zooms inputs < 16px). Border is bolder + darker than
+   before so the field is an obvious tap target on a beige background. */
+.input2 { width: 100%; padding: 14px 18px; background: var(--paper); border: 1.5px solid rgba(15,14,13,0.22); border-radius: 999px; font-family: inherit; font-size: 16px; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.input2:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(15,14,13,0.08); }
+.input2::placeholder { color: rgba(15,14,13,0.38); }
+
+/* Mobile: when the user collapses the cart summary we add .is-collapsed
+   which hides the content. Class-based instead of inline display:none so
+   the desktop override below can force it back open. */
+.checkout-summary-content.is-collapsed { display: none; }
+
+/* The compact "Total + Ajouter une réduction" block above the Continuer
+   button is mobile-only — on desktop the sidebar already shows the full
+   summary so duplicating it just creates visual noise. */
+.checkout-action-block { display: block; }
+
+/* Hide the collapsible chevron on desktop where the sidebar layout
+   makes the cart summary always visible — there's nothing to collapse.
+   Also unconditionally show the content even if the user previously
+   collapsed it on a narrower viewport. */
+@media (min-width: 901px) {
+  .checkout-summary-toggle { pointer-events: none; }
+  .checkout-summary-toggle > span { display: none !important; }
+  .checkout-summary-content.is-collapsed { display: block !important; }
+  .checkout-action-block { display: none !important; }
+}
 
 @media (max-width: 768px) {
   .hero-section { padding: 24px 16px 40px !important; }

@@ -4,6 +4,7 @@ import { sendOrderShippedWhatsApp } from '@/lib/whatsapp';
 import { sendTelegramText } from '@/lib/telegram';
 import { upsertOrderToSheet } from '@/lib/sheets';
 import { alertWarn } from '@/lib/alerts';
+import { blockIfNotAdmin } from '@/lib/auth-guard';
 
 /**
  * Marks an order as expédié + records livreur info + fires the shipped
@@ -17,6 +18,8 @@ import { alertWarn } from '@/lib/alerts';
  */
 export async function POST(req: Request) {
   try {
+    const block = await blockIfNotAdmin();
+    if (block) return block;
     const { orderId, livreurName, livreurPhone } = await req.json();
 
     if (!orderId || !livreurName?.trim() || !livreurPhone?.trim()) {
@@ -36,7 +39,7 @@ export async function POST(req: Request) {
         shipped_at: new Date().toISOString(),
       })
       .eq('id', orderId)
-      .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at')
+      .select('order_number, full_name, phone, email, address, city, total, status, items, cancel_reason, created_at, lang')
       .single();
 
     if (error || !order) {
@@ -67,6 +70,16 @@ export async function POST(req: Request) {
         cancel_reason: order.cancel_reason,
         created_at: order.created_at,
         items: order.items ?? [],
+        lang: order.lang,
+        cost_total: (order.items ?? []).reduce(
+          (s: number, it: { qty: number; cost?: number | null }) =>
+            s + (typeof it.cost === 'number' ? it.cost * it.qty : 0),
+          0,
+        ),
+        delivery_cost: (() => {
+          const c = (order.city ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+          return c.includes('casa') ? 20 : 35;
+        })(),
       }),
     ]);
 
