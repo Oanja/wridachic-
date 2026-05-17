@@ -11,6 +11,7 @@ import { useApp } from '@/store/AppContext';
 import type { Product } from '@/lib/types';
 import type { SiteSettings } from '@/lib/settings';
 import { DEFAULT_SETTINGS } from '@/lib/settings';
+import { shouldSkipImageOptimization } from '@/lib/image';
 
 export function HomePage({ products, settings }: { products: Product[]; settings?: SiteSettings }) {
   const { lang, wishlist, toggleWish } = useApp();
@@ -83,11 +84,11 @@ export function HomePage({ products, settings }: { products: Product[]; settings
               <div aria-hidden="true" style={{ position: 'absolute', top: 40, right: 40, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,116,107,0.08), transparent 70%)', zIndex: 0 }} />
 
               <div className="blob hero-big" style={{ position: 'absolute', top: 0, right: 0, width: '88%', aspectRatio: '3/4', borderRadius: 28, overflow: 'hidden', boxShadow: '0 24px 60px -20px rgba(15,14,13,0.25)', zIndex: 1 }}>
-                <Image src={moodImages.hero_big_image} alt="" fill priority sizes="(max-width: 768px) 100vw, 45vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.hero_big_image.startsWith('http')} />
+                <Image src={moodImages.hero_big_image} alt="" fill priority sizes="(max-width: 768px) 100vw, 45vw" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(moodImages.hero_big_image)} />
               </div>
 
               <div className="blob hero-small" style={{ position: 'absolute', top: '54%', left: -30, width: '50%', aspectRatio: '4/5', borderRadius: 22, overflow: 'hidden', animationDelay: '-2s', boxShadow: '0 18px 40px -10px rgba(15,14,13,0.28)', border: '6px solid var(--paper)', zIndex: 2 }}>
-                <Image src={moodImages.hero_small_image} alt="" fill priority sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.hero_small_image.startsWith('http')} />
+                <Image src={moodImages.hero_small_image} alt="" fill priority sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(moodImages.hero_small_image)} />
               </div>
 
               <div className="blob hero-sticker" style={{ position: 'absolute', bottom: 40, right: -8, animationDelay: '-6s', zIndex: 3 }}>
@@ -126,7 +127,7 @@ export function HomePage({ products, settings }: { products: Product[]; settings
 
           <div className="cat-grid reveal-stagger">
             <Link href="/shop" className="cat-main">
-              <Image src={moodImages.shop_mood_main_image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.shop_mood_main_image.startsWith('http')} />
+              <Image src={moodImages.shop_mood_main_image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(moodImages.shop_mood_main_image)} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(15,14,13,0.72))', zIndex: 2 }} />
               <div style={{ position: 'absolute', bottom: 24, [lang === 'ar' ? 'right' : 'left']: 24, color: 'var(--paper)', zIndex: 3, textAlign: lang === 'ar' ? 'right' : 'left' }}>
                 <div className="mono" style={{ fontSize: 11, opacity: 0.75, letterSpacing: '0.1em' }}>{pick(lang, 'ROBES', 'DRESSES', 'فساتين')} / 01</div>
@@ -141,7 +142,7 @@ export function HomePage({ products, settings }: { products: Product[]; settings
 
             <div className="cat-side">
               <Link href="/new" className="cat-small">
-                <Image src={moodImages.shop_mood_top_image} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.shop_mood_top_image.startsWith('http')} />
+                <Image src={moodImages.shop_mood_top_image} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(moodImages.shop_mood_top_image)} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'NOUVEAU', 'NEW', 'جديد')} / 02</div>
@@ -151,7 +152,7 @@ export function HomePage({ products, settings }: { products: Product[]; settings
                 </div>
               </Link>
               <Link href="/shop" className="cat-small">
-                <Image src={moodImages.shop_mood_bottom_image} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={moodImages.shop_mood_bottom_image.startsWith('http')} />
+                <Image src={moodImages.shop_mood_bottom_image} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(moodImages.shop_mood_bottom_image)} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(15,14,13,0.55))', zIndex: 2 }} />
                 <div style={{ position: 'absolute', bottom: 18, [lang === 'ar' ? 'right' : 'left']: 18, zIndex: 3, color: 'var(--paper)', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.85 }}>{pick(lang, 'TENDANCE', 'TRENDING', 'الرائج')} / 03</div>

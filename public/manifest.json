@@ -1,0 +1,35 @@
+{
+  "name": "WridaChic — Mode féminine marocaine",
+  "short_name": "WridaChic",
+  "description": "Robes, ensembles et essentiels féminins. Livraison partout au Maroc.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6F1",
+  "theme_color": "#FAF6F1",
+  "orientation": "portrait",
+  "lang": "fr-MA",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/wa-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Boutique",
+      "short_name": "Shop",
+      "url": "/shop",
+      "description": "Voir tous les produits"
+    },
+    {
+      "name": "Mon compte",
+      "short_name": "Compte",
+      "url": "/account",
+      "description": "Mes commandes & favoris"
+    }
+  ]
+}

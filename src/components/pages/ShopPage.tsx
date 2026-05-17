@@ -1,11 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PCard } from '@/components/ui/PCard';
 import { TINTS, CATEGORIES } from '@/lib/data';
 import { pick, pickField } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import type { Product } from '@/lib/types';
+
+// First N products painted on initial load — everything else is hidden
+// behind a sentinel that fires only when the user scrolls near it.
+// 12 fits roughly 2-3 screen heights on mobile, so most users never even
+// trigger the second page.
+const INITIAL_VISIBLE = 12;
+const LOAD_MORE_BATCH = 12;
 
 interface ShopPageProps {
   products: Product[];
@@ -18,6 +25,8 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
   const { lang, wishlist, toggleWish } = useApp();
   const [cat, setCat] = useState<string>(initialCat);
   const [sort, setSort] = useState<'featured' | 'new' | 'price-asc' | 'price-desc'>('featured');
+  const [visible, setVisible] = useState<number>(INITIAL_VISIBLE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // `cat` is either:
   //   "all"            → no filter
@@ -39,6 +48,30 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
     if (sort === 'new') l = [...l].sort((a, b) => (b.tag === 'new' ? 1 : 0) - (a.tag === 'new' ? 1 : 0));
     return l;
   }, [products, cat, sort, filterNew]);
+
+  // Reset pagination whenever the filter changes so the user always
+  // sees the top of the new category, not page 4 of the old one.
+  useEffect(() => { setVisible(INITIAL_VISIBLE); }, [cat, sort, filterNew]);
+
+  // IntersectionObserver-driven infinite scroll. We attach to a tiny
+  // sentinel below the grid; when it enters the viewport (root margin
+  // adds a 600 px head-start so the next batch is ready before the user
+  // hits the bottom) we bump `visible` and the grid re-renders.
+  useEffect(() => {
+    if (visible >= filtered.length) return; // nothing left to reveal
+    const el = sentinelRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible((v) => Math.min(v + LOAD_MORE_BATCH, filtered.length));
+        }
+      },
+      { rootMargin: '600px 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible, filtered.length]);
 
   const cats = [
     { id: 'all',      name: pick(lang, 'Tout',         'All',          'الكل'),         nameEn: '', nameAr: '' },
@@ -99,11 +132,18 @@ export function ShopPage({ products, initialCat = 'all', title, filterNew = fals
             <p>{pick(lang, 'Aucun article ne correspond à ces filtres.', 'No items match these filters.', 'لا توجد قطع تطابق الفلاتر.')}</p>
           </div>
         ) : (
-          <div className="g3 reveal-stagger">
-            {filtered.map((p, i) => (
-              <PCard key={p.id} product={p} lang={lang} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
-            ))}
-          </div>
+          <>
+            <div className="g3 reveal-stagger">
+              {filtered.slice(0, visible).map((p, i) => (
+                <PCard key={p.id} product={p} lang={lang} onWish={toggleWish} wished={wishlist.includes(p.id)} tint={TINTS[i % TINTS.length]} />
+              ))}
+            </div>
+            {/* Invisible 1 px sentinel — the IntersectionObserver above
+                watches it and bumps `visible` when it scrolls into view. */}
+            {visible < filtered.length && (
+              <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
+            )}
+          </>
         )}
       </div>
     </div>

@@ -12,6 +12,7 @@ import {
   AUTO_DISCOUNT_PCT, computeAutoDiscount, computeDiscount, readCoupon, writeCoupon,
 } from '@/lib/coupon';
 import type { Coupon } from '@/lib/types';
+import { shouldSkipImageOptimization } from '@/lib/image';
 
 export function CartPage() {
   const { lang, cart, user, updateQty, removeItem } = useApp();
@@ -85,7 +86,7 @@ export function CartPage() {
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr auto', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--line)' }}>
                 <div style={{ aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden', position: 'relative', background: 'var(--paper-2)' }}>
                   {item.imgFiles?.[0] && (
-                    <Image src={item.imgFiles[0]} alt="" fill sizes="110px" style={{ objectFit: 'cover' }} unoptimized={item.imgFiles[0].startsWith('http')} />
+                    <Image src={item.imgFiles[0]} alt="" fill sizes="110px" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(item.imgFiles[0])} />
                   )}
                 </div>
                 <div>

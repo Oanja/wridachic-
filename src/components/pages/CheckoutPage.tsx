@@ -12,6 +12,7 @@ import {
 } from '@/lib/coupon';
 import { cartPayload, trackMetaEvent } from '@/lib/metaPixel';
 import type { Coupon } from '@/lib/types';
+import { shouldSkipImageOptimization } from '@/lib/image';
 
 const CITIES = ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger', 'Agadir', 'Meknès', 'Oujda'];
 
@@ -413,7 +414,7 @@ export function CheckoutPage() {
                 <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13, alignItems: 'center' }}>
                   <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
                     {src && (
-                      <Image src={src} alt="" fill sizes="48px" style={{ objectFit: 'cover' }} unoptimized={src.startsWith('http')} />
+                      <Image src={src} alt="" fill sizes="48px" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(src)} />
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -648,7 +649,7 @@ export function CheckoutPage() {
                   >
                     {cart[0]?.imgFiles?.[0] && (
                       <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', position: 'relative', flexShrink: 0, background: 'rgba(0,0,0,0.05)' }}>
-                        <Image src={cart[0].imgFiles[0]} alt="" fill sizes="44px" style={{ objectFit: 'cover' }} unoptimized={cart[0].imgFiles[0].startsWith('http')} />
+                        <Image src={cart[0].imgFiles[0]} alt="" fill sizes="44px" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(cart[0].imgFiles[0])} />
                       </div>
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
