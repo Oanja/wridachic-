@@ -220,7 +220,7 @@ export function ProductEditor({ product, nextSortOrder, totalProducts, onClose, 
                 <option value="robes">Robes & Ensembles</option>
                 <option value="basics">Denim / Basics</option>
                 <option value="caftans">Caftans</option>
-                <option value="prayer">Espace Prière</option>
+                <option value="prayer">Modeste / Longues</option>
               </select>
             </div>
             <div>

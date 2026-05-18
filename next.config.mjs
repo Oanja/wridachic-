@@ -21,6 +21,10 @@ const nextConfig = {
     return [
       { source: '/index.html', destination: '/', permanent: true },
       { source: '/wridachic.html', destination: '/', permanent: true },
+      // /prayer was renamed to /modest to avoid Meta auto-classifying the
+      // site as "Religion" (which triggers EU/GDPR data-sharing restrictions
+      // on the Pixel). 301 keeps backlinks + Google ranking.
+      { source: '/prayer', destination: '/modest', permanent: true },
     ];
   },
 

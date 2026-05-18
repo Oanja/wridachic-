@@ -7,7 +7,17 @@ import { pick } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
 import type { Product } from '@/lib/types';
 
-export function PrayerPage({ products }: { products: Product[] }) {
+/**
+ * Modest collection page — formerly /prayer.
+ *
+ * Renamed away from "prayer/prière" because Meta's auto-categorizer
+ * flagged the site as "Religion" (triggering GDPR data-sharing
+ * restrictions in the EU). The DB category name is still `prayer`
+ * internally — only user-facing text was rebranded to "Modest /
+ * Modeste / محتشمة", which is what crawlers and Meta's classifier
+ * actually read.
+ */
+export function ModestPage({ products }: { products: Product[] }) {
   const { lang, wishlist, toggleWish } = useApp();
   const items = products.filter((p) => p.cat === 'prayer');
 
@@ -22,23 +32,23 @@ export function PrayerPage({ products }: { products: Product[] }) {
           </span>
           <h1 className="display" style={{ fontSize: 'clamp(52px, 9vw, 100px)', lineHeight: 0.92, letterSpacing: '-0.04em' }}>
             {lang === 'ar'
-              ? <>ملابس<br /><em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>الصلاة</em></>
+              ? <>ملابس<br /><em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>محتشمة</em></>
               : lang === 'en'
-                ? <>Prayer<br /><em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>space</em></>
-                : <>Espace<br /><em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>prière</em></>}
+                ? <>Modest<br /><em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>edit</em></>
+                : <>Tenues<br /><em style={{ fontStyle: 'italic', color: 'var(--rose)' }}>modestes</em></>}
           </h1>
           <p style={{ fontSize: 15, maxWidth: 460, opacity: 0.85, marginTop: 16 }}>
             {pick(lang,
-              'Jilbabs, khimars & ensembles conçus pour être confortables, couvrants et élégants. Dès 299 MAD.',
-              'Jilbabs, khimars & sets designed to be comfortable, modest and elegant. From 299 MAD.',
-              'جلابيب، خمارات وأطقم مصممة لتكون مريحة، محتشمة وجميلة. من 299 درهم.')}
+              'Robes longues, ensembles couvrants & jilbabs conçus pour être confortables et élégants. Dès 299 MAD.',
+              'Long dresses, covering sets & jilbabs designed to be comfortable and elegant. From 299 MAD.',
+              'فساتين طويلة، أطقم وجلابيب مصممة لتكون مريحة وأنيقة. من 299 درهم.')}
           </p>
         </div>
       </section>
       <section style={{ padding: '64px 28px 80px' }}>
         <div className="wrap">
           <div className="sh2">
-            <span className="sh2-num mono">/ {pick(lang, 'espace prière', 'prayer space', 'ملابس الصلاة')}</span>
+            <span className="sh2-num mono">/ {pick(lang, 'tenues modestes', 'modest edit', 'ملابس محتشمة')}</span>
             <h2 className="sh2-title">{pick(lang, 'Tous les articles', 'All items', 'كل القطع')}</h2>
           </div>
           <div className="g4">

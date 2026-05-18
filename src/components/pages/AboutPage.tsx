@@ -62,7 +62,7 @@ export function AboutPage() {
             {
               n: '03',
               t: pick(lang, 'Modeste & chic', 'Modest & chic', 'محتشمة وأنيقة'),
-              d: pick(lang, 'Mode, prière, cérémonie — une marque pour toutes les occasions.', 'Fashion, prayer, ceremony — a brand for every occasion.', 'موضة، صلاة، مناسبات — علامة لكل الأوقات.'),
+              d: pick(lang, 'Quotidien, cérémonie, sortie — une marque pour toutes les occasions.', 'Everyday, ceremony, outings — a brand for every occasion.', 'يومي، مناسبات، خرجات — علامة لكل الأوقات.'),
               tint: 'sky',
             },
           ].map((v) => (

@@ -8,7 +8,7 @@ export const TR = {
       'Nouvelle collection — mode féminine raffinée',
       'Retours acceptés sous 14 jours',
     ],
-    nav: { shop: 'Boutique', prayer: 'Prière', new: 'Nouveautés', lookbook: 'Lookbook', about: 'À propos' },
+    nav: { shop: 'Boutique', modest: 'Modeste', new: 'Nouveautés', lookbook: 'Lookbook', about: 'À propos' },
     hero: {
       eyebrow: 'La mode féminine marocaine',
       title: 'Le style à portée\nde toutes',
@@ -58,7 +58,7 @@ export const TR = {
       'New collection — refined women\'s fashion',
       'Returns accepted within 14 days',
     ],
-    nav: { shop: 'Shop', prayer: 'Prayer', new: 'New', lookbook: 'Lookbook', about: 'About' },
+    nav: { shop: 'Shop', modest: 'Modest', new: 'New', lookbook: 'Lookbook', about: 'About' },
     hero: {
       eyebrow: 'Moroccan women\'s fashion',
       title: 'Style within reach\nof every woman',
@@ -108,7 +108,7 @@ export const TR = {
       'مجموعة جديدة — أزياء نسائية راقية',
       'الإرجاع مقبول خلال 14 يوماً',
     ],
-    nav: { shop: 'المتجر', prayer: 'الصلاة', new: 'جديد', lookbook: 'لوكبوك', about: 'عنا' },
+    nav: { shop: 'المتجر', modest: 'محتشمة', new: 'جديد', lookbook: 'لوكبوك', about: 'عنا' },
     hero: {
       eyebrow: 'الأزياء النسائية المغربية', title: 'الأناقة في متناول\nالجميع',
       sub: 'فساتين، أطقم وأساسيات نسائية — ابتداءً من 299 درهم، توصيل في كل المغرب خلال 24-48 ساعة.',
