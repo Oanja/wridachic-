@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { getSupabaseServer } from './supabase/server';
+import { getSupabaseStatic } from './supabase/static';
 import { DEFAULT_SETTINGS, type SiteSettingKey, type SiteSettings } from './settings';
 
 /**
@@ -9,7 +9,7 @@ import { DEFAULT_SETTINGS, type SiteSettingKey, type SiteSettings } from './sett
  */
 export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   try {
-    const sb = await getSupabaseServer();
+    const sb = getSupabaseStatic();
     const { data, error } = await sb.from('site_settings').select('key, value');
     if (error || !data) return { ...DEFAULT_SETTINGS };
     const out: SiteSettings = { ...DEFAULT_SETTINGS };

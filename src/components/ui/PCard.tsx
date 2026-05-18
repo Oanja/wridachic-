@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Icon } from './Icon';
 import { Placeholder } from './Placeholder';
+import { StarRating } from '@/components/reviews/StarRating';
 import { TINTS } from '@/lib/data';
 import { TR, pick, pickField } from '@/lib/i18n';
 import type { Lang, Product } from '@/lib/types';
@@ -76,6 +77,17 @@ export function PCard({ product, lang, onWish, wished, tint, priority = false }:
 
       <div>
         <div className="pcard-name">{name}</div>
+        {/* Rating row — rendered only when we actually have reviews so a
+            product with 0 reviews doesn't show a row of empty grey stars
+            that suggests it's been rated badly. */}
+        {product.reviewCount && product.reviewCount > 0 && product.rating ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            <StarRating value={product.rating} size={12} />
+            <span className="mono" style={{ fontSize: 10, opacity: 0.65 }}>
+              {product.rating.toFixed(1)} ({product.reviewCount})
+            </span>
+          </div>
+        ) : null}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
           <div className="pcard-colors">
             {product.colors.map((c, i) => <span key={i} style={{ background: c }} />)}

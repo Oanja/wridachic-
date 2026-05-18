@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { sendOrderWhatsAppConfirmation } from '@/lib/whatsapp';
 import { sendOrderTelegramNotification } from '@/lib/telegram';
 import { upsertOrderToSheet } from '@/lib/sheets';
 import { alertError, alertWarn } from '@/lib/alerts';
 import { withRetry } from '@/lib/retry';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { sendCapiPurchase } from '@/lib/metaCapi';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -40,6 +41,12 @@ interface OrderPayload {
   total: number;
   items: OrderItem[];
   lang?: 'fr' | 'en' | 'ar';
+  /** Meta CAPI deduplication — same eventId the browser Pixel uses. */
+  eventId?: string;
+  /** _fbp cookie (set by Pixel JS), forwarded for CAPI match quality. */
+  fbp?: string;
+  /** _fbc cookie (click ID from fbclid), forwarded for CAPI match quality. */
+  fbc?: string;
 }
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -102,6 +109,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'bad-payload' }, { status: 400 });
     }
 
+    // Capture network metadata for Meta CAPI match quality. Doing this
+    // synchronously (before after()) because Request headers aren't
+    // accessible from background work.
+    const clientIp =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      undefined;
+    const clientUserAgent = req.headers.get('user-agent') || undefined;
+    const sourceUrl = req.headers.get('referer') || 'https://wridachic.com/checkout';
+
     // Anti-abuse: confirm the order actually exists in Supabase before
     // burning Resend/WhatsApp/Telegram quotas. Without this, anyone who
     // finds the endpoint URL can spam fake orders and exhaust our budgets.
@@ -128,7 +145,10 @@ export async function POST(req: Request) {
     const adminResult: { ok: boolean; reason: string } = { ok: true, reason: 'admin-email-disabled' };
 
     // 2) Email to customer if they provided one — friendly confirmation.
-    let customerResult: { ok: boolean; reason: string } = { ok: false, reason: 'skipped' };
+    //    We BUILD the HTML synchronously (we have all the data here) but
+    //    actually send it inside the after() block below.
+    let customerHtml: string | undefined;
+    let customerEmailSubject: string | undefined;
     if (data.email) {
       const lang = data.lang ?? 'fr';
       const t = lang === 'ar'
@@ -158,7 +178,7 @@ export async function POST(req: Request) {
             help: 'Une question ? Réponse rapide sur WhatsApp : +212 773-847986',
           };
 
-      const customerHtml = `
+      customerHtml = `
         <div style="font-family:system-ui,sans-serif;color:#0F0E0D;max-width:600px;margin:0 auto;padding:32px 24px;background:#FAF6F1" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">
           <h1 style="font-size:28px;margin:0 0 4px">${t.hi}</h1>
           <p style="font-family:monospace;color:#C85C3F;font-size:13px;margin:0 0 20px">${data.orderNumber}</p>
@@ -173,61 +193,82 @@ export async function POST(req: Request) {
           <p style="margin-top:16px;font-size:11px;opacity:0.5;font-family:monospace;letter-spacing:0.08em;text-transform:uppercase">wridachic.com · Casablanca · 🇲🇦</p>
         </div>
       `;
-
-      customerResult = await sendEmail(data.email, t.subject, customerHtml);
+      customerEmailSubject = t.subject;
     }
 
-    // Fire WhatsApp template + Telegram admin alert + Google Sheets sync
-    // in parallel — they're independent and none should block the others.
-    const [whatsappResult, telegramResult, sheetsResult] = await Promise.all([
-      sendOrderWhatsAppConfirmation({
-        orderNumber: data.orderNumber,
-        fullName: data.fullName,
-        phone: data.phone,
-        total: data.total,
-        items: data.items,
-      }),
-      sendOrderTelegramNotification({
-        orderNumber: data.orderNumber,
-        fullName: data.fullName,
-        phone: data.phone,
-        email: data.email,
-        address: data.address,
-        city: data.city,
-        total: data.total,
-        lang: data.lang,
-        items: data.items,
-      }),
-      upsertOrderToSheet({
-        orderNumber: data.orderNumber,
-        fullName: data.fullName,
-        phone: data.phone,
-        email: data.email,
-        address: data.address,
-        city: data.city,
-        total: data.total,
-        status: 'nouveau',
-        items: data.items,
-        created_at: new Date().toISOString(),
-        lang: data.lang,
-      }),
-    ]);
+    // ─── Background work via Next.js `after()` ───────────────────────
+    //
+    // Everything below this point is non-critical for the caller (the
+    // checkout page only needs to know its POST was accepted). We push
+    // emails + Telegram + WhatsApp + Sheets sync into after() so the
+    // browser sees a sub-200 ms response instead of waiting 2-3 s for
+    // all the downstream APIs to acknowledge.
+    //
+    // Errors inside after() are logged + alerted via Telegram but
+    // never break the response that already went out.
+    after(async () => {
+      // Customer email (if we have one)
+      let customerResult: { ok: boolean; reason: string } = { ok: false, reason: 'skipped' };
+      if (data.email && customerHtml && customerEmailSubject) {
+        await sendEmail(data.email, customerEmailSubject, customerHtml);
+      }
 
-    if (whatsappResult.ok) {
-      console.info('[whatsapp] order confirmation sent', {
-        orderNumber: data.orderNumber,
-        phoneLast4: data.phone.replace(/\D/g, '').slice(-4),
-        reason: whatsappResult.reason,
-      });
-    } else {
-      console.error('[whatsapp] order confirmation failed', {
-        orderNumber: data.orderNumber,
-        phoneLast4: data.phone.replace(/\D/g, '').slice(-4),
-        reason: whatsappResult.reason,
-      });
-      // Only escalate to Telegram if WhatsApp is genuinely down. Skip the
-      // self-send edge case ("can't message own number") to avoid noise.
-      if (!/cannot message yourself|same phone/i.test(whatsappResult.reason)) {
+      // WhatsApp + Telegram in parallel. The Sheet sync is now handled
+      // exclusively by the Supabase database webhook (see
+      // /api/webhooks/sheet-sync) so we don't trigger it here anymore —
+      // doing both at once caused race-condition duplicates in the
+      // Commandes tab (both code paths saw "row not found" and appended
+      // simultaneously). One source of truth = no duplicates.
+      const [whatsappResult, telegramResult, capiResult] = await Promise.all([
+        sendOrderWhatsAppConfirmation({
+          orderNumber: data.orderNumber,
+          fullName: data.fullName,
+          phone: data.phone,
+          total: data.total,
+          items: data.items,
+        }),
+        sendOrderTelegramNotification({
+          orderNumber: data.orderNumber,
+          fullName: data.fullName,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          city: data.city,
+          total: data.total,
+          lang: data.lang,
+          items: data.items,
+        }),
+        // Meta Conversions API — server-side Purchase. Uses the same
+        // event_id as the browser Pixel so Meta deduplicates and counts
+        // the conversion exactly once. If the browser Pixel was blocked
+        // (iOS ATT, ad-blocker), this is the only signal Meta gets — and
+        // that's exactly the point: +30-50% recovered conversions for the
+        // ad algorithm to optimize on.
+        sendCapiPurchase({
+          eventId: data.eventId || `order-${data.orderNumber}`,
+          orderNumber: data.orderNumber,
+          total: data.total,
+          email: data.email,
+          phone: data.phone,
+          fullName: data.fullName,
+          city: data.city,
+          items: data.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+          clientIp,
+          clientUserAgent,
+          fbp: data.fbp,
+          fbc: data.fbc,
+          sourceUrl,
+        }),
+      ]);
+      if (!capiResult.ok && capiResult.reason !== 'capi-not-configured') {
+        console.error('[meta-capi] purchase failed', { orderNumber: data.orderNumber, reason: capiResult.reason });
+      }
+      const sheetsResult = { ok: true, reason: 'handled-by-webhook' };
+
+      if (whatsappResult.ok) {
+        console.info('[whatsapp] order confirmation sent', { orderNumber: data.orderNumber });
+      } else if (!/cannot message yourself|same phone/i.test(whatsappResult.reason)) {
+        console.error('[whatsapp] order confirmation failed', { orderNumber: data.orderNumber, reason: whatsappResult.reason });
         alertWarn({
           title: `Confirmation WhatsApp non envoyée — ${data.orderNumber}`,
           body: 'La cliente ne recevra pas le message de confirmation automatique. Contacte-la manuellement.',
@@ -240,54 +281,40 @@ export async function POST(req: Request) {
           fingerprint: 'wa-confirm-failed',
         });
       }
-    }
 
-    if (!telegramResult.ok) {
-      console.error('[telegram] admin notification failed', {
-        orderNumber: data.orderNumber,
-        reason: telegramResult.reason,
-      });
-      // If Telegram is down we obviously can't alert via Telegram. Just log.
-    }
+      if (!telegramResult.ok) {
+        console.error('[telegram] admin notification failed', { orderNumber: data.orderNumber, reason: telegramResult.reason });
+      }
 
-    if (!sheetsResult.ok) {
-      console.error('[sheets] sync failed', {
-        orderNumber: data.orderNumber,
-        reason: sheetsResult.reason,
-      });
-      alertWarn({
-        title: 'Google Sheets désynchronisé',
-        body: `Le Sheet ne reflète plus la base. Clique « Sync Sheets » dans l'admin pour rattraper.`,
-        context: { orderNumber: data.orderNumber, reason: sheetsResult.reason.slice(0, 400) },
-        fingerprint: 'sheets-sync-failed',
-      });
-    }
+      if (!sheetsResult.ok) {
+        console.error('[sheets] sync failed', { orderNumber: data.orderNumber, reason: sheetsResult.reason });
+        alertWarn({
+          title: 'Google Sheets désynchronisé',
+          body: `Le Sheet ne reflète plus la base. Clique « Sync Sheets » dans l'admin pour rattraper.`,
+          context: { orderNumber: data.orderNumber, reason: sheetsResult.reason.slice(0, 400) },
+          fingerprint: 'sheets-sync-failed',
+        });
+      }
 
-    // If BOTH emails failed AND the customer has no Telegram backup, the
-    // admin literally has no async record beyond Supabase — alert hard.
-    if (!adminResult.ok && !telegramResult.ok) {
-      alertError({
-        title: `Aucune notification reçue pour ${data.orderNumber}`,
-        body: 'Email admin ET Telegram ont échoué. La commande EST bien dans Supabase (ouvre /admin) mais aucune notif n\'a été envoyée.',
-        context: {
-          orderNumber: data.orderNumber,
-          customer: data.fullName,
-          phone: data.phone,
-          adminEmailReason: adminResult.reason,
-          telegramReason: telegramResult.reason,
-        },
-        fingerprint: 'notify-total-failure',
-      });
-    }
-
-    return NextResponse.json({
-      ok: true,
-      admin: adminResult,
-      customer: customerResult,
-      whatsapp: whatsappResult,
-      telegram: telegramResult,
-      sheets: sheetsResult,
+      if (!adminResult.ok && !telegramResult.ok) {
+        alertError({
+          title: `Aucune notification reçue pour ${data.orderNumber}`,
+          body: 'Email admin ET Telegram ont échoué. La commande EST bien dans Supabase (ouvre /admin) mais aucune notif n\'a été envoyée.',
+          context: {
+            orderNumber: data.orderNumber,
+            customer: data.fullName,
+            phone: data.phone,
+            adminEmailReason: adminResult.reason,
+            telegramReason: telegramResult.reason,
+          },
+          fingerprint: 'notify-total-failure',
+        });
+      }
     });
+
+    // Response goes out NOW — all the heavy lifting above runs after
+    // the client has already moved on.
+    return NextResponse.json({ ok: true, queued: true });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : 'unknown' }, { status: 500 });
   }

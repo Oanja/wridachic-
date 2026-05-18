@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Placeholder } from '@/components/ui/Placeholder';
 import { PCard } from '@/components/ui/PCard';
+import { ReviewsSection } from '@/components/reviews/ReviewsSection';
 import { TINTS, CATEGORIES } from '@/lib/data';
 import { TR, pick, pickField } from '@/lib/i18n';
 import { useApp } from '@/store/AppContext';
@@ -294,6 +295,8 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
             </div>
           </div>
         </div>
+
+        <ReviewsSection productId={product.id} />
 
         {related.length > 0 && (
           <section style={{ marginTop: 80 }}>

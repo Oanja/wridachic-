@@ -10,7 +10,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 import {
   AUTO_DISCOUNT_PCT, computeAutoDiscount, computeDiscount, readCoupon, writeCoupon,
 } from '@/lib/coupon';
-import { cartPayload, trackMetaEvent } from '@/lib/metaPixel';
+import { cartPayload, trackMetaEvent, readCookie, newEventId } from '@/lib/metaPixel';
 import type { Coupon } from '@/lib/types';
 import { shouldSkipImageOptimization } from '@/lib/image';
 
@@ -243,8 +243,18 @@ export function CheckoutPage() {
         } catch {}
       }
 
+      // Generate a single event_id used by BOTH the browser Pixel and
+      // the server-side CAPI Purchase event. Meta uses this to merge the
+      // two signals and count the conversion exactly once — without it
+      // we'd double-count every conversion that wasn't blocked.
+      const purchaseEventId = `order-${num}`;
+      const fbp = readCookie('_fbp');
+      const fbc = readCookie('_fbc');
+
       // Fire-and-forget email notification (admin + customer). Failure here
       // must NOT block the user — the order is already saved in Supabase.
+      // Forwards eventId + fbp/fbc so the server-side CAPI call can
+      // deduplicate against the browser Pixel and improve match quality.
       fetch('/api/notify-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -258,10 +268,13 @@ export function CheckoutPage() {
           total,
           items: itemsData,
           lang,
+          eventId: purchaseEventId,
+          fbp,
+          fbc,
         }),
       }).catch(() => { /* silent — email is non-critical */ });
 
-      trackMetaEvent('Purchase', cartPayload(cart, total));
+      trackMetaEvent('Purchase', cartPayload(cart, total), purchaseEventId);
     } catch (e) {
       console.error('[order] unexpected throw', e);
       // Catch-all: network or runtime failure. Don't lose the customer.
@@ -394,7 +407,10 @@ export function CheckoutPage() {
               }}
             >
               <div className="display" style={{ fontSize: 20 }}>
-                🛍️ {cart.length} {pick(lang, 'articles', 'items', 'قطعة')}
+                {/* Show total quantity (e.g. 7) not the count of
+                    distinct products (2) — a customer with 4 dresses +
+                    3 caftans expects to read "7 articles", not "2". */}
+                🛍️ {itemsCount} {pick(lang, itemsCount > 1 ? 'articles' : 'article', itemsCount > 1 ? 'items' : 'item', itemsCount > 1 ? 'قطع' : 'قطعة')}
                 <span className="mono" style={{ fontSize: 13, opacity: 0.65, marginLeft: 10, fontWeight: 400 }}>
                   · {total} MAD
                 </span>
@@ -410,18 +426,38 @@ export function CheckoutPage() {
             <div className={`checkout-summary-content${summaryOpen ? '' : ' is-collapsed'}`}>
             {cart.map((item, i) => {
               const src = item.imgFiles?.[0];
+              const qtyLabel = item.qty > 1 ? ` × ${item.qty}` : '';
               return (
-                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10, fontSize: 13, alignItems: 'center' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
+                <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 12, fontSize: 13, alignItems: 'center', paddingBottom: 12, borderBottom: i < cart.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
                     {src && (
-                      <Image src={src} alt="" fill sizes="48px" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(src)} />
+                      <Image src={src} alt="" fill sizes="56px" style={{ objectFit: 'cover' }} unoptimized={shouldSkipImageOptimization(src)} />
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
-                    <div className="mono" style={{ fontSize: 10, opacity: 0.55, marginTop: 2 }}>{item.size} · x{item.qty}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
+                      {pickField(lang, item.name, item.nameEn, item.nameAr)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', fontSize: 11, opacity: 0.75 }}>
+                      <span style={{ background: 'rgba(255,255,255,0.12)', padding: '2px 7px', borderRadius: 999 }}>
+                        {pick(lang, 'Taille', 'Size', 'القياس')} {item.size}
+                      </span>
+                      {item.color && (
+                        <span style={{ background: 'rgba(255,255,255,0.12)', padding: '2px 7px', borderRadius: 999 }}>
+                          {item.color}
+                        </span>
+                      )}
+                      <span style={{ background: 'rgba(255,255,255,0.18)', padding: '2px 7px', borderRadius: 999, fontWeight: 600 }} className="mono">
+                        × {item.qty}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mono" style={{ fontWeight: 600 }}>{item.price * item.qty} MAD</div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="mono" style={{ fontWeight: 700, fontSize: 14 }}>{item.price * item.qty} <span style={{ fontSize: 10, opacity: 0.6 }}>MAD</span></div>
+                    {item.qty > 1 && (
+                      <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>{item.price} × {item.qty}</div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -471,8 +507,13 @@ export function CheckoutPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 0', borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 12 }}>
-                <span className="display" style={{ fontSize: 20 }}>total</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '12px 0 0', borderTop: '1px solid rgba(255,255,255,0.15)', marginTop: 12 }}>
+                <span className="display" style={{ fontSize: 20 }}>
+                  total
+                  <span className="mono" style={{ fontSize: 12, opacity: 0.6, marginLeft: 8, fontWeight: 400 }}>
+                    ({itemsCount} {pick(lang, itemsCount > 1 ? 'articles' : 'article', itemsCount > 1 ? 'items' : 'item', itemsCount > 1 ? 'قطع' : 'قطعة')})
+                  </span>
+                </span>
                 <span className="mono" style={{ fontSize: 20, fontWeight: 600 }}>{total} MAD</span>
               </div>
             </div>
@@ -672,15 +713,32 @@ export function CheckoutPage() {
                     screen, skipping the old review step entirely. */}
                 <button
                   className="btn2 btn2-dark btn2-lg"
-                  style={{ marginTop: 18, opacity: valid && !saving ? 1 : 0.5, cursor: valid && !saving ? 'pointer' : 'not-allowed', width: '100%' }}
+                  style={{ marginTop: 18, opacity: valid && !saving ? 1 : 0.5, cursor: valid && !saving ? 'pointer' : 'not-allowed', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
                   disabled={!valid || saving}
                   onClick={() => { if (valid && !saving) { setOrderError(''); placeOrder(); } }}
                 >
-                  {saving
-                    ? '...'
-                    : orderError
-                      ? pick(lang, 'Réessayer', 'Retry', 'إعادة المحاولة')
-                      : `🔒 ${t.checkout.place} · ${total} MAD`}
+                  {saving ? (
+                    '...'
+                  ) : orderError ? (
+                    pick(lang, 'Réessayer', 'Retry', 'إعادة المحاولة')
+                  ) : (
+                    <>
+                      {/* Green pulsing check chip — eye-catching call-
+                          to-action that says "you're one tap from done"
+                          without the legalese vibe of a padlock icon. */}
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          width: 24, height: 24, borderRadius: '50%',
+                          background: '#4CAF50', color: '#fff',
+                          fontSize: 14, fontWeight: 800, lineHeight: 1,
+                          boxShadow: '0 0 0 4px rgba(76,175,80,0.25)',
+                        }}
+                      >✓</span>
+                      <span>{t.checkout.place} · {total} MAD</span>
+                    </>
+                  )}
                 </button>
                 <p style={{ marginTop: 10, fontSize: 11, opacity: 0.55, textAlign: 'center' }}>
                   {pick(lang,

@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { getSupabaseServer } from './supabase/server';
+import { getSupabaseStatic } from './supabase/static';
 import { FALLBACK_PRODUCTS } from './data';
 import type { Product } from './types';
 
@@ -64,16 +64,41 @@ function transform(row: SupabaseProductRow): Product {
 // Wrapped in React.cache so multiple calls within the same render
 // (e.g. getProductBySlug + page.tsx both calling getAllProducts) hit
 // Supabase only once per request.
+//
+// We also fold in the aggregated review ratings here — one extra query
+// (small, indexed on (product_id, status)), result merged into each
+// product. Doing it in this helper keeps PCard/ProductDetail dumb (no
+// per-card fetch loop = no N+1).
 export const getAllProducts = cache(async (): Promise<Product[]> => {
   try {
-    const sb = await getSupabaseServer();
-    const { data, error } = await sb
-      .from('products')
-      .select('*')
-      .eq('active', true)
-      .order('sort_order', { ascending: true });
-    if (error || !data || data.length === 0) return FALLBACK_PRODUCTS;
-    return (data as SupabaseProductRow[]).map(transform);
+    const sb = getSupabaseStatic();
+    const [productsRes, reviewsRes] = await Promise.all([
+      sb.from('products').select('*').eq('active', true).order('sort_order', { ascending: true }),
+      sb.from('product_reviews').select('product_id, rating').eq('status', 'approved'),
+    ]);
+    if (productsRes.error || !productsRes.data || productsRes.data.length === 0) return FALLBACK_PRODUCTS;
+
+    // Build a Map<product_id, { sum, count }> in one pass.
+    const ratingsByProduct = new Map<string, { sum: number; count: number }>();
+    for (const r of (reviewsRes.data || []) as Array<{ product_id: string; rating: number }>) {
+      const cur = ratingsByProduct.get(r.product_id) || { sum: 0, count: 0 };
+      cur.sum += r.rating;
+      cur.count += 1;
+      ratingsByProduct.set(r.product_id, cur);
+    }
+
+    return (productsRes.data as SupabaseProductRow[]).map((row) => {
+      const p = transform(row);
+      const agg = ratingsByProduct.get(p.id);
+      if (agg) {
+        p.rating = Math.round((agg.sum / agg.count) * 10) / 10;
+        p.reviewCount = agg.count;
+      } else {
+        p.rating = 0;
+        p.reviewCount = 0;
+      }
+      return p;
+    });
   } catch {
     return FALLBACK_PRODUCTS;
   }

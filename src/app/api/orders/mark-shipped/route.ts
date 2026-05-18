@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendOrderShippedWhatsApp } from '@/lib/whatsapp';
-import { sendTelegramText } from '@/lib/telegram';
-import { upsertOrderToSheet } from '@/lib/sheets';
+import { sendTelegramText, TELEGRAM_CHATS } from '@/lib/telegram';
+// upsertOrderToSheet intentionally not imported — Supabase webhook
+// (/api/webhooks/sheet-sync) syncs every orders mutation automatically.
 import { alertWarn } from '@/lib/alerts';
 import { blockIfNotAdmin } from '@/lib/auth-guard';
 
@@ -49,75 +50,55 @@ export async function POST(req: Request) {
       );
     }
 
-    // Fire WhatsApp shipped template + Sheet sync in parallel
-    const [waResult, sheetResult] = await Promise.all([
-      sendOrderShippedWhatsApp({
+    // ─── Background work via Next.js after() ─────────────────────────
+    // Status flip is the critical write; downstream notifications (WA,
+    // Telegram, Sheet) run in parallel after the response is sent so
+    // the admin's "Expédié" button feels instant.
+    after(async () => {
+      // Sheet sync is handled by the Supabase webhook (the status update
+      // above triggers it). We only fire the customer-facing WhatsApp
+      // template here.
+      const waResult = await sendOrderShippedWhatsApp({
         orderNumber: order.order_number,
         fullName: order.full_name,
         phone: order.phone,
         livreurName: livreurName.trim(),
         livreurPhone: livreurPhone.trim(),
-      }),
-      upsertOrderToSheet({
-        orderNumber: order.order_number,
-        fullName: order.full_name,
-        phone: order.phone,
-        email: order.email,
-        address: order.address,
-        city: order.city,
-        total: order.total,
-        status: 'expédié',
-        cancel_reason: order.cancel_reason,
-        created_at: order.created_at,
-        items: order.items ?? [],
-        lang: order.lang,
-        cost_total: (order.items ?? []).reduce(
-          (s: number, it: { qty: number; cost?: number | null }) =>
-            s + (typeof it.cost === 'number' ? it.cost * it.qty : 0),
-          0,
-        ),
-        delivery_cost: (() => {
-          const c = (order.city ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
-          return c.includes('casa') ? 20 : 35;
-        })(),
-      }),
-    ]);
-
-    // Push a Telegram notification to the orders chat so the admin sees
-    // the dispatch acknowledged.
-    await sendTelegramText(
-      `🚚 <b>EXPÉDIÉ</b>\n` +
-      `━━━━━━━━━━━━━━━━━\n` +
-      `<b>${order.order_number}</b>\n` +
-      `👤 ${order.full_name}\n` +
-      `📞 ${order.phone}\n` +
-      `💰 ${order.total} MAD\n\n` +
-      `🚚 Livreur : <b>${livreurName.trim()}</b>\n` +
-      `📱 ${livreurPhone.trim()}\n\n` +
-      (waResult.ok
-        ? '✅ Message WhatsApp envoyé à la cliente'
-        : '⚠️ Message WhatsApp PAS envoyé — contacte-la manuellement')
-    );
-
-    if (!waResult.ok) {
-      alertWarn({
-        title: `WhatsApp "expédié" non envoyé — ${order.order_number}`,
-        body: 'Le statut est bien mis à "expédié" mais la cliente n\'a PAS reçu de notification. Préviens-la manuellement.',
-        context: {
-          orderNumber: order.order_number,
-          customer: order.full_name,
-          phone: order.phone,
-          reason: waResult.reason.slice(0, 400),
-        },
-        fingerprint: 'shipped-wa-failed',
       });
-    }
 
-    return NextResponse.json({
-      ok: true,
-      whatsapp: waResult,
-      sheet: sheetResult,
+      await sendTelegramText(
+        `🚚 <b>EXPÉDIÉ</b>\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `<b>${order.order_number}</b>\n` +
+        `👤 ${order.full_name}\n` +
+        `📞 ${order.phone}\n` +
+        `📍 ${order.city}\n` +
+        `💰 ${order.total} MAD\n\n` +
+        `🚚 Livreur : <b>${livreurName.trim()}</b>\n` +
+        `📱 ${livreurPhone.trim()}\n\n` +
+        (waResult.ok
+          ? '✅ Message WhatsApp envoyé à la cliente'
+          : '⚠️ Message WhatsApp PAS envoyé — contacte-la manuellement'),
+        TELEGRAM_CHATS.shipped,
+      );
+
+      if (!waResult.ok) {
+        alertWarn({
+          title: `WhatsApp "expédié" non envoyé — ${order.order_number}`,
+          body: 'Le statut est bien mis à "expédié" mais la cliente n\'a PAS reçu de notification. Préviens-la manuellement.',
+          context: {
+            orderNumber: order.order_number,
+            customer: order.full_name,
+            phone: order.phone,
+            reason: waResult.reason.slice(0, 400),
+          },
+          fingerprint: 'shipped-wa-failed',
+        });
+      }
+
     });
+
+    return NextResponse.json({ ok: true, queued: true });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : 'unknown' },

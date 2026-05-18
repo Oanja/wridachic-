@@ -54,17 +54,21 @@ const LANG_BADGE: Record<string, { flag: string; label: string; color: string }>
 
 // Auto-refresh interval (ms). 30s strikes a balance between fresh data and
 // Supabase rate-limit politeness. Set to 0 to disable.
-const AUTO_REFRESH_MS = 30000;
+// 5 seconds — fast enough to feel "live" even when Supabase Realtime
+// is slow to deliver an event (rare but does happen behind some
+// corporate proxies). With Realtime working normally, this poll almost
+// never finds anything new and is essentially free.
+const AUTO_REFRESH_MS = 5000;
 
-// Fire-and-forget Google Sheets sync. Errors are logged but never surfaced
-// to the admin — the source of truth is Supabase, the Sheet is a mirror.
-function syncToSheet(ids?: string[], deleteNums?: string[]) {
-  if ((!ids || ids.length === 0) && (!deleteNums || deleteNums.length === 0)) return;
-  fetch('/api/sync-order', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ids, delete: deleteNums }),
-  }).catch(() => {});
+// No-op: Sheet sync is now driven entirely by the Supabase database
+// webhook (/api/webhooks/sheet-sync), which fires on every INSERT /
+// UPDATE / DELETE regardless of source. Calling sync-order from the
+// browser too was the cause of duplicate rows in the Sheet (race
+// condition: both code paths inserted the same order simultaneously).
+// We keep the function stub so existing call sites compile but it
+// does nothing at runtime.
+function syncToSheet(_ids?: string[], _deleteNums?: string[]) {
+  // intentionally empty
 }
 
 export function AdminOrders() {
@@ -93,7 +97,10 @@ export function AdminOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Auto-refresh every AUTO_REFRESH_MS while the tab is visible
+  // Auto-refresh every AUTO_REFRESH_MS while the tab is visible. This is
+  // the fallback in case Realtime drops the connection (rare but
+  // possible behind some corporate proxies). With Realtime working the
+  // poll usually finds nothing new and is essentially free.
   useEffect(() => {
     if (!autoRefresh) return;
     const tick = () => {
@@ -104,6 +111,36 @@ export function AdminOrders() {
     const id = window.setInterval(tick, AUTO_REFRESH_MS);
     return () => window.clearInterval(id);
   }, [autoRefresh, fetchOrders]);
+
+  // Live updates via Supabase Realtime — new orders + status changes
+  // appear instantly without waiting for the next poll. Free on the
+  // Supabase free tier (2 concurrent channels, far more than we need).
+  // We subscribe to ALL change events on `orders` and patch local state
+  // in-place. If the websocket drops, the poll above still keeps things
+  // fresh, so this is purely a UX speedup with no failure mode that
+  // would lose data.
+  useEffect(() => {
+    const channel = sb
+      .channel('admin-orders-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as Order;
+            setOrders((prev) => [row, ...prev.filter((o) => o.id !== row.id)]);
+          } else if (payload.eventType === 'UPDATE') {
+            const row = payload.new as Order;
+            setOrders((prev) => prev.map((o) => (o.id === row.id ? row : o)));
+          } else if (payload.eventType === 'DELETE') {
+            const old = payload.old as { id: string };
+            setOrders((prev) => prev.filter((o) => o.id !== old.id));
+          }
+        },
+      )
+      .subscribe();
+    return () => { sb.removeChannel(channel); };
+  }, [sb]);
 
   // Stats are scoped to the time range (today / 7d / 30d / all)
   const statsOrders = useMemo(() => {
@@ -137,6 +174,35 @@ export function AdminOrders() {
   const updateStatus = async (id: string, status: string) => {
     if (status === 'expédié') {
       setShippingOrderId(id);
+      return;
+    }
+    // "livré" gets its own endpoint so the dedicated Livrées Telegram
+    // chat receives a celebratory notification + delivered_at timestamp
+    // is recorded for future delivery-time analytics.
+    //
+    // Optimistic UX: flip the badge immediately and fire the network
+    // call in the background. The previous await-the-whole-pipeline
+    // approach felt sluggish vs the other status buttons (which just
+    // hit Supabase directly). If the request actually fails we revert
+    // the row and surface the error.
+    if (status === 'livré') {
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+      fetch('/api/orders/mark-delivered', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: id }),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (!json.ok) {
+            // Revert the optimistic update on failure.
+            setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: o.status } : o)));
+            alert('Erreur : ' + (json.error || 'inconnue'));
+          }
+        })
+        .catch((e) => {
+          alert('Erreur réseau : ' + (e?.message || 'inconnue'));
+        });
       return;
     }
     await sb.from('orders').update({ status }).eq('id', id);

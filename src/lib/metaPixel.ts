@@ -20,7 +20,12 @@ type MetaPixelPayload = {
 
 declare global {
   interface Window {
-    fbq?: (action: 'track', event: MetaPixelEvent, payload?: MetaPixelPayload) => void;
+    fbq?: (
+      action: 'track',
+      event: MetaPixelEvent,
+      payload?: MetaPixelPayload,
+      options?: { eventID?: string },
+    ) => void;
   }
 }
 
@@ -32,9 +37,30 @@ function canTrackMetaPixel() {
   );
 }
 
-export function trackMetaEvent(event: MetaPixelEvent, payload?: MetaPixelPayload) {
+/**
+ * Fire a Pixel event. Pass `eventId` to deduplicate against the same
+ * event sent server-side via Meta Conversions API (CAPI) — Meta will
+ * count it exactly once even if both arrive.
+ */
+export function trackMetaEvent(event: MetaPixelEvent, payload?: MetaPixelPayload, eventId?: string) {
   if (!canTrackMetaPixel()) return;
-  window.fbq?.('track', event, payload);
+  if (eventId) {
+    window.fbq?.('track', event, payload, { eventID: eventId });
+  } else {
+    window.fbq?.('track', event, payload);
+  }
+}
+
+/** Read a cookie value (used to forward _fbp and _fbc to CAPI). */
+export function readCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()[\]\\/+^]/g, '\\$&') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+/** Generate a unique event_id for Pixel ↔ CAPI deduplication. */
+export function newEventId(prefix = 'evt'): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function productPayload(product: Product, quantity = 1) {

@@ -124,4 +124,12 @@ export const TELEGRAM_CHATS = {
   cancellations: process.env.TELEGRAM_CANCEL_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
   modifications: process.env.TELEGRAM_MODIFY_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
   confirmations: process.env.TELEGRAM_CONFIRM_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+  // Delivered orders — celebrating successful sales. Falls back to the
+  // main orders chat if the dedicated env var is not set so we never
+  // silently drop a delivery notification.
+  delivered: process.env.TELEGRAM_DELIVERED_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+  // Shipped orders — courier dispatched, message sent to the customer.
+  // Lives in its own chat so the team can follow in-flight packages
+  // without competing with new-order / cancellation noise.
+  shipped: process.env.TELEGRAM_SHIPPED_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
 };

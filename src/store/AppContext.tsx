@@ -140,8 +140,14 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
     setCart((c) => [...c, item]);
     trackMetaEvent('AddToCart', productPayload(item, item.qty));
   }, []);
+  // "Acheter maintenant" used to replace the cart with just this one
+  // item (setCart([item])) which surprised customers — they'd add 5
+  // items, click Acheter on a 6th, and watch the previous 5 disappear.
+  // New behaviour: append to the existing cart (same as addToCart) and
+  // let the checkout page show everything. If the customer really wants
+  // to buy this item alone they can clear the cart manually.
   const buyNow = useCallback((item: CartItem) => {
-    setCart([item]);
+    setCart((c) => [...c, item]);
     trackMetaEvent('AddToCart', productPayload(item, item.qty));
   }, []);
   const updateQty = useCallback((index: number, qty: number) =>

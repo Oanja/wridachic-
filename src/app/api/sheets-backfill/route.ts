@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { blockIfNotAdmin } from '@/lib/auth-guard';
-import { bulkUpsertOrdersToSheet, setupSheetsDashboard } from '@/lib/sheets';
+import { bulkUpsertOrdersToSheet } from '@/lib/sheets';
 
 /**
  * One-shot maintenance endpoint, fired from the admin UI:
@@ -70,10 +70,17 @@ export async function POST() {
       };
     });
 
+    // Sync the data only — we deliberately DO NOT call
+    // setupSheetsDashboard() here anymore. Rebuilding the Dashboard
+    // wipes any manual formatting (RTL direction, column widths the
+    // admin tweaked, custom colours, etc.). It also surprises the admin
+    // when a routine "Sync Sheets" click suddenly redraws everything.
+    // To rebuild the Dashboard intentionally, open Apps Script and Run
+    // setupDashboard manually — that's the only path that should touch
+    // it now.
     const sync = await bulkUpsertOrdersToSheet(payloads);
-    const dashboard = await setupSheetsDashboard();
 
-    return NextResponse.json({ ok: true, count: payloads.length, sync, dashboard });
+    return NextResponse.json({ ok: true, count: payloads.length, sync });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : 'unknown' },

@@ -27,6 +27,10 @@ export interface Product {
   stock?: number | null;
   /** Unit cost (purchase price) — admin-only, used for profit calculation. */
   cost?: number | null;
+  /** Aggregated rating from approved reviews. 0 = no reviews yet. */
+  rating?: number;
+  /** Count of approved reviews. 0 = none. */
+  reviewCount?: number;
 }
 
 export interface Category {

@@ -98,6 +98,7 @@ function getOrCreateOrdersSheet() {
       .setFontColor('#ffffff');
     sheet.setFrozenRows(1);
     sheet.setColumnWidths(1, COLS, 120);
+    sheet.setRightToLeft(true); // Arabic-first reading layout
   }
   return sheet;
 }
@@ -129,6 +130,7 @@ function getOrCreateAdsSheet() {
     sheet.getRange('A2:A').setNumberFormat('yyyy-mm-dd');
     // Format Montant as currency.
     sheet.getRange('B2:B').setNumberFormat('#,##0 "MAD"');
+    sheet.setRightToLeft(true); // Arabic-first reading layout
   }
   return sheet;
 }
@@ -144,6 +146,7 @@ function getOrCreateBackupSheet() {
       .setFontColor('#ffffff');
     sheet.setFrozenRows(1);
     sheet.setColumnWidths(1, COLS, 120);
+    sheet.setRightToLeft(true); // Arabic-first reading layout
   }
   return sheet;
 }
@@ -344,6 +347,70 @@ function snapshotOrders(tabName, orders) {
 
 // ─── Dashboard (KPI tab) ───────────────────────────────────────────
 
+// ─── Section colors used by the side-by-side dashboard layout ──────
+const DASH_H1_COLORS = {
+  blue:   '#1976D2',
+  green:  '#2E7D32',
+  dark:   '#3D352E',
+  clay:   '#C85C3F',
+  purple: '#6A1B9A',
+  orange: '#E65100',
+};
+
+const DASH_ROW_COLORS = {
+  good: '#C8E6C9',
+  warn: '#FFE0B2',
+  bad:  '#FFCDD2',
+  kpi:  '#E1F5FE',
+};
+
+/**
+ * Draw a single dashboard section at (startRow, leftCol) with bilingual
+ * labels. Each row is { label, formula, tag? } and `tag` is one of:
+ *   header   → section title bar (merged across both columns)
+ *   good/warn/bad/kpi → highlighted data row
+ *   null     → regular data row
+ *
+ * Returns the next free row beneath the section so callers can stack
+ * vertically inside one column.
+ */
+function drawDashSection(sheet, startRow, leftCol, headerColor, rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const r = startRow + i;
+    sheet.getRange(r, leftCol).setValue(row.label);
+    if (row.formula !== '') sheet.getRange(r, leftCol + 1).setValue(row.formula);
+
+    if (row.tag === 'header') {
+      sheet.getRange(r, leftCol, 1, 2).merge()
+        .setFontWeight('bold').setFontSize(13)
+        .setBackground(headerColor).setFontColor('#ffffff')
+        .setHorizontalAlignment('left').setVerticalAlignment('middle')
+        .setWrap(true);
+      sheet.setRowHeight(r, 36);
+    } else {
+      const fill = DASH_ROW_COLORS[row.tag];
+      if (fill) {
+        sheet.getRange(r, leftCol, 1, 2).setBackground(fill);
+      }
+      if (row.tag === 'good' || row.tag === 'bad' || row.tag === 'kpi') {
+        sheet.getRange(r, leftCol, 1, 2).setFontWeight('bold');
+      }
+      sheet.getRange(r, leftCol, 1, 2).setWrap(true).setVerticalAlignment('middle');
+      sheet.setRowHeight(r, 44);
+    }
+
+    // Money formatting on the value cell — same heuristic as before.
+    const label = String(row.label || '');
+    if (/CA |Marge|Ads|Coût|CAC|Panier|Frais|encaissé|brut|nette|potentiel/i.test(label) && row.formula !== '' && !label.includes('ALERTE')) {
+      sheet.getRange(r, leftCol + 1).setNumberFormat('#,##0 "MAD"');
+    }
+    if (label.includes('ROAS')) sheet.getRange(r, leftCol + 1).setNumberFormat('0.00"×"');
+    if (label.includes('Taux')) sheet.getRange(r, leftCol + 1).setNumberFormat('0.0%');
+  }
+  return startRow + rows.length;
+}
+
 function setupDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   // Ensure Orders + Ads tabs exist first — Google Sheets won't let us
@@ -383,153 +450,134 @@ function setupDashboard() {
   // (separated by \n — we enable wrap-text below so the cell shows both).
   const bi = (fr, ar) => fr + '\n' + ar;
 
-  const rows = [
-    ['🏆  WridaChic — Tableau de bord  ·  لوحة القيادة', '', 'title'],
-    ['', '', null],
+  // ───── Side-by-side dashboard layout ──────────────────────────────
+  //
+  // Columns are organised in 4 visual blocks (one spacer col between):
+  //
+  //   A-B (statuts + potentiel + global)
+  //   D-E (réel livré)
+  //   G-H (today + week + month, stacked)
+  //   J-K (performance pub + alerte)
+  //
+  // Each section is drawn independently with drawDashSection() and the
+  // function returns the next free row so we can stack inside a column.
 
-    ['📊  STATUTS  ·  حالات الطلبيات', '', 'h1-blue'],
-    [bi('Commandes totales', 'مجموع الطلبيات'),       `=COUNTA(${O}!B2:B)`, null],
-    [bi('Nouvelles (à traiter)', 'جديدة (للمعالجة)'),  `=COUNTIF(${C},"nouveau")`, 'warn'],
-    [bi('Confirmées', 'مؤكدة'),                        `=COUNTIF(${C},"confirmé")`, null],
-    [bi('Expédiées', 'مُرسلة'),                        `=COUNTIF(${C},"expédié")`, null],
-    [bi('Livrées', 'مُسلَّمة'),                         `=COUNTIF(${C},"livré")`, 'good'],
-    [bi('Modifications demandées', 'تعديل مطلوب'),     `=COUNTIF(${C},"modification demandée")`, null],
-    [bi('Annulées', 'ملغاة'),                          `=COUNTIF(${C},"annulé")`, 'bad'],
-    ['', '', null],
-
-    ['📦  RÉEL — livrées uniquement  ·  حقيقي — المُسلَّمة فقط', '', 'h1-green'],
-    [bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    `=COUNTIF(${C},"livré")`, null],
-    [bi('CA encaissé', 'المبلغ المُحَصَّل'),             `=SUMIFS(${J},${C},"livré")`, 'good'],
-    [bi('Coût produits livrés', 'تكلفة المنتجات'),     `=SUMIFS(${M},${C},"livré")`, null],
-    [bi('Frais livraison réels', 'تكلفة التوصيل'),     `=SUMIFS(${N},${C},"livré")`, null],
-    [bi('Marge brute livrée', 'الربح الإجمالي'),       `=SUMIFS(${Oo},${C},"livré")`, null],
-    [bi('Marge nette (− ads)', 'الربح الصافي (− إعلانات)'), `=IFERROR(SUMIFS(${Oo},${C},"livré")-SUM(${AdAmt}),0)`, 'good'],
-    ['', '', null],
-
-    ['📊  POTENTIEL — sauf annulées  ·  محتمل — بدون الملغاة', '', 'h1-blue'],
-    [bi('Commandes actives', 'الطلبيات النشطة'),       `=COUNTA(${O}!B2:B)-COUNTIF(${C},"annulé")`, null],
-    [bi('CA potentiel', 'الرقم المحتمل'),              `=SUMIFS(${J},${C},"<>annulé")`, null],
-    [bi('Marge brute potentielle', 'الربح المحتمل'),   `=SUMIFS(${Oo},${C},"<>annulé")`, null],
-    ['', '', null],
-
-    ['💸  GLOBAL — tout y compris annulées  ·  الإجمالي — يشمل الملغاة', '', 'h1-dark'],
-    [bi('Chiffre d\'affaires brut', 'رقم الأعمال الإجمالي'), `=SUM(${J})`, null],
-    [bi('Coût produits', 'تكلفة المنتجات'),            `=SUM(${M})`, null],
-    [bi('Frais livraison', 'تكلفة التوصيل'),           `=SUM(${N})`, null],
-    [bi('Marge brute totale', 'الربح الإجمالي'),       `=SUM(${Oo})`, null],
-    [bi('Total Ads dépensé', 'مجموع الإعلانات'),       `=SUM(${AdAmt})`, null],
-    ['', '', null],
-
-    ['📅  AUJOURD\'HUI — livré  ·  اليوم — المُسلَّم', '', 'h1-clay'],
-    [bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    `=COUNTIFS(${C},"livré",${TODAY})`, null],
-    [bi('CA encaissé', 'المُحَصَّل'),                    `=SUMIFS(${J},${C},"livré",${TODAY})`, null],
-    [bi('Marge brute', 'الربح الإجمالي'),              `=SUMIFS(${Oo},${C},"livré",${TODAY})`, null],
-    [bi('Ads dépensé', 'الإعلانات'),                   `=SUMIFS(${AdAmt},${AD_TODAY})`, 'warn'],
-    [bi('Marge nette', 'الربح الصافي'),                `=IFERROR(SUMIFS(${Oo},${C},"livré",${TODAY})-SUMIFS(${AdAmt},${AD_TODAY}),0)`, 'good'],
-    ['', '', null],
-
-    ['📆  CETTE SEMAINE — livré  ·  هذا الأسبوع — المُسلَّم', '', 'h1-clay'],
-    [bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    `=COUNTIFS(${C},"livré",${WEEK})`, null],
-    [bi('CA encaissé', 'المُحَصَّل'),                    `=SUMIFS(${J},${C},"livré",${WEEK})`, null],
-    [bi('Marge brute', 'الربح الإجمالي'),              `=SUMIFS(${Oo},${C},"livré",${WEEK})`, null],
-    [bi('Ads dépensé', 'الإعلانات'),                   `=SUMIFS(${AdAmt},${AD_WEEK})`, 'warn'],
-    [bi('Marge nette', 'الربح الصافي'),                `=IFERROR(SUMIFS(${Oo},${C},"livré",${WEEK})-SUMIFS(${AdAmt},${AD_WEEK}),0)`, 'good'],
-    ['', '', null],
-
-    ['🗓️  CE MOIS — livré  ·  هذا الشهر — المُسلَّم', '', 'h1-clay'],
-    [bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    `=COUNTIFS(${C},"livré",${MONTH})`, null],
-    [bi('CA encaissé', 'المُحَصَّل'),                    `=SUMIFS(${J},${C},"livré",${MONTH})`, null],
-    [bi('Marge brute', 'الربح الإجمالي'),              `=SUMIFS(${Oo},${C},"livré",${MONTH})`, null],
-    [bi('Ads dépensé', 'الإعلانات'),                   `=SUMIFS(${AdAmt},${AD_MONTH})`, 'warn'],
-    [bi('Marge nette', 'الربح الصافي'),                `=IFERROR(SUMIFS(${Oo},${C},"livré",${MONTH})-SUMIFS(${AdAmt},${AD_MONTH}),0)`, 'good'],
-    ['', '', null],
-
-    ['🎯  PERFORMANCE PUB (ce mois)  ·  أداء الإعلانات', '', 'h1-purple'],
-    [bi('CAC — Coût d\'acquisition', 'تكلفة جلب عميل'), `=IFERROR(SUMIFS(${AdAmt},${AD_MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)`, 'kpi'],
-    [bi('Panier moyen confirmé', 'متوسط السلة'),       `=IFERROR(SUMIFS(${J},${C},"confirmé",${MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)`, 'kpi'],
-    [bi('Marge moyenne par commande', 'متوسط الربح للطلبية'), `=IFERROR(SUMIFS(${Oo},${C},"confirmé",${MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)`, 'kpi'],
-    [bi('ROAS — Retour sur pub (×)', 'العائد على الإعلان'), `=IFERROR(SUMIFS(${J},${C},"confirmé",${MONTH})/SUMIFS(${AdAmt},${AD_MONTH}),0)`, 'kpi'],
-    [bi('Taux de confirmation', 'نسبة التأكيد'),       `=IFERROR(COUNTIFS(${C},"confirmé",${MONTH})/COUNTIFS(${MONTH}),0)`, 'kpi'],
-    ['', '', null],
-
-    ['⚠️  ALERTE RENTABILITÉ  ·  تنبيه الربحية', '', 'h1-orange'],
-    [bi('Statut', 'الحالة'),                    `=IFS(COUNTIFS(${C},"confirmé",${MONTH})=0,"⏳ Pas encore de commande confirmée ce mois",SUMIFS(${AdAmt},${AD_MONTH})=0,"⚪ Pas de pub ce mois",IFERROR(SUMIFS(${Oo},${C},"confirmé",${MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)>IFERROR(SUMIFS(${AdAmt},${AD_MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0),"✅ Rentable — marge > CAC",TRUE,"❌ Tu perds de l'argent — CAC > marge moyenne")`, 'kpi'],
-  ];
-
-  // Write all values/formulas
-  const values = rows.map(r => [r[0], r[1]]);
-  dash.getRange(1, 1, values.length, 2).setValues(values);
-
-  // Title row
-  dash.getRange(1, 1, 1, 2).merge()
+  // ── Title bar (full width across all 4 columns: A-K) ──────────────
+  dash.getRange(1, 1).setValue('🏆  WridaChic — Tableau de bord  ·  لوحة القيادة');
+  dash.getRange(1, 1, 1, 11).merge()
     .setFontSize(18).setFontWeight('bold')
     .setBackground('#1a1a1a').setFontColor('#ffffff')
-    .setHorizontalAlignment('center');
+    .setHorizontalAlignment('center').setVerticalAlignment('middle');
+  dash.setRowHeight(1, 46);
 
-  // Section header palette — each h1-* color cues a different category
-  // visually so the eye can find "the green block" or "the orange block"
-  // without re-reading every label.
-  const H1_COLORS = {
-    'h1-blue':   '#1976D2',  // informational / statuses
-    'h1-green':  '#2E7D32',  // money actually earned (livré)
-    'h1-dark':   '#3D352E',  // global / all-time (brand brown)
-    'h1-clay':   '#C85C3F',  // time periods (today/week/month)
-    'h1-purple': '#6A1B9A',  // ads performance KPIs
-    'h1-orange': '#E65100',  // rentabilité alert
-  };
+  // ── Column A-B : STATUTS + POTENTIEL + GLOBAL (stacked) ───────────
+  let next = 3;
+  next = drawDashSection(dash, next, 1, DASH_H1_COLORS.blue, [
+    { label: '📊  STATUTS  ·  حالات الطلبيات', formula: '', tag: 'header' },
+    { label: bi('Commandes totales', 'مجموع الطلبيات'),       formula: `=COUNTA(${O}!B2:B)` },
+    { label: bi('Nouvelles (à traiter)', 'جديدة (للمعالجة)'),  formula: `=COUNTIF(${C},"nouveau")`, tag: 'warn' },
+    { label: bi('Confirmées', 'مؤكدة'),                        formula: `=COUNTIF(${C},"confirmé")` },
+    { label: bi('Expédiées', 'مُرسلة'),                        formula: `=COUNTIF(${C},"expédié")` },
+    { label: bi('Livrées', 'مُسلَّمة'),                         formula: `=COUNTIF(${C},"livré")`, tag: 'good' },
+    { label: bi('Modifications demandées', 'تعديل مطلوب'),     formula: `=COUNTIF(${C},"modification demandée")` },
+    { label: bi('Annulées', 'ملغاة'),                          formula: `=COUNTIF(${C},"annulé")`, tag: 'bad' },
+  ]);
+  next += 1;
+  next = drawDashSection(dash, next, 1, DASH_H1_COLORS.blue, [
+    { label: '📊  POTENTIEL  ·  محتمل', formula: '', tag: 'header' },
+    { label: bi('Commandes actives', 'الطلبيات النشطة'),       formula: `=COUNTA(${O}!B2:B)-COUNTIF(${C},"annulé")` },
+    { label: bi('CA potentiel', 'الرقم المحتمل'),              formula: `=SUMIFS(${J},${C},"<>annulé")` },
+    { label: bi('Marge brute potentielle', 'الربح المحتمل'),   formula: `=SUMIFS(${Oo},${C},"<>annulé")` },
+  ]);
+  next += 1;
+  drawDashSection(dash, next, 1, DASH_H1_COLORS.dark, [
+    { label: '💸  GLOBAL  ·  الإجمالي', formula: '', tag: 'header' },
+    { label: bi('Chiffre d\'affaires brut', 'رقم الأعمال الإجمالي'), formula: `=SUM(${J})` },
+    { label: bi('Coût produits', 'تكلفة المنتجات'),            formula: `=SUM(${M})` },
+    { label: bi('Frais livraison', 'تكلفة التوصيل'),           formula: `=SUM(${N})` },
+    { label: bi('Marge brute totale', 'الربح الإجمالي'),       formula: `=SUM(${Oo})` },
+    { label: bi('Total Ads dépensé', 'مجموع الإعلانات'),       formula: `=SUM(${AdAmt})` },
+  ]);
 
-  // Per-row formatting based on tag
-  for (let i = 0; i < rows.length; i++) {
-    const tag = rows[i][2];
-    const r = i + 1;
+  // ── Column D-E : RÉEL (livré only) ────────────────────────────────
+  drawDashSection(dash, 3, 4, DASH_H1_COLORS.green, [
+    { label: '📦  RÉEL — livrées uniquement  ·  حقيقي', formula: '', tag: 'header' },
+    { label: bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    formula: `=COUNTIF(${C},"livré")` },
+    { label: bi('CA encaissé', 'المبلغ المُحَصَّل'),             formula: `=SUMIFS(${J},${C},"livré")`, tag: 'good' },
+    { label: bi('Coût produits livrés', 'تكلفة المنتجات'),     formula: `=SUMIFS(${M},${C},"livré")` },
+    { label: bi('Frais livraison réels', 'تكلفة التوصيل'),     formula: `=SUMIFS(${N},${C},"livré")` },
+    { label: bi('Marge brute livrée', 'الربح الإجمالي'),       formula: `=SUMIFS(${Oo},${C},"livré")` },
+    { label: bi('Marge nette (− ads)', 'الربح الصافي'),         formula: `=IFERROR(SUMIFS(${Oo},${C},"livré")-SUM(${AdAmt}),0)`, tag: 'good' },
+  ]);
 
-    // Section headers (h1-*) — merged across A+B with a category color.
-    if (tag && tag.indexOf('h1') === 0) {
-      const color = H1_COLORS[tag] || '#3D352E';
-      dash.getRange(r, 1, 1, 2).merge()
-        .setFontWeight('bold').setFontSize(13)
-        .setBackground(color).setFontColor('#ffffff')
-        .setHorizontalAlignment('left').setVerticalAlignment('middle')
-        .setWrap(true);
-      dash.setRowHeight(r, 36);
-    } else if (tag === 'good') {
-      dash.getRange(r, 1, 1, 2).setBackground('#C8E6C9').setFontWeight('bold');
-    } else if (tag === 'warn') {
-      dash.getRange(r, 1, 1, 2).setBackground('#FFE0B2');
-    } else if (tag === 'bad') {
-      dash.getRange(r, 1, 1, 2).setBackground('#FFCDD2').setFontWeight('bold');
-    } else if (tag === 'kpi') {
-      dash.getRange(r, 1, 1, 2).setBackground('#E1F5FE').setFontWeight('bold');
-    } else if (rows[i][0] && tag === null) {
-      dash.getRange(r, 1).setFontWeight('bold');
-    }
+  // ── Column G-H : Today + Week + Month (stacked) ───────────────────
+  next = 3;
+  next = drawDashSection(dash, next, 7, DASH_H1_COLORS.clay, [
+    { label: '📅  AUJOURD\'HUI  ·  اليوم', formula: '', tag: 'header' },
+    { label: bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    formula: `=COUNTIFS(${C},"livré",${TODAY})` },
+    { label: bi('CA encaissé', 'المُحَصَّل'),                    formula: `=SUMIFS(${J},${C},"livré",${TODAY})` },
+    { label: bi('Marge brute', 'الربح الإجمالي'),              formula: `=SUMIFS(${Oo},${C},"livré",${TODAY})` },
+    { label: bi('Ads dépensé', 'الإعلانات'),                   formula: `=SUMIFS(${AdAmt},${AD_TODAY})`, tag: 'warn' },
+    { label: bi('Marge nette', 'الربح الصافي'),                formula: `=IFERROR(SUMIFS(${Oo},${C},"livré",${TODAY})-SUMIFS(${AdAmt},${AD_TODAY}),0)`, tag: 'good' },
+  ]);
+  next += 1;
+  next = drawDashSection(dash, next, 7, DASH_H1_COLORS.clay, [
+    { label: '📆  CETTE SEMAINE  ·  هذا الأسبوع', formula: '', tag: 'header' },
+    { label: bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    formula: `=COUNTIFS(${C},"livré",${WEEK})` },
+    { label: bi('CA encaissé', 'المُحَصَّل'),                    formula: `=SUMIFS(${J},${C},"livré",${WEEK})` },
+    { label: bi('Marge brute', 'الربح الإجمالي'),              formula: `=SUMIFS(${Oo},${C},"livré",${WEEK})` },
+    { label: bi('Ads dépensé', 'الإعلانات'),                   formula: `=SUMIFS(${AdAmt},${AD_WEEK})`, tag: 'warn' },
+    { label: bi('Marge nette', 'الربح الصافي'),                formula: `=IFERROR(SUMIFS(${Oo},${C},"livré",${WEEK})-SUMIFS(${AdAmt},${AD_WEEK}),0)`, tag: 'good' },
+  ]);
+  next += 1;
+  drawDashSection(dash, next, 7, DASH_H1_COLORS.clay, [
+    { label: '🗓️  CE MOIS  ·  هذا الشهر', formula: '', tag: 'header' },
+    { label: bi('Commandes livrées', 'الطلبيات المُسلَّمة'),    formula: `=COUNTIFS(${C},"livré",${MONTH})` },
+    { label: bi('CA encaissé', 'المُحَصَّل'),                    formula: `=SUMIFS(${J},${C},"livré",${MONTH})` },
+    { label: bi('Marge brute', 'الربح الإجمالي'),              formula: `=SUMIFS(${Oo},${C},"livré",${MONTH})` },
+    { label: bi('Ads dépensé', 'الإعلانات'),                   formula: `=SUMIFS(${AdAmt},${AD_MONTH})`, tag: 'warn' },
+    { label: bi('Marge nette', 'الربح الصافي'),                formula: `=IFERROR(SUMIFS(${Oo},${C},"livré",${MONTH})-SUMIFS(${AdAmt},${AD_MONTH}),0)`, tag: 'good' },
+  ]);
 
-    // Always make data rows tall enough for the 2-line bilingual label
-    // and enable wrap so the Arabic line is visible.
-    if (rows[i][0] && !(tag && tag.indexOf('h1') === 0) && tag !== 'title') {
-      dash.getRange(r, 1, 1, 2).setWrap(true).setVerticalAlignment('middle');
-      dash.setRowHeight(r, 44);
-    }
-  }
+  // ── Column J-K : Performance Pub + Alerte ─────────────────────────
+  next = 3;
+  next = drawDashSection(dash, next, 10, DASH_H1_COLORS.purple, [
+    { label: '🎯  PERFORMANCE PUB (ce mois)  ·  أداء الإعلانات', formula: '', tag: 'header' },
+    { label: bi('CAC — Coût d\'acquisition', 'تكلفة جلب عميل'), formula: `=IFERROR(SUMIFS(${AdAmt},${AD_MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)`, tag: 'kpi' },
+    { label: bi('Panier moyen confirmé', 'متوسط السلة'),       formula: `=IFERROR(SUMIFS(${J},${C},"confirmé",${MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)`, tag: 'kpi' },
+    { label: bi('Marge moyenne par commande', 'متوسط الربح'), formula: `=IFERROR(SUMIFS(${Oo},${C},"confirmé",${MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)`, tag: 'kpi' },
+    { label: bi('ROAS — Retour sur pub (×)', 'العائد على الإعلان'), formula: `=IFERROR(SUMIFS(${J},${C},"confirmé",${MONTH})/SUMIFS(${AdAmt},${AD_MONTH}),0)`, tag: 'kpi' },
+    { label: bi('Taux de confirmation', 'نسبة التأكيد'),       formula: `=IFERROR(COUNTIFS(${C},"confirmé",${MONTH})/COUNTIFS(${MONTH}),0)`, tag: 'kpi' },
+  ]);
+  next += 1;
+  drawDashSection(dash, next, 10, DASH_H1_COLORS.orange, [
+    { label: '⚠️  ALERTE RENTABILITÉ  ·  تنبيه الربحية', formula: '', tag: 'header' },
+    { label: bi('Statut', 'الحالة'), formula: `=IFS(COUNTIFS(${C},"confirmé",${MONTH})=0,"⏳ Pas encore de commande confirmée ce mois",SUMIFS(${AdAmt},${AD_MONTH})=0,"⚪ Pas de pub ce mois",IFERROR(SUMIFS(${Oo},${C},"confirmé",${MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0)>IFERROR(SUMIFS(${AdAmt},${AD_MONTH})/COUNTIFS(${C},"confirmé",${MONTH}),0),"✅ Rentable — marge > CAC",TRUE,"❌ Tu perds de l'argent — CAC > marge moyenne")`, tag: 'kpi' },
+  ]);
 
-  // Format currency columns (rough heuristic: any row containing CA/Marge/Ads/Coût/CAC/Panier)
-  for (let i = 0; i < rows.length; i++) {
-    const label = String(rows[i][0] || '');
-    if (/CA |Marge|Ads|Coût|CAC|Panier|Frais/.test(label) && rows[i][1] !== '' && !label.includes('STATUT')) {
-      dash.getRange(i + 1, 2).setNumberFormat('#,##0 "MAD"');
-    }
-    if (label.includes('ROAS')) {
-      dash.getRange(i + 1, 2).setNumberFormat('0.00"×"');
-    }
-    if (label.includes('Taux')) {
-      dash.getRange(i + 1, 2).setNumberFormat('0.0%');
-    }
-  }
+  // ── Column widths ──────────────────────────────────────────────────
+  // Each section uses 2 cols (label + value). Spacer cols between blocks.
+  dash.setColumnWidth(1, 230);  // A label
+  dash.setColumnWidth(2, 140);  // B value
+  dash.setColumnWidth(3, 16);   // C spacer
+  dash.setColumnWidth(4, 230);  // D label
+  dash.setColumnWidth(5, 140);  // E value
+  dash.setColumnWidth(6, 16);   // F spacer
+  dash.setColumnWidth(7, 230);  // G label
+  dash.setColumnWidth(8, 140);  // H value
+  dash.setColumnWidth(9, 16);   // I spacer
+  dash.setColumnWidth(10, 240); // J label
+  dash.setColumnWidth(11, 140); // K value
 
-  dash.setColumnWidth(1, 280);  // a bit narrower since labels wrap onto 2 lines
-  dash.setColumnWidth(2, 160);
   dash.setFrozenRows(1);
-  // Tasteful row 1 enhancements — title row stays as configured above.
 
-  return { ok: true, rows: rows.length };
+  // RTL — Arabic-first reading direction.
+  // Locks in the preferred direction so we don't lose it on every
+  // setupDashboard rebuild. setRightToLeft(true) flips column A to the
+  // right edge of the sheet, which matches how the bilingual labels
+  // (French + Arabic) flow most naturally for an Arabic reader.
+  dash.setRightToLeft(true);
+
+  return { ok: true, layout: 'side-by-side', rtl: true };
 }
+

@@ -74,6 +74,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" dir="ltr">
       <head>
+        {/* Preconnect to third-party origins we ALWAYS reach during a
+            session (DNS + TLS handshake happens in parallel with HTML
+            parsing → saves 100-300 ms on the first API call). Safe to
+            include even if the user never triggers the request — modern
+            browsers just drop the unused connection. */}
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} crossOrigin="" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
+        <link rel="dns-prefetch" href="https://api.resend.com" />
+
         {/* Preload the two font weights that appear above the fold on
             every page (Regular for body text, Bold for the brand logo /
             display headlines). Cuts ~150-250 ms of LCP on mobile —
