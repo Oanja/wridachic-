@@ -426,7 +426,6 @@ export function CheckoutPage() {
             <div className={`checkout-summary-content${summaryOpen ? '' : ' is-collapsed'}`}>
             {cart.map((item, i) => {
               const src = item.imgFiles?.[0];
-              const qtyLabel = item.qty > 1 ? ` × ${item.qty}` : '';
               return (
                 <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 12, fontSize: 13, alignItems: 'center', paddingBottom: 12, borderBottom: i < cart.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
                   <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
@@ -447,33 +446,40 @@ export function CheckoutPage() {
                           {item.color}
                         </span>
                       )}
-                      <span style={{ background: 'rgba(255,255,255,0.18)', padding: '2px 7px', borderRadius: 999, fontWeight: 600 }} className="mono">
-                        × {item.qty}
-                      </span>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="mono" style={{ fontWeight: 700, fontSize: 14 }}>{item.price * item.qty} <span style={{ fontSize: 10, opacity: 0.6 }}>MAD</span></div>
+                  {/* Right column: total price on top (bold), unit×qty
+                      subline below — only shown when qty > 1 so single
+                      items don't get a redundant "299 × 1". minWidth +
+                      tabular-nums keep prices visually aligned across
+                      rows even with different digit counts. */}
+                  <div dir="ltr" style={{ textAlign: 'right', minWidth: 78, flexShrink: 0 }}>
+                    <div className="mono" style={{ fontWeight: 700, fontSize: 15, fontVariantNumeric: 'tabular-nums', lineHeight: 1.2 }}>
+                      {item.price * item.qty}
+                      <span style={{ fontSize: 10, opacity: 0.55, marginLeft: 3, fontWeight: 500 }}>MAD</span>
+                    </div>
                     {item.qty > 1 && (
-                      <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>{item.price} × {item.qty}</div>
+                      <div className="mono" style={{ fontSize: 10, opacity: 0.5, marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>
+                        {item.qty} × {item.price}
+                      </div>
                     )}
                   </div>
                 </div>
               );
             })}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 12, marginTop: 8, fontVariantNumeric: 'tabular-nums' }}>
+              <div dir="ltr" style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
                 <span style={{ opacity: 0.7 }}>subtotal</span>
                 <span>{subtotal} MAD</span>
               </div>
               {autoDiscount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: '#3D7A2C', fontWeight: 500 }} className="mono">
+                <div dir="ltr" style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: '#3D7A2C', fontWeight: 500 }} className="mono">
                   <span>2+ articles (−{AUTO_DISCOUNT_PCT}%)</span>
                   <span>−{autoDiscount} MAD</span>
                 </div>
               )}
               {coupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--clay)' }} className="mono">
+                <div dir="ltr" style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: 'var(--clay)' }} className="mono">
                   <span style={{ opacity: 0.85 }}>
                     code ({coupon.code})
                     <button onClick={removeCoupon} style={{ marginLeft: 6, fontSize: 9, opacity: 0.7, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>✕</button>
@@ -481,7 +487,7 @@ export function CheckoutPage() {
                   <span>−{discount} MAD</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
+              <div dir="ltr" style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }} className="mono">
                 <span style={{ opacity: 0.7 }}>delivery</span>
                 <span>{delivery === 0 ? 'free' : `${delivery} MAD`}</span>
               </div>
