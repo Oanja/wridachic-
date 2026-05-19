@@ -136,20 +136,48 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
   };
 
   const setLang = useCallback((l: Lang) => setLangState(l), []);
+  // Two items are "the same line" if they share product id + size + color.
+  // We dedupe on this triple so a customer who picks the same variant twice
+  // sees their qty go up, not two separate cart rows.
+  const sameVariant = (a: CartItem, b: CartItem) =>
+    a.id === b.id && a.size === b.size && a.color === b.color;
+
   const addToCart = useCallback((item: CartItem) => {
-    setCart((c) => [...c, item]);
+    setCart((c) => {
+      const idx = c.findIndex((it) => sameVariant(it, item));
+      if (idx >= 0) {
+        // Same variant already in cart — merge quantities instead of
+        // adding a duplicate row. Cap at 20 (matches the server limit).
+        return c.map((it, i) =>
+          i === idx ? { ...it, qty: Math.min(20, it.qty + item.qty) } : it,
+        );
+      }
+      return [...c, item];
+    });
     trackMetaEvent('AddToCart', productPayload(item, item.qty));
   }, []);
-  // "Acheter maintenant" used to replace the cart with just this one
-  // item (setCart([item])) which surprised customers — they'd add 5
-  // items, click Acheter on a 6th, and watch the previous 5 disappear.
-  // New behaviour: append to the existing cart (same as addToCart) and
-  // let the checkout page show everything. If the customer really wants
-  // to buy this item alone they can clear the cart manually.
+  // "Acheter maintenant" used to REPLACE the cart with just this one
+  // item which surprised customers — they'd add 5 items, click Acheter
+  // on a 6th, and watch the previous 5 disappear. Then we swung to
+  // "always append" but that surprised customers the OTHER way: they'd
+  // add 2 of a dress, change their mind and click Acheter on the SAME
+  // dress, and the cart would show 4 (2 + 2) instead of just going to
+  // checkout with the 2 already there.
+  //
+  // Final behaviour: dedupe on (id, size, color) — if the same variant
+  // is already in the cart, don't add another row, just go to checkout
+  // with what's there. If it's a different product or a different
+  // size/color, append normally.
   const buyNow = useCallback((item: CartItem) => {
+    // Read cart directly (closure capture) so the dedupe + Pixel decision
+    // happen on the same snapshot. setCart's updater pattern is great for
+    // concurrent mutations, but here buyNow is single-click and we need
+    // a synchronous "was it new?" answer for the Pixel call below.
+    const alreadyInCart = cart.some((it) => sameVariant(it, item));
+    if (alreadyInCart) return; // just go to checkout — don't double-add
     setCart((c) => [...c, item]);
     trackMetaEvent('AddToCart', productPayload(item, item.qty));
-  }, []);
+  }, [cart]);
   const updateQty = useCallback((index: number, qty: number) =>
     setCart((c) => c.map((it, i) => (i === index ? { ...it, qty } : it))), []);
   const removeItem = useCallback((index: number) =>
