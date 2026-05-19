@@ -25,6 +25,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { AUTO_DISCOUNT_PCT, AUTO_DISCOUNT_THRESHOLD } from '@/lib/coupon';
 import { alertWarn } from '@/lib/alerts';
+import { cleanText, cleanMultiline, cleanEmail, cleanPhone, FIELD_LIMITS } from '@/lib/validate';
 
 const DELIVERY_THRESHOLD = 500; // free delivery above this many MAD
 const DELIVERY_FEE = 35;
@@ -78,8 +79,30 @@ export async function POST(req: Request) {
   if (items.length > 50) {
     return NextResponse.json({ ok: false, error: 'too-many-items' }, { status: 400 });
   }
-  if (!form?.fullName?.trim() || !form?.phone?.trim() || !form?.address?.trim() || !form?.city?.trim()) {
+
+  // Sanitize + bound every customer-supplied field BEFORE we touch the
+  // DB or any downstream service. This strips HTML tags (so injected
+  // <img onerror> can't render in admin emails / Telegram), collapses
+  // whitespace, and caps lengths so a malicious 1 MB "address" can't
+  // bloat the DB or DoS the admin UI.
+  const cleanedForm = {
+    fullName: cleanText(form?.fullName, FIELD_LIMITS.fullName),
+    phone: cleanPhone(form?.phone, FIELD_LIMITS.phone),
+    email: cleanEmail(form?.email, FIELD_LIMITS.email), // '' if malformed
+    address: cleanMultiline(form?.address, FIELD_LIMITS.address),
+    city: cleanText(form?.city, FIELD_LIMITS.city),
+    payment: cleanText(form?.payment, FIELD_LIMITS.payment) || 'cod',
+  };
+
+  if (!cleanedForm.fullName || !cleanedForm.phone || !cleanedForm.address || !cleanedForm.city) {
     return NextResponse.json({ ok: false, error: 'missing-customer-fields' }, { status: 400 });
+  }
+  // Reject if customer typed something email-shaped but malformed
+  // (empty string from cleanEmail when input was non-empty). We
+  // distinguish "no email provided" (allowed — COD doesn't need it)
+  // from "email provided but invalid" (reject so the customer notices).
+  if (form?.email && typeof form.email === 'string' && form.email.trim() && !cleanedForm.email) {
+    return NextResponse.json({ ok: false, error: 'invalid-email' }, { status: 400 });
   }
 
   // Bot heuristic — honeypot field filled OR submitted in under 3 seconds.
@@ -191,18 +214,18 @@ export async function POST(req: Request) {
   const insertPayload: Record<string, unknown> = {
     order_number: orderNumber,
     status: 'nouveau',
-    full_name: form.fullName!.trim(),
-    phone: form.phone!.trim(),
-    email: (form.email ?? '').trim(),
-    address: form.address!.trim(),
-    city: form.city!.trim(),
-    payment: form.payment ?? 'cod',
+    full_name: cleanedForm.fullName,
+    phone: cleanedForm.phone,
+    email: cleanedForm.email,
+    address: cleanedForm.address,
+    city: cleanedForm.city,
+    payment: cleanedForm.payment,
     subtotal,
     delivery,
     total,
     items: canonicalItems,
     lang: lang ?? 'fr',
-    marketing_consent: !!(marketingConsent && (form.email ?? '').trim()),
+    marketing_consent: !!(marketingConsent && cleanedForm.email),
   };
   if (userId) insertPayload.user_id = userId;
   if (autoDiscount > 0) insertPayload.auto_discount = autoDiscount;
@@ -219,7 +242,7 @@ export async function POST(req: Request) {
       title: `Checkout insert failed — ${orderNumber}`,
       body: 'Customer hit "Confirmer" but the order did not save. Call them back.',
       context: {
-        orderNumber, customer: form.fullName, phone: form.phone, reason: insertErr?.message ?? 'no-row',
+        orderNumber, customer: cleanedForm.fullName, phone: cleanedForm.phone, reason: insertErr?.message ?? 'no-row',
       },
       fingerprint: 'checkout-insert-failed',
     });
@@ -231,16 +254,16 @@ export async function POST(req: Request) {
   if (coupon) {
     sb.rpc('consume_coupon', {
       p_code: coupon.code,
-      p_phone: form.phone!.trim(),
+      p_phone: cleanedForm.phone,
       p_order: orderNumber,
     }).then(() => {}, () => {});
   }
 
   // Newsletter opt-in.
-  if (marketingConsent && (form.email ?? '').trim()) {
+  if (marketingConsent && cleanedForm.email) {
     sb.from('newsletter_subscribers').insert({
-      email: form.email!.trim(),
-      phone: form.phone!.trim() || null,
+      email: cleanedForm.email,
+      phone: cleanedForm.phone || null,
     }).then(() => {}, () => {});
   }
 
@@ -249,9 +272,9 @@ export async function POST(req: Request) {
   if (qtyTotal >= 2) {
     try {
       const { data: gift } = await sb.rpc('issue_gift_coupon', {
-        p_name: form.fullName!.trim() || null,
-        p_phone: form.phone!.trim() || null,
-        p_city: form.city!.trim() || null,
+        p_name: cleanedForm.fullName || null,
+        p_phone: cleanedForm.phone || null,
+        p_city: cleanedForm.city || null,
         p_order: orderNumber,
       });
       if (typeof gift === 'string') giftCode = gift;

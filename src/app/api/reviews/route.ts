@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { cleanText, cleanMultiline, FIELD_LIMITS } from '@/lib/validate';
 
 /**
  * Reviews public API.
@@ -78,17 +79,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!product_id || typeof product_id !== 'string') {
+  if (!product_id || typeof product_id !== 'string' || product_id.length > 80) {
     return NextResponse.json({ ok: false, error: 'missing-product' }, { status: 400 });
   }
   if (typeof rating !== 'number' || rating < 1 || rating > 5) {
     return NextResponse.json({ ok: false, error: 'invalid-rating' }, { status: 400 });
   }
-  if (!customer_name || customer_name.trim().length < 2 || customer_name.trim().length > 100) {
+  // Sanitize free-text fields (strip HTML, collapse whitespace, cap length).
+  // The schema's CHECK constraint + RLS still gate insert; this is the
+  // first line of defence before any of that runs.
+  const cleanName = cleanText(customer_name, FIELD_LIMITS.reviewName);
+  const cleanComment = cleanMultiline(comment, FIELD_LIMITS.reviewComment);
+  if (!cleanName || cleanName.length < 2) {
     return NextResponse.json({ ok: false, error: 'invalid-name' }, { status: 400 });
-  }
-  if (comment && comment.length > 2000) {
-    return NextResponse.json({ ok: false, error: 'comment-too-long' }, { status: 400 });
   }
 
   // We use the SERVICE ROLE here so this works whether or not the visitor
@@ -98,8 +101,8 @@ export async function POST(req: Request) {
   const { error } = await sb.from('product_reviews').insert({
     product_id,
     rating: Math.round(rating),
-    comment: comment?.trim() || null,
-    customer_name: customer_name.trim(),
+    comment: cleanComment || null,
+    customer_name: cleanName,
     status: 'pending',
   });
 
