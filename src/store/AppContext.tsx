@@ -173,31 +173,37 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
   // is already in the cart, don't add another row, just go to checkout
   // with what's there. If it's a different product or a different
   // size/color, append normally.
-  // "Acheter maintenant" (Buy Now). Mirrors Zara / ASOS behaviour:
-  //   - If the exact variant is NOT in the cart → add it.
-  //   - If it IS already there → increment the qty by what the user
-  //     just picked (so picking "3" while you already had "2" gives
-  //     you 5, not 2 and not 3). Capped at MAX_QTY_PER_LINE.
-  // Then navigate to checkout (the navigation happens in the caller).
+  // "Acheter maintenant" (Buy Now). Treats the requested qty as a
+  // TARGET, not a delta. Mental model: "Take me to checkout with at
+  // least this many of this variant."
+  //
+  //   - Variant not in cart       → add as a new line.
+  //   - Variant in cart, qty<req  → top up to the requested qty
+  //                                 (capped at MAX_QTY_PER_LINE).
+  //   - Variant in cart, qty>=req → do nothing, just navigate.
+  //
+  // This kills the "I clicked Add to Cart, then I clicked Buy Now,
+  // and now I have double" surprise — the customer's intent on the
+  // product page is always the final number they want.
   const buyNow = useCallback((item: CartItem) => {
-    let wasNew = true;
+    let addedQty = 0;
     setCart((c) => {
       const idx = c.findIndex((it) => sameVariant(it, item));
       if (idx >= 0) {
-        wasNew = false;
-        return c.map((it, i) =>
-          i === idx ? { ...it, qty: Math.min(MAX_QTY_PER_LINE, it.qty + item.qty) } : it,
-        );
+        const existing = c[idx];
+        if (existing.qty >= item.qty) return c; // already at or above target
+        const targetQty = Math.min(MAX_QTY_PER_LINE, item.qty);
+        addedQty = targetQty - existing.qty;
+        return c.map((it, i) => (i === idx ? { ...it, qty: targetQty } : it));
       }
+      addedQty = item.qty;
       return [...c, item];
     });
-    // Fire AddToCart for the qty we actually contributed (whether the
-    // line was new or we merged into an existing one). This keeps the
-    // Meta funnel honest — every "Buy Now" click adds something.
-    trackMetaEvent('AddToCart', productPayload(item, item.qty));
-    // Avoid lint warning about an unused var — wasNew is captured for
-    // future telemetry if we ever want to split "new vs merged" events.
-    void wasNew;
+    // Only fire AddToCart if we actually added something — otherwise
+    // we'd inflate the Pixel funnel with no-op clicks.
+    if (addedQty > 0) {
+      trackMetaEvent('AddToCart', productPayload(item, addedQty));
+    }
   }, []);
   const updateQty = useCallback((index: number, qty: number) =>
     setCart((c) => c.map((it, i) =>
