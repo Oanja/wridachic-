@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { alertCritical } from '@/lib/alerts';
 import { sendTelegramText } from '@/lib/telegram';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 /**
  * Fired by the client when the user clicks "Confirmer" but Supabase
@@ -9,6 +10,11 @@ import { sendTelegramText } from '@/lib/telegram';
  * know IMMEDIATELY so they can call them back before the customer gives up.
  */
 export async function POST(req: Request) {
+  // 3 failure pings per IP per 5 min — a customer retrying checkout never
+  // needs more, and this prevents Telegram spam from a malicious script.
+  const rl = checkRateLimit(req, { limit: 3, windowMs: 5 * 60_000, scope: 'checkout-fail' });
+  if (!rl.ok) return rl.response;
+
   try {
     const data = await req.json();
 

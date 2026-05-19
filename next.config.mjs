@@ -29,7 +29,28 @@ const nextConfig = {
   },
 
   async headers() {
+    // Baseline security headers applied to every response.
+    // - HSTS: force HTTPS for 2 years (Vercel already serves HTTPS, this
+    //   blocks downgrade attacks on the customer's network).
+    // - X-Content-Type-Options: stops the browser from MIME-sniffing a
+    //   text/html out of an image upload.
+    // - X-Frame-Options: nobody can iframe the checkout to phish.
+    // - Referrer-Policy: don't leak full URLs (with order numbers) to
+    //   third-party hosts like Meta Pixel.
+    // - Permissions-Policy: disable APIs we never use; defence-in-depth
+    //   in case a vulnerable third-party script tries.
+    const securityHeaders = [
+      { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+    ];
+
     return [
+      // Apply security headers to every route.
+      { source: '/:path*', headers: securityHeaders },
+      // Long-cache immutable assets.
       {
         source: '/fonts/:path*',
         headers: [

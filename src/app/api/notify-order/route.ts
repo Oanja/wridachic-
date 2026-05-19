@@ -6,6 +6,7 @@ import { alertError, alertWarn } from '@/lib/alerts';
 import { withRetry } from '@/lib/retry';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendCapiPurchase } from '@/lib/metaCapi';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 /**
  * Sends two emails (via Resend) when an order is placed:
@@ -103,6 +104,13 @@ function renderItemsTable(items: OrderItem[]) {
 }
 
 export async function POST(req: Request) {
+  // 8 notify-order calls per IP per 5 min. A real customer rarely places
+  // more than 1-2; this stops a script from burning Resend/WhatsApp/
+  // Telegram/Meta CAPI quotas. The anti-abuse check below (verifying
+  // the order exists in DB) is the second line of defence.
+  const rl = checkRateLimit(req, { limit: 8, windowMs: 5 * 60_000, scope: 'notify-order' });
+  if (!rl.ok) return rl.response;
+
   try {
     const data = (await req.json()) as OrderPayload;
     if (!data?.orderNumber || !data?.fullName) {
@@ -119,18 +127,53 @@ export async function POST(req: Request) {
     const clientUserAgent = req.headers.get('user-agent') || undefined;
     const sourceUrl = req.headers.get('referer') || 'https://wridachic.com/checkout';
 
-    // Anti-abuse: confirm the order actually exists in Supabase before
-    // burning Resend/WhatsApp/Telegram quotas. Without this, anyone who
-    // finds the endpoint URL can spam fake orders and exhaust our budgets.
+    // Anti-abuse + total-tampering guard: confirm the order exists AND
+    // its stored subtotal matches the sum of items in the DB. The
+    // checkout currently inserts orders from the browser, so an attacker
+    // could forge a 1 MAD total for a 1000 MAD cart by tampering with the
+    // payload. We can't *block* the insert without an RPC-based
+    // server-side checkout, but we can refuse to send confirmations
+    // (and alert) when the math doesn't add up — making the attack
+    // unprofitable since the customer never receives a receipt.
     try {
       const sb = getSupabaseAdmin();
       const { data: row, error } = await sb
         .from('orders')
-        .select('order_number')
+        .select('order_number, total, subtotal, items, full_name')
         .eq('order_number', data.orderNumber)
         .maybeSingle();
       if (error || !row) {
         return NextResponse.json({ ok: false, error: 'order-not-found' }, { status: 404 });
+      }
+
+      const items = Array.isArray(row.items) ? row.items as Array<{ qty: number; price: number }> : [];
+      const expectedSubtotal = items.reduce((s, it) => {
+        const qty = Number(it?.qty) || 0;
+        const price = Number(it?.price) || 0;
+        return s + qty * price;
+      }, 0);
+      const storedSubtotal = Number(row.subtotal) || 0;
+      const storedTotal = Number(row.total) || 0;
+
+      // Allow a 1 MAD tolerance for rounding artefacts. Anything bigger
+      // is either a bug or tampering — both deserve an alert.
+      const drift = Math.abs(expectedSubtotal - storedSubtotal);
+      const totalLooksImpossible = storedTotal < storedSubtotal - 500; // discount cap sanity check
+      if (drift > 1 || totalLooksImpossible) {
+        await alertError({
+          title: `⚠️ Possible cart tampering — ${row.order_number}`,
+          body: 'Stored totals do not match items. Notifications were NOT sent. Verify manually before fulfilling.',
+          context: {
+            orderNumber: row.order_number,
+            customer: row.full_name,
+            storedSubtotal,
+            expectedSubtotal,
+            storedTotal,
+            drift,
+          },
+          fingerprint: 'order-tamper',
+        });
+        return NextResponse.json({ ok: false, error: 'totals-mismatch' }, { status: 422 });
       }
     } catch (e) {
       // If we can't verify (DB blip), fail closed — don't let blind spam through.

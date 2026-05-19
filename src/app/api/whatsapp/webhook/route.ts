@@ -9,12 +9,16 @@ const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
 /**
  * Verify the x-hub-signature-256 header Meta sends with every webhook POST.
  * Without this anyone who finds our URL can spam fake button-clicks and
- * mutate order statuses. Returns true if the signature matches OR if we
- * haven't configured APP_SECRET yet (fail-open during rollout — flip to
- * fail-closed once the env var is set in prod).
+ * mutate order statuses. Fails CLOSED — if APP_SECRET ever goes missing
+ * in prod we reject everything rather than silently letting spoofed
+ * payloads through (the env var is verified set in Vercel Production +
+ * Preview + Development, so this should never trigger).
  */
 function verifyMetaSignature(rawBody: string, header: string | null): boolean {
-  if (!APP_SECRET) return true; // not configured → don't block legitimate traffic
+  if (!APP_SECRET) {
+    console.error('[whatsapp-webhook] WHATSAPP_APP_SECRET missing — rejecting all requests');
+    return false;
+  }
   if (!header || !header.startsWith('sha256=')) return false;
   const expected = crypto
     .createHmac('sha256', APP_SECRET)

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 /**
  * Reviews public API.
@@ -60,6 +61,11 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // 5 reviews per IP per 10 minutes — a real customer never needs more,
+  // and bots get throttled before they fill the moderation queue.
+  const rl = checkRateLimit(req, { limit: 5, windowMs: 10 * 60_000, scope: 'reviews' });
+  if (!rl.ok) return rl.response;
+
   let body: SubmitBody;
   try { body = await req.json(); }
   catch { return NextResponse.json({ ok: false, error: 'invalid-json' }, { status: 400 }); }

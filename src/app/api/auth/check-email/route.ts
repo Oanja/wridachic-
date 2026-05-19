@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 /**
  * Check whether an email is registered before triggering a password
@@ -11,6 +12,11 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
  * implicitly via Supabase's admin API rate limits.
  */
 export async function POST(req: Request) {
+  // 10 lookups per IP per minute — generous enough for typo retries but
+  // stops email-enumeration attacks (probing which emails are registered).
+  const rl = checkRateLimit(req, { limit: 10, windowMs: 60_000, scope: 'check-email' });
+  if (!rl.ok) return rl.response;
+
   try {
     const { email } = await req.json();
     if (!email || typeof email !== 'string') {
