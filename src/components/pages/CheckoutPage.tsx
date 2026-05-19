@@ -126,72 +126,50 @@ export function CheckoutPage() {
 
   const placeOrder = async () => {
     setSaving(true);
-    // Get a server-issued sequential order number. Falls back to the legacy
-    // client-side random if the RPC isn't deployed yet (e.g. preview build
-    // before migration runs) so checkout never blocks on the migration step.
-    const sbForNum = getSupabaseBrowser();
-    let num: string;
+    // Server-authoritative checkout. The browser no longer inserts the
+    // order directly — it sends the cart + customer info to
+    // /api/checkout/place which fetches actual product prices from
+    // Supabase, recomputes subtotal/discount/delivery/total, validates
+    // the coupon, and inserts via the service role. The client is
+    // never trusted for money.
+    //
+    // Side benefits handled server-side now: coupon consumption,
+    // newsletter opt-in, gift-coupon issuance. The client only does
+    // the things that intrinsically need a browser: Meta Pixel,
+    // notify-order fire-and-forget, and UI transitions.
+    let num = '';
     try {
-      const { data, error } = await sbForNum.rpc('next_order_number');
-      if (error || typeof data !== 'string' || !data) throw error || new Error('no-rpc');
-      num = data;
-    } catch {
-      num = 'WC-' + (Math.floor(Math.random() * 900000) + 100000);
-    }
-    setOrderNum(num);
-
-    const elapsed = Date.now() - startedAt.current;
-    const isBot = hp.length > 0 || elapsed < 3000;
-    if (isBot) {
-      console.warn('[order] suspected bot, skipped insert');
-      setSaving(false); setStep(4);
-      return;
-    }
-
-    const sb = getSupabaseBrowser();
-    const itemsData = cart.map((it) => ({
-      name: pickField(lang, it.name, it.nameEn, it.nameAr),
-      qty: it.qty, size: it.size, color: it.color, price: it.price,
-      // Snapshot the product cost at order time so future price/cost edits
-      // don't retroactively change historical profit numbers.
-      cost: it.cost ?? null,
-      image: it.imgFiles?.[0],
-    }));
-    try {
-      const payload: Record<string, unknown> = {
-        order_number: num, status: 'nouveau',
-        full_name: form.fullName, phone: form.phone, email: form.email,
-        address: form.address, city: form.city, payment,
-        subtotal, delivery, total, items: itemsData, lang,
-        // Per-order audit trail of the marketing opt-in decision. We
-        // store the boolean even when there's no email so we can later
-        // tell "didn't share email" from "shared email but said no".
-        marketing_consent: marketingOk && !!form.email.trim(),
-      };
-      if (user) payload.user_id = user.id;
-      if (autoDiscount > 0) payload.auto_discount = autoDiscount;
-      if (coupon) { payload.coupon_code = coupon.code; payload.discount = discount; }
-      const { data: inserted, error: insertError } = await sb.from('orders').insert(payload).select('id').single();
-
-      // Hard failure path: the order DID NOT save. Tell the user clearly so
-      // they don't think the order went through, and ping the admin via the
-      // server-side alert API (Telegram).
-      if (insertError || !inserted) {
-        const reason = insertError?.message || 'unknown DB error';
-        console.error('[order] supabase insert failed', reason);
-        // Server-side alert — Supabase RLS failure is critical.
+      const elapsed = Date.now() - startedAt.current;
+      const res = await fetch('/api/checkout/place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map((it) => ({
+            product_id: it.id, qty: it.qty, size: it.size, color: it.color,
+          })),
+          form: {
+            fullName: form.fullName, phone: form.phone, email: form.email,
+            address: form.address, city: form.city, payment,
+          },
+          couponCode: coupon?.code,
+          marketingConsent: marketingOk,
+          lang,
+          userId: user?.id ?? null,
+          hp,
+          elapsedMs: elapsed,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        const reason = json?.error || `HTTP ${res.status}`;
+        console.error('[order] server checkout failed', reason);
         fetch('/api/notify-checkout-failure', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            orderNumber: num,
-            fullName: form.fullName,
-            phone: form.phone,
-            email: form.email,
-            city: form.city,
-            address: form.address,
-            total,
-            items: itemsData,
+            orderNumber: '(server)', fullName: form.fullName, phone: form.phone,
+            email: form.email, city: form.city, address: form.address, total,
+            items: cart.map((it) => ({ name: it.name, qty: it.qty, size: it.size, price: it.price })),
             reason,
           }),
         }).catch(() => {});
@@ -202,59 +180,32 @@ export function CheckoutPage() {
           'عذراً، حدث خطأ. تم إخطار فريقنا وسيتواصل معك على واتساب قريباً. يمكنك أيضاً مراسلتنا مباشرة.'));
         return;
       }
+      if (json.suppressed) {
+        // Honeypot or sub-3s submission — pretend success without a real order.
+        setSaving(false); setStep(4);
+        return;
+      }
+      num = json.orderNumber as string;
+      setOrderNum(num);
+      if (json.giftCode) setGiftCode(json.giftCode);
+      if (coupon) writeCoupon(null);
 
-      // Fire-and-forget: push the brand-new order to Google Sheets immediately
-      // so the admin doesn't have to hit "Sync Sheets" manually for every new
-      // checkout. Failure is silent — the order is already saved in Supabase
-      // and the next admin sync will pick it up regardless.
-      if (inserted?.id) {
+      // Trigger Sheet sync for this order (server route reads admin
+      // policies; cheap fire-and-forget).
+      if (json.orderId) {
         fetch('/api/sync-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: [inserted.id] }),
+          body: JSON.stringify({ ids: [json.orderId] }),
         }).catch(() => { /* silent */ });
       }
 
-      if (coupon) {
-        try { await sb.rpc('consume_coupon', { p_code: coupon.code, p_phone: form.phone, p_order: num }); } catch {}
-        writeCoupon(null);
-      }
-
-      // Marketing opt-in: save the email (and phone) to the newsletter
-      // table only if the customer actively ticked the consent box AND
-      // provided an email. Silent failure (duplicates etc.) — never blocks
-      // the order.
-      if (marketingOk && form.email.trim()) {
-        try {
-          await sb.from('newsletter_subscribers').insert({
-            email: form.email.trim(),
-            phone: form.phone.trim() || null,
-          });
-        } catch { /* duplicate or RLS — fine */ }
-      }
-
-      if (itemsCount >= 2) {
-        try {
-          const { data } = await sb.rpc('issue_gift_coupon', {
-            p_name: form.fullName || null, p_phone: form.phone || null,
-            p_city: form.city || null, p_order: num,
-          });
-          if (data) setGiftCode(data);
-        } catch {}
-      }
-
-      // Generate a single event_id used by BOTH the browser Pixel and
-      // the server-side CAPI Purchase event. Meta uses this to merge the
-      // two signals and count the conversion exactly once — without it
-      // we'd double-count every conversion that wasn't blocked.
+      // Meta Pixel + CAPI deduplication via shared event_id.
       const purchaseEventId = `order-${num}`;
       const fbp = readCookie('_fbp');
       const fbc = readCookie('_fbc');
 
-      // Fire-and-forget email notification (admin + customer). Failure here
-      // must NOT block the user — the order is already saved in Supabase.
-      // Forwards eventId + fbp/fbc so the server-side CAPI call can
-      // deduplicate against the browser Pixel and improve match quality.
+      // Fire-and-forget notifications (email + WhatsApp + Telegram + CAPI).
       fetch('/api/notify-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -265,32 +216,28 @@ export function CheckoutPage() {
           email: form.email,
           address: form.address,
           city: form.city,
-          total,
-          items: itemsData,
+          total: json.total,
+          items: json.items,
           lang,
           eventId: purchaseEventId,
           fbp,
           fbc,
         }),
-      }).catch(() => { /* silent — email is non-critical */ });
+      }).catch(() => { /* silent — non-critical */ });
 
-      trackMetaEvent('Purchase', cartPayload(cart, total), purchaseEventId);
+      // Browser Pixel with the same event_id (Meta dedupes against CAPI).
+      trackMetaEvent('Purchase', cartPayload(cart, json.total), purchaseEventId);
     } catch (e) {
       console.error('[order] unexpected throw', e);
-      // Catch-all: network or runtime failure. Don't lose the customer.
       const reason = e instanceof Error ? e.message : 'unknown error';
       fetch('/api/notify-checkout-failure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderNumber: num,
-          fullName: form.fullName,
-          phone: form.phone,
-          email: form.email,
-          city: form.city,
-          address: form.address,
-          total,
-          items: itemsData,
+          orderNumber: num || '(none)',
+          fullName: form.fullName, phone: form.phone, email: form.email,
+          city: form.city, address: form.address, total,
+          items: cart.map((it) => ({ name: it.name, qty: it.qty, size: it.size, price: it.price })),
           reason: 'CLIENT_THROW: ' + reason,
         }),
       }).catch(() => {});
@@ -301,8 +248,6 @@ export function CheckoutPage() {
         'عذراً، حدث خطأ. تم إخطار فريقنا وسيتواصل معك على واتساب قريباً. يمكنك أيضاً مراسلتنا مباشرة.'));
       return;
     }
-    // Empty the cart immediately so navigating away (or back to /cart)
-    // shows the right state, even if the customer never clicks "Retour".
     clearCart();
     setSaving(false); setStep(4);
   };

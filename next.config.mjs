@@ -39,12 +39,34 @@ const nextConfig = {
     //   third-party hosts like Meta Pixel.
     // - Permissions-Policy: disable APIs we never use; defence-in-depth
     //   in case a vulnerable third-party script tries.
+    // CSP is deployed in REPORT-ONLY mode first so violations show up in
+    // browser console / report-uri without breaking real users. Once we
+    // confirm nothing legitimate is blocked (Meta Pixel, GTM, Supabase
+    // Realtime), flip "Content-Security-Policy-Report-Only" to
+    // "Content-Security-Policy" to enforce.
+    const csp = [
+      "default-src 'self'",
+      // 'unsafe-inline' + 'unsafe-eval' needed for Meta Pixel + GTM injected scripts.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.googletagmanager.com https://www.google-analytics.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https: https://*.supabase.co",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://connect.facebook.net https://www.facebook.com https://graph.facebook.com https://api.resend.com https://api.telegram.org https://*.vercel-insights.com",
+      "frame-src 'self' https://www.facebook.com",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "upgrade-insecure-requests",
+    ].join('; ');
+
     const securityHeaders = [
       { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
       { key: 'X-Content-Type-Options', value: 'nosniff' },
       { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+      { key: 'Content-Security-Policy-Report-Only', value: csp },
     ];
 
     return [
