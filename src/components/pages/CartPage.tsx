@@ -15,7 +15,7 @@ import type { Coupon } from '@/lib/types';
 import { shouldSkipImageOptimization } from '@/lib/image';
 
 export function CartPage() {
-  const { lang, cart, user, updateQty, removeItem } = useApp();
+  const { lang, cart, user, updateQty, updateVariant, removeItem, maxQtyPerLine } = useApp();
   const router = useRouter();
   const t = TR[lang];
 
@@ -78,11 +78,21 @@ export function CartPage() {
     <div className="page2" style={{ padding: '40px 0 80px' }}>
       <div className="wrap">
         <h1 className="display" style={{ fontSize: 'clamp(40px, 6vw, 64px)', marginBottom: 32, letterSpacing: '-0.03em' }}>
-          {t.cart.title} <span className="mono" style={{ fontSize: 16, opacity: 0.4 }}>({cart.length})</span>
+          {t.cart.title}{' '}
+          <span className="mono" style={{ fontSize: 16, opacity: 0.4 }}>
+            ({itemsCount} {pick(lang,
+              itemsCount > 1 ? 'articles' : 'article',
+              itemsCount > 1 ? 'items' : 'item',
+              itemsCount > 1 ? 'قطع' : 'قطعة')})
+          </span>
         </h1>
         <div className="cart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 40 }}>
           <div>
-            {cart.map((item, i) => (
+            {cart.map((item, i) => {
+              const itemSizes = item.sizes && item.sizes.length > 0 ? item.sizes : ['XS','S','M','L','XL','XXL'];
+              const itemColors = item.colors && item.colors.length > 0 ? item.colors : [item.color];
+              const atMax = item.qty >= maxQtyPerLine;
+              return (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr auto', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--line)' }}>
                 <div style={{ aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden', position: 'relative', background: 'var(--paper-2)' }}>
                   {item.imgFiles?.[0] && (
@@ -91,23 +101,68 @@ export function CartPage() {
                 </div>
                 <div>
                   <div className="display" style={{ fontSize: 20 }}>{pickField(lang, item.name, item.nameEn, item.nameAr)}</div>
-                  <div className="mono" style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
-                    {item.size} · <span style={{ display: 'inline-block', width: 10, height: 10, background: item.color, borderRadius: '50%', verticalAlign: 'middle' }} />
+
+                  {/* Inline SIZE picker — change directly in the cart
+                      (Zara/ASOS style). If the new variant clashes with
+                      another line, AppContext.updateVariant merges them. */}
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
+                    {itemSizes.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => updateVariant(i, { size: s })}
+                        style={{
+                          padding: '4px 9px', border: '1px solid var(--line)', borderRadius: 999,
+                          background: item.size === s ? 'var(--ink)' : 'transparent',
+                          color: item.size === s ? 'var(--paper)' : 'var(--ink)',
+                          fontSize: 11, fontFamily: 'JetBrains Mono, monospace', minWidth: 32,
+                          cursor: 'pointer',
+                        }}
+                      >{s}</button>
+                    ))}
                   </div>
+
+                  {/* Inline COLOR picker. Only show if the product
+                      genuinely has multiple colors. */}
+                  {itemColors.length > 1 && (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                      {itemColors.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => updateVariant(i, { color: c })}
+                          aria-label={`Color ${c}`}
+                          style={{
+                            width: 22, height: 22, borderRadius: '50%', background: c,
+                            border: item.color === c ? '2px solid var(--ink)' : '1px solid var(--line)',
+                            outline: item.color === c ? '2px solid var(--paper)' : 'none',
+                            outlineOffset: -3, cursor: 'pointer', padding: 0,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', gap: 12, marginTop: 14, alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--ink)', borderRadius: 999 }}>
-                      <button onClick={() => updateQty(i, Math.max(1, item.qty - 1))} style={{ padding: '5px 10px' }}><Icon n="minus" s={10} /></button>
+                      <button onClick={() => updateQty(i, Math.max(1, item.qty - 1))} disabled={item.qty <= 1} style={{ padding: '5px 10px', opacity: item.qty <= 1 ? 0.35 : 1 }}><Icon n="minus" s={10} /></button>
                       <span style={{ minWidth: 22, textAlign: 'center', fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}>{item.qty}</span>
-                      <button onClick={() => updateQty(i, item.qty + 1)} style={{ padding: '5px 10px' }}><Icon n="plus" s={10} /></button>
+                      <button onClick={() => updateQty(i, item.qty + 1)} disabled={atMax} style={{ padding: '5px 10px', opacity: atMax ? 0.35 : 1 }}><Icon n="plus" s={10} /></button>
                     </div>
                     <button onClick={() => removeItem(i)} style={{ fontSize: 11, opacity: 0.5, borderBottom: '1px solid currentColor' }}>{t.cart.remove}</button>
+                    {atMax && (
+                      <span className="mono" style={{ fontSize: 10, opacity: 0.5 }}>
+                        {pick(lang, `max ${maxQtyPerLine}`, `max ${maxQtyPerLine}`, `الحد ${maxQtyPerLine}`)}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="mono" style={{ textAlign: 'right' }}>
+                <div className="mono" style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                   <span style={{ fontSize: 18, fontWeight: 600 }}>{item.price * item.qty}</span> <span style={{ fontSize: 10, opacity: 0.4 }}>MAD</span>
+                  {item.qty > 1 && (
+                    <div style={{ fontSize: 10, opacity: 0.45, marginTop: 4 }}>{item.qty} × {item.price}</div>
+                  )}
                 </div>
               </div>
-            ))}
+            );})}
             <Link className="btn2 btn2-outline" style={{ marginTop: 20 }} href="/shop">← {t.cart.continue}</Link>
           </div>
 

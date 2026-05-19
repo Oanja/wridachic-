@@ -23,11 +23,17 @@ interface ProductDetailProps {
 const SWIPE_THRESHOLD = 40;
 
 export function ProductDetail({ product, related }: ProductDetailProps) {
-  const { lang, addToCart, buyNow, wishlist, toggleWish } = useApp();
+  const { lang, cart, addToCart, buyNow, wishlist, toggleWish, maxQtyPerLine } = useApp();
   const router = useRouter();
   const t = TR[lang];
 
-  const [size, setSize] = useState('M');
+  // Default size = first size the product actually has. Hardcoding 'M'
+  // surprised customers when a product only had S/L (M button would
+  // appear "selected" but actually nothing was selected).
+  const availableSizes = product.sizes && product.sizes.length > 0
+    ? product.sizes
+    : ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const [size, setSize] = useState<string>(availableSizes[0]);
   const [color, setColor] = useState(product.colors[0]);
   const [qty, setQty] = useState(1);
   const [main, setMain] = useState(0);
@@ -65,18 +71,38 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
   const catName = cat ? pickField(lang, cat.name, cat.nameEn, cat.nameAr) : '';
   const soldOut = product.stock === 0;
 
+  // How many of THIS product (any variant) are already in the cart.
+  // Used for the "Vous avez 2 dans votre panier" hint below the buttons.
+  const inCartTotal = cart.reduce((s, it) => s + (it.id === product.id ? it.qty : 0), 0);
+  // How many of the CURRENT variant (id + size + color) are in the cart.
+  // Used to cap the qty stepper so the user can't go over the per-line max.
+  const inCartSameVariant = cart.reduce(
+    (s, it) => s + (it.id === product.id && it.size === size && it.color === color ? it.qty : 0),
+    0,
+  );
+  const remainingForVariant = Math.max(0, maxQtyPerLine - inCartSameVariant);
+
   useEffect(() => {
     trackMetaEvent('ViewContent', productPayload(product));
   }, [product]);
 
+  // Clamp the requested qty so we never ask for more than the per-line
+  // cap allows (taking into account whatever the customer already has).
+  const clampedQty = () => Math.max(1, Math.min(qty, remainingForVariant || 1));
+
   const handleAdd = () => {
-    addToCart({ ...product, size, color, qty });
+    if (remainingForVariant === 0) return; // already at cap for this variant
+    addToCart({ ...product, size, color, qty: clampedQty() });
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
   };
 
   const handleBuyNow = () => {
-    buyNow({ ...product, size, color, qty });
+    if (remainingForVariant > 0) {
+      buyNow({ ...product, size, color, qty: clampedQty() });
+    }
+    // If at cap, we still navigate to checkout — the user already has
+    // the max of this variant and probably wants to finalise.
     router.push('/checkout');
   };
 
@@ -184,7 +210,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
                 <a onClick={() => setSizeGuideOpen(true)} style={{ fontSize: 12, borderBottom: '1px solid var(--ink)', cursor: 'pointer' }}>{t.product.sizeGuide}</a>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {(product.sizes && product.sizes.length > 0 ? product.sizes : ['XS','S','M','L','XL','XXL']).map((s) => (
+                {availableSizes.map((s) => (
                   <button
                     key={s} onClick={() => setSize(s)}
                     style={{ padding: '9px 14px', border: '1.5px solid var(--ink)', borderRadius: 999, background: size === s ? 'var(--ink)' : 'transparent', color: size === s ? 'var(--paper)' : 'var(--ink)', fontSize: 12, minWidth: 42 }}
@@ -202,18 +228,55 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
               </div>
             )}
 
+            {/* Cap the qty stepper at remainingForVariant so the customer
+                can't pick a number bigger than what we can actually add
+                (per-line max minus what they already have of this exact
+                size/color). Reset to 1 if a variant change leaves them
+                over the cap. */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--ink)', borderRadius: 999, opacity: soldOut ? 0.4 : 1 }}>
-                <button onClick={() => setQty(Math.max(1, qty - 1))} disabled={soldOut} style={{ padding: '0 14px', height: 48 }}><Icon n="minus" s={12} /></button>
-                <span style={{ minWidth: 28, textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>{qty}</span>
-                <button onClick={() => setQty(qty + 1)} disabled={soldOut} style={{ padding: '0 14px', height: 48 }}><Icon n="plus" s={12} /></button>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--ink)', borderRadius: 999, opacity: soldOut || remainingForVariant === 0 ? 0.4 : 1 }}>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} disabled={soldOut || qty <= 1} style={{ padding: '0 14px', height: 48 }}><Icon n="minus" s={12} /></button>
+                <span style={{ minWidth: 28, textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>{Math.min(qty, Math.max(1, remainingForVariant))}</span>
+                <button onClick={() => setQty(Math.min(remainingForVariant || 1, qty + 1))} disabled={soldOut || qty >= remainingForVariant} style={{ padding: '0 14px', height: 48 }}><Icon n="plus" s={12} /></button>
               </div>
-              <button className="btn2 btn2-dark" style={{ flex: 1, opacity: soldOut ? 0.4 : 1, cursor: soldOut ? 'not-allowed' : 'pointer' }} disabled={soldOut} onClick={handleAdd}>
-                {added ? <><Icon n="check" s={14} /> {pick(lang, 'Ajouté !', 'Added!', 'تمت!')}</> : `+ ${t.product.add}`}
+              <button
+                className="btn2 btn2-dark"
+                style={{ flex: 1, opacity: soldOut || remainingForVariant === 0 ? 0.4 : 1, cursor: (soldOut || remainingForVariant === 0) ? 'not-allowed' : 'pointer' }}
+                disabled={soldOut || remainingForVariant === 0}
+                onClick={handleAdd}
+              >
+                {added
+                  ? <><Icon n="check" s={14} /> {pick(lang, 'Ajouté !', 'Added!', 'تمت!')}</>
+                  : remainingForVariant === 0
+                    ? pick(lang, 'Maximum atteint', 'Maximum reached', 'وصلتي الحد الأقصى')
+                    : `+ ${t.product.add}`}
               </button>
               <button className="btn2 btn2-outline" onClick={() => toggleWish(product.id)}><Icon n="heart" s={16} /></button>
             </div>
-            <button className="btn2 btn2-clay" style={{ width: '100%', marginBottom: 12, opacity: soldOut ? 0.4 : 1, cursor: soldOut ? 'not-allowed' : 'pointer' }} disabled={soldOut} onClick={handleBuyNow}>
+
+            {/* "You already have N of this in your cart" — Zara-style
+                signal so customers don't accidentally re-add what they
+                meant to just go checkout for. */}
+            {inCartTotal > 0 && (
+              <div className="mono" style={{ fontSize: 11, opacity: 0.7, marginBottom: 8, padding: '8px 12px', background: 'var(--paper-2)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>
+                  ✓ {pick(lang,
+                    `${inCartTotal} déjà dans ton panier`,
+                    `${inCartTotal} already in your cart`,
+                    `${inCartTotal} موجود فالسلة`)}
+                </span>
+                <Link href="/cart" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+                  {pick(lang, 'Voir', 'View', 'شوفي')}
+                </Link>
+              </div>
+            )}
+
+            <button
+              className="btn2 btn2-clay"
+              style={{ width: '100%', marginBottom: 12, opacity: soldOut ? 0.4 : 1, cursor: soldOut ? 'not-allowed' : 'pointer' }}
+              disabled={soldOut}
+              onClick={handleBuyNow}
+            >
               {pick(lang, 'Commander maintenant →', 'Order now →', 'اطلبي دابا ←')}
             </button>
             {(() => {

@@ -17,9 +17,13 @@ interface AppContextValue {
 
   cart: CartItem[];
   cartCount: number;
+  /** Hard cap on per-line quantity — matches server validation. */
+  maxQtyPerLine: number;
   addToCart: (item: CartItem) => void;
   buyNow: (item: CartItem) => void;
   updateQty: (index: number, qty: number) => void;
+  /** Change size/color in place; auto-merges if the new variant already exists. */
+  updateVariant: (index: number, patch: { size?: string; color?: string }) => void;
   removeItem: (index: number) => void;
   clearCart: () => void;
 
@@ -139,7 +143,8 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
   // Two items are "the same line" if they share product id + size + color.
   // We dedupe on this triple so a customer who picks the same variant twice
   // sees their qty go up, not two separate cart rows.
-  const sameVariant = (a: CartItem, b: CartItem) =>
+  const MAX_QTY_PER_LINE = 20;
+  const sameVariant = (a: { id: string; size: string; color: string }, b: { id: string; size: string; color: string }) =>
     a.id === b.id && a.size === b.size && a.color === b.color;
 
   const addToCart = useCallback((item: CartItem) => {
@@ -149,7 +154,7 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
         // Same variant already in cart — merge quantities instead of
         // adding a duplicate row. Cap at 20 (matches the server limit).
         return c.map((it, i) =>
-          i === idx ? { ...it, qty: Math.min(20, it.qty + item.qty) } : it,
+          i === idx ? { ...it, qty: Math.min(MAX_QTY_PER_LINE, it.qty + item.qty) } : it,
         );
       }
       return [...c, item];
@@ -168,18 +173,57 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
   // is already in the cart, don't add another row, just go to checkout
   // with what's there. If it's a different product or a different
   // size/color, append normally.
+  // "Acheter maintenant" (Buy Now). Mirrors Zara / ASOS behaviour:
+  //   - If the exact variant is NOT in the cart → add it.
+  //   - If it IS already there → increment the qty by what the user
+  //     just picked (so picking "3" while you already had "2" gives
+  //     you 5, not 2 and not 3). Capped at MAX_QTY_PER_LINE.
+  // Then navigate to checkout (the navigation happens in the caller).
   const buyNow = useCallback((item: CartItem) => {
-    // Read cart directly (closure capture) so the dedupe + Pixel decision
-    // happen on the same snapshot. setCart's updater pattern is great for
-    // concurrent mutations, but here buyNow is single-click and we need
-    // a synchronous "was it new?" answer for the Pixel call below.
-    const alreadyInCart = cart.some((it) => sameVariant(it, item));
-    if (alreadyInCart) return; // just go to checkout — don't double-add
-    setCart((c) => [...c, item]);
+    let wasNew = true;
+    setCart((c) => {
+      const idx = c.findIndex((it) => sameVariant(it, item));
+      if (idx >= 0) {
+        wasNew = false;
+        return c.map((it, i) =>
+          i === idx ? { ...it, qty: Math.min(MAX_QTY_PER_LINE, it.qty + item.qty) } : it,
+        );
+      }
+      return [...c, item];
+    });
+    // Fire AddToCart for the qty we actually contributed (whether the
+    // line was new or we merged into an existing one). This keeps the
+    // Meta funnel honest — every "Buy Now" click adds something.
     trackMetaEvent('AddToCart', productPayload(item, item.qty));
-  }, [cart]);
+    // Avoid lint warning about an unused var — wasNew is captured for
+    // future telemetry if we ever want to split "new vs merged" events.
+    void wasNew;
+  }, []);
   const updateQty = useCallback((index: number, qty: number) =>
-    setCart((c) => c.map((it, i) => (i === index ? { ...it, qty } : it))), []);
+    setCart((c) => c.map((it, i) =>
+      i === index ? { ...it, qty: Math.max(1, Math.min(MAX_QTY_PER_LINE, qty)) } : it,
+    )), []);
+  // Change size/color of an existing line. If the patched variant
+  // already exists as another line, MERGE them (sum quantities, capped)
+  // and drop the original line — keeps the cart visually clean.
+  const updateVariant = useCallback((index: number, patch: { size?: string; color?: string }) => {
+    setCart((c) => {
+      if (index < 0 || index >= c.length) return c;
+      const original = c[index];
+      const patched = { ...original, ...patch };
+      // Find an existing line elsewhere with the new variant.
+      const dupIdx = c.findIndex((it, i) => i !== index && sameVariant(it, patched));
+      if (dupIdx >= 0) {
+        // Merge into existing line, drop the original.
+        const mergedQty = Math.min(MAX_QTY_PER_LINE, c[dupIdx].qty + original.qty);
+        return c
+          .map((it, i) => (i === dupIdx ? { ...it, qty: mergedQty } : it))
+          .filter((_, i) => i !== index);
+      }
+      // No dup → patch in place.
+      return c.map((it, i) => (i === index ? patched : it));
+    });
+  }, []);
   const removeItem = useCallback((index: number) =>
     setCart((c) => c.filter((_, i) => i !== index)), []);
   const clearCart = useCallback(() => setCart([]), []);
@@ -225,11 +269,12 @@ export function AppProvider({ children, defaultLang = 'fr' }: { children: ReactN
 
   const value = useMemo<AppContextValue>(() => ({
     lang, setLang,
-    cart, cartCount, addToCart, buyNow, updateQty, removeItem, clearCart,
+    cart, cartCount, maxQtyPerLine: MAX_QTY_PER_LINE,
+    addToCart, buyNow, updateQty, updateVariant, removeItem, clearCart,
     wishlist, toggleWish,
     user, setUser, authReady, authOpen, openAuth, closeAuth, authPrefill, logout,
     toast, showToast,
-  }), [lang, setLang, cart, cartCount, addToCart, buyNow, updateQty, removeItem, clearCart,
+  }), [lang, setLang, cart, cartCount, addToCart, buyNow, updateQty, updateVariant, removeItem, clearCart,
        wishlist, toggleWish, user, authReady, authOpen, openAuth, closeAuth, authPrefill, logout, toast, showToast]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
